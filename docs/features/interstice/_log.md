@@ -439,3 +439,26 @@ JavaScript fetches the asset over the reverse port forwarding and gets a 200 wit
 **Edits:** `_facts.yml` (+`limits.vega_media.no_js_console`, `.media_process_is_separate`, `.surface_races_init`) · `docs/features/_profile.yml` (`device_log` qualified as NATIVE-only, new `js_log` entry naming the beacon) · `src/screens/PlayerScreen.tsx` rewritten · `src/diagnostics.ts`, `tools/beacon-server.mjs`, `test/mocks/diagnostics.ts` new.
 **Validation:** `npm test` exit 0 (jest 6 + vitest 6) · `npm run lint` exit 0 · `audit.py` → 0 contradictions, 0 drift.
 **Next mode:** make the asset reachable by the media process. Cheapest first: `require()` the clip so metro bundles it into the package and reference the packaged path — the build already logs `cp .../rn-bundles/Release/assets/*` and fails because nothing requires an asset today, which is the same fact seen from the build side.
+
+---
+
+## R19 · 2026-09-22 · claude-opus-5 (Claude Code) · asset bundled; six causes eliminated; D5 raised and the debugging stopped
+**Read:** `_facts.yml` · `_log.md` (through R18 end) · `@amazon-devices/react-native-w3cmedia@2.3.2` **source**, not only its declarations
+**Log read through:** R18
+**Done:** the asset now travels inside the package. `require('./assets/clip.mp4')` rather than a string URI — `mp4` is already in metro's default `assetExts`, and the build's `cp .../rn-bundles/Release/assets/*` step only had something to copy once an asset was actually required. The `cp: no such file or directory` R16 recorded was the same fact seen from the build side. The build now logs **"Done copying assets"**, the clip lands in the bundle, and it resolves on device to `file:///pkg/bundle/assets/src/assets/clip.mp4`.
+**And it still fails.** `MEDIA_ERR_SRC_NOT_SUPPORTED`, every time.
+**Six candidate causes eliminated by measurement rather than argument. The list is the deliverable of this round** — each is a test nobody has to run again:
+1. **Format** — `canPlayType('video/mp4')` returns `probably`.
+2. **Ordering** — the surface/init race was real (R18) and is fixed; the error survived the fix.
+3. **Network reachability** — JavaScript fetched the same URL over the forwarded port and got `200 video/mp4`.
+4. **Asset packaging** — bundled, `Done copying assets`, and JavaScript reads the packaged `file://` path successfully (`probe.fetch 200`).
+5. **Codec profile** — re-encoded from High L3.1 to **Constrained Baseline L3.0**, yuv420p, AAC stereo. Identical failure.
+6. **Empty src** — reading the package source found the *only* path in `MediaPlayer.js` that raises code 4 is an empty-URL check in the `src` setter. The URI is logged non-empty and `ready src=set` confirms it at play time; the error arrives ~300 ms later from the native TurboModule (`MediaPlayer.js:1049`, `W3CMediaTurboModule.getError`), not from that check.
+The native error message, once logged, is **empty**. No media decode error appears in the device syslog either.
+**R19-F1 → `defects[D5]`: the Virtual Device may not decode video at all.** Raised as a named hypothesis with a `falsified_by` rather than left as an unexplained failure, because an unnamed wall is the thing a later round burns a day rediscovering. **The next test is cheap and decisive and is not more of this app**: build and run Amazon's own `vega-video-sample` (`related_docs[R-VEGA-VIDEO]`) on this same device. If the reference player cannot play video here, the device is the answer and this app was never the problem.
+**Why `D5` is a planning risk and not only a bug.** `limits.hackathon.firetv_runtime_requirement` accepts a demo video recorded on a real Fire TV device **or** on the simulator. If the Virtual Device cannot decode, `AC1` and `AC12` need **physical hardware** — a lead time and a cost, on the owner's clock, in the same class as `AC20` and `D4`. Named now, at day 4 of 34, instead of discovered in Phase 5.
+**Judgment recorded, because stopping is a decision:** debugging stops here rather than continuing to iterate. Six eliminations is a well-characterised open problem; a seventh guess without a new information source is not diagnosis. The cheap decisive test is written down and belongs to the next round.
+**Edits:** `_facts.yml` (`defects[D5]`) · `01-master-plan.md` (§7 checklist item, §8 risk row) · `src/App.tsx` (asset required and resolved) · `src/screens/PlayerScreen.tsx` (error listener logs the native message) · `src/assets/clip.mp4` re-encoded to Constrained Baseline.
+**Validation:** `npm test` exit 0 · `npm run lint` exit 0 · `audit.py` → 0 contradictions, 0 drift.
+**Still open:** `D5` **new, and it gates `D3`'s playback half** · `D3` playback · `D2` — its test cannot run until something plays · `D4` Bedrock, **decide by 09-30** · credits bound · `AC20`, **drop-dead 10-16**.
+**Next mode:** run `vega-video-sample` on this Virtual Device. One answer, two outcomes: it plays and the fault is in this app, or it does not and the demo needs hardware. Either way the next step after it is unambiguous, which is why it comes before writing another line of player code.

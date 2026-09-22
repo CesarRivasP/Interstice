@@ -62,7 +62,11 @@ export function PlayerScreen({ uri }: PlayerScreenProps) {
 
         p.addEventListener('error', () => {
           const code = p.error?.code ?? -1;
-          log(`INTERSTICE.player.error code=${code}`);
+          // The native TurboModule carries the real reason in `message`; the
+          // numeric code alone is almost always MEDIA_ERR_SRC_NOT_SUPPORTED and
+          // says nothing about which of a dozen causes fired.
+          const msg = (p.error as { message?: string } | null)?.message ?? 'none';
+          log(`INTERSTICE.player.error code=${code} msg=${msg}`);
           setStatus('error');
           setDetail(`media error ${code}`);
         });

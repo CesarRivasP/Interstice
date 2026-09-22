@@ -716,6 +716,46 @@ related_docs:
 # =====================================================================
 defects:
 
+  - id: D5
+    role: blocking
+    claim: 'the Vega Virtual Device can decode and render H.264 video at all'
+    basis: asserted
+    falsified_by: 'any app playing any video on this Virtual Device — including
+                   Amazon''s own vega-video-sample, which is the cheapest test'
+    log_line: 'INTERSTICE.player.error code=<n> msg=<native message>'
+    status: open
+    outcome: null
+    note: 'RAISED 2026-09-22 after six candidate causes were eliminated by
+           measurement rather than argument. Every attempt to play a file ends in
+           MEDIA_ERR_SRC_NOT_SUPPORTED (code 4) with an EMPTY native message.
+           ELIMINATED, each with the observation that killed it:
+           (1) format — canPlayType("video/mp4") returns "probably";
+           (2) ordering — the surface/init race was real and is fixed
+               (limits.vega_media.surface_races_init); the error survived the fix;
+           (3) network reachability — JavaScript fetched the same URL over the
+               forwarded port and got 200 video/mp4;
+           (4) asset packaging — the clip is now required so metro bundles it, the
+               build reports "Done copying assets", it resolves to
+               file:///pkg/bundle/assets/src/assets/clip.mp4 and JavaScript reads
+               that path successfully (probe.fetch 200);
+           (5) codec profile — re-encoded to Constrained Baseline L3.0, yuv420p,
+               AAC stereo; identical failure;
+           (6) empty src — the W3C setter raises code 4 on an empty URL and that is
+               the only such path in MediaPlayer.js, but the URI is logged non-empty
+               and `ready src=set` confirms it at play time. The error arrives ~300 ms
+               later from the native TurboModule, not from that check.
+           No media decode error appears in the device syslog either.
+           WHY THIS MATTERS BEYOND THE BUG: limits.hackathon.firetv_runtime_requirement
+           accepts a demo video recorded on a real Fire TV device OR on the
+           simulator. If the Virtual Device cannot decode video, AC1 and AC12 need
+           PHYSICAL HARDWARE, which has a lead time and a cost and is on the owner''s
+           clock — the same class of dependency as AC20 and D4, and it would be
+           discovered at the worst possible moment if left unnamed.
+           NEXT TEST, and it is cheap and decisive: build and run
+           related_docs[R-VEGA-VIDEO] (AmazonAppDev/vega-video-sample) on this same
+           Virtual Device. If Amazon''s own reference player cannot play video here,
+           the device is the answer and this app is not the problem.'
+
   - id: D4
     role: blocking
     claim: 'Amazon Bedrock refuses every InvokeModel and Converse call on AWS account
