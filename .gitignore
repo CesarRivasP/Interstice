@@ -1,0 +1,16 @@
+
+.DS_Store
+.env
+.idea
+.tmp
+.vscode
+*.iml
+*.log
+*.swp
+build
+CMakeUserPresets.json
+dist
+node_modules
+node_modules/
+npm-debug.log
+out/
