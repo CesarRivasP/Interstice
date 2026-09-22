@@ -409,3 +409,33 @@ What is true: these are build- and documentation-time tools that metro would not
 **Green, both halves, from the commands the README publishes:** `npm test` exit **0** — jest 6 passed (app), vitest 6 passed (pipeline) · `npm run lint` exit **0** (one informational warning: the same plugin noting that w3cmedia is a system distributed library, which is the intended state and not a defect) · `audit.py` → 0 contradictions, 0 drift.
 **`tests_baseline` re-measured** to cover both runners, with a note that `npm test` runs each and fails if either does.
 **Next mode:** unchanged from R16 — debug build with Metro to recover the JS console, read `INTERSTICE.player.*`, and close the playback half of `D3`.
+
+---
+
+## R18 · 2026-09-22 · claude-opus-5 (Claude Code) · built a diagnostic channel, then used it to isolate why playback fails
+**Read:** `_facts.yml` · `_log.md` (through R17 end) · skill `amazon-devices-vega-build-and-run`
+**Log read through:** R17
+**The problem R16 left:** an app that runs but cannot report. Establishing that took three negatives worth recording, because each looks like the obvious answer:
+- `console.log` in a **Debug** build does not reach `vega device start-log-stream` either. Debug was the obvious fix and is not one.
+- Metro, with the device connected and the bundle served over reverse port forwarding, prints **"JavaScript logs have moved! They can now be viewed in React Native DevTools"** — React Native 0.73+ behaviour. So the JS console exists but only behind a browser.
+- No screenshot path either: `vega device` has no capture command, `screencapture` returns *could not create image from display*, and `osascript` is denied assistive access. The screen could not be looked at.
+**`tools/beacon-server.mjs` + `src/diagnostics.ts` — the channel that works.** The device already reverse-forwards to the host for Metro, so `log()` sends one GET per line to a host process that prints it. `console.log` is kept alongside for anyone who does attach DevTools. Marked TEMPORARY DIAGNOSTIC TRANSPORT, with removal gated on a platform logging API being confirmed **and** the `D2` runtime test having read its lines — `references/implementable.md` §Diagnostic log lines is explicit that removal is ordered after the last run that needs the oracle, not after the last code phase.
+This is the most useful thing measured on this platform so far. **`D2`'s runtime test could not have reported its result without it**, and neither could anything else in `02c`.
+**First lines ever received from the device, and they immediately paid for the channel:**
+```
+INTERSTICE.player.surface created handle=1     .788
+INTERSTICE.player.init ok=true                 .814   <- 26 ms LATER
+INTERSTICE.player.error code=4                 .826
+```
+**R18-F1 `FUNCTIONAL`, a bug in this set's own code, found the moment it could be seen.** `VideoPlayer.initialize()` and the platform handing over the surface are independent async signals **with no guaranteed order**, and on this device the surface won the race by 26 ms. The surface callback called `setSurfaceHandle` and `play()` on a player whose `src` had not been assigned yet — producing `MEDIA_ERR_SRC_NOT_SUPPORTED` (code 4), which reads exactly like an unsupported file and is not one. Fixed by tracking both readiness signals and letting whichever lands second start playback. Landed in `limits.vega_media.surface_races_init` so `02c` Phase 7 is regenerated against it. The app test written in R17 asserted the surface handler exists; it could not have caught the ordering, and now the registry states the rule the test cannot.
+**R18-F2, and it is the one that matters: the media pipeline is a SEPARATE PROCESS with its own network path.** After the ordering fix the log reads `canPlayType_mp4=probably`, `src=set`, `play resolved` — and still `error code=4`, with the http server logging **no request from the player**. A probe added to discriminate settled it in one run:
+```
+INTERSTICE.probe.fetch ok status=200 type=video/mp4    <- JavaScript reaches the URL
+INTERSTICE.player.error code=4                         <- the player rejects the same URL
+```
+JavaScript fetches the asset over the reverse port forwarding and gets a 200 with the right content type. `com.amazon.media.server` never asks for it. **Host-localhost forwarding works for the app process and not for playback, and from JavaScript the two are indistinguishable** — which is precisely the trap this would have been without a probe.
+**Consequence for the plan, recorded in `limits.vega_media.media_process_is_separate`:** the demo asset must be reachable by the *media* process — bundled into the package, or served from a host the device genuinely routes to. The host's LAN address is not that host today: macOS blocks the inbound connection (`curl` to `192.168.1.216:8100` times out from the host itself), so opening it is a firewall decision for the owner, not a code change.
+**Honest status:** `D3`'s playback half is **still open**, and that is the correct entry. But the failure is no longer a black screen with no explanation — it is characterised to one sentence, with the discriminating measurement attached. Three candidate causes were eliminated by measurement rather than argument: the format (`canPlayType` = `probably`), the ordering (fixed, error persisted), and the network reachability (JS proved the URL serves).
+**Edits:** `_facts.yml` (+`limits.vega_media.no_js_console`, `.media_process_is_separate`, `.surface_races_init`) · `docs/features/_profile.yml` (`device_log` qualified as NATIVE-only, new `js_log` entry naming the beacon) · `src/screens/PlayerScreen.tsx` rewritten · `src/diagnostics.ts`, `tools/beacon-server.mjs`, `test/mocks/diagnostics.ts` new.
+**Validation:** `npm test` exit 0 (jest 6 + vitest 6) · `npm run lint` exit 0 · `audit.py` → 0 contradictions, 0 drift.
+**Next mode:** make the asset reachable by the media process. Cheapest first: `require()` the clip so metro bundles it into the package and reference the packaged path — the build already logs `cp .../rn-bundles/Release/assets/*` and fails because nothing requires an asset today, which is the same fact seen from the build side.

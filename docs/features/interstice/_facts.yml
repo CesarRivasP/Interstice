@@ -511,6 +511,35 @@ limits:
     manifest_requirement: 'media services must be declared under [wants] in
            manifest.toml (changes C17). Missing services cause SILENT playback
            failure — no video and no error.'
+    no_js_console: 'MEASURED 2026-09-22. There is NO readable JavaScript console on
+           this platform. console.log reaches `vega device start-log-stream` in
+           neither Release nor Debug, and since React Native 0.73 Metro prints
+           "JavaScript logs have moved" and routes them to React Native DevTools,
+           which needs a browser. Every INTERSTICE.* line references/implementable.md
+           specifies would be written and never read. The channel that works is an
+           HTTP beacon over the reverse port forwarding the device already uses for
+           Metro — tools/beacon-server.mjs plus src/diagnostics.ts. This is the
+           single most useful thing measured on this platform so far: without it the
+           D2 runtime test cannot report its result either.'
+    media_process_is_separate: 'MEASURED 2026-09-22, and it constrains where the asset
+           may live. The JavaScript side fetched http://localhost:8100/clip.mp4 over
+           the reverse port forwarding and got `status=200 type=video/mp4`; the
+           VideoPlayer rejected the SAME url with MEDIA_ERR_SRC_NOT_SUPPORTED
+           (code 4) and the http server logged NO request from it. canPlayType
+           ("video/mp4") returns "probably", so the format is not the issue. The
+           media pipeline runs in its own process (com.amazon.media.server) which
+           does not share the app process network path. CONSEQUENCE: the demo asset
+           must be reachable by THAT process — bundled in the package, or served
+           from a host the device genuinely routes to. Host-localhost forwarding
+           works for the app and not for playback, and the two look identical from
+           JavaScript.'
+    surface_races_init: 'MEASURED 2026-09-22. VideoPlayer.initialize() and the
+           platform handing over the surface are independent async signals with no
+           guaranteed order — the surface arrived 26 ms BEFORE initialize() resolved.
+           Calling play() from the surface callback alone plays a player whose src is
+           not set yet and yields MEDIA_ERR_SRC_NOT_SUPPORTED, which reads exactly
+           like an unsupported file and is not one. Both signals must be tracked and
+           whichever lands second starts playback.'
 
   clip_cache:
     basis: decided

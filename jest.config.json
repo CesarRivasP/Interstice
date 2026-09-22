@@ -13,7 +13,8 @@
     "^react-native$": "@amazon-devices/react-native-kepler",
     "^react-native/(.*)$": "@amazon-devices/react-native-kepler/$1",
     "^~/(.*)$": "<rootDir>/src/$1",
-    "^@amazon-devices/react-native-w3cmedia$": "<rootDir>/test/mocks/w3cmedia.tsx"
+    "^@amazon-devices/react-native-w3cmedia$": "<rootDir>/test/mocks/w3cmedia.tsx",
+    "^../diagnostics$": "<rootDir>/test/mocks/diagnostics.ts"
   },
   "modulePaths": [
     "<rootDir>/src"

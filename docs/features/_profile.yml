@@ -35,6 +35,13 @@ commands:
   # Vega CLI 1.3.4, SDK 0.24.12112, with the Virtual Device booted. Not guessed.
   build:        "npm run build"
   device_log:   "vega device start-log-stream | rg {log_tag}"
+  # ^ NATIVE logs only. There is no readable JavaScript console on this platform:
+  #   console.log reaches this stream in neither Release nor Debug, and RN 0.73+
+  #   routes JS logs to React Native DevTools, which needs a browser. JS
+  #   diagnostics go over an HTTP beacon instead — run `node tools/beacon-server.mjs`
+  #   and `vega device start-port-forwarding --port 8099 --forward false`, then read
+  #   its stdout. See _facts.yml limits.vega_media.no_js_console.
+  js_log:       "node tools/beacon-server.mjs  # + reverse-forward port 8099"
   force_stop:   "vega device terminate-app --appName {component_id}"
   # Vega is not Android — `adb logcat` never applied. The CLI streams logs rather
   # than exposing a filtered tail, so the {log_tag} filter is applied by the pipe.
