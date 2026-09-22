@@ -1,0 +1,60 @@
+# Profile — Interstice (React Native on Vega OS / Fire OS, TV)
+# One per REPO. Registry says what is true; this file says how this repo finds out.
+# Derived from feature-spec profiles/rn-tv.yml.
+
+repo: Hackathon
+app: null
+
+stack: rn-tv
+prose_language: en
+
+app_id: com.cesarrivasp.interstice
+# The PACKAGE id is above. Every device command takes the COMPONENT id, which is
+# the package id plus `.main` — read off the generated manifest.toml in R14, after
+# `--appName com.cesarrivasp.interstice` had been written from the package id and
+# would have matched nothing.
+component_id: com.cesarrivasp.interstice.main
+log_tag: INTERSTICE
+
+commands:
+  # null = this repo has no such command YET.
+  # A guessed command is worse than none: `evidence.cmd` carries it into every
+  # doc and the executor runs it. Fill each one the moment it exists, then
+  # re-run the evidence that depends on it.
+  #
+  # tests / tests_expect / lint were filled on 2026-09-22 by running them
+  # (spec `02` Phase 1), never from memory. vitest has no count-free
+  # pass-only substring — a partial failure still prints "passed" — so the
+  # authoritative pass signal is EXIT 0, and `tests_expect` below is the
+  # literal full-pass line at the current test count. Re-measure it whenever
+  # the count changes; `_facts.yml tests_baseline` is what tracks the count.
+  tests:        "npm test"
+  tests_expect: "6 passed (6)"
+  lint:         "npm run lint"
+  # Filled 2026-09-22 (R11) from `vega --help` / `vega device <cmd> --help` on
+  # Vega CLI 1.3.4, SDK 0.24.12112, with the Virtual Device booted. Not guessed.
+  build:        "npm run build"
+  device_log:   "vega device start-log-stream | rg {log_tag}"
+  force_stop:   "vega device terminate-app --appName {component_id}"
+  # Vega is not Android — `adb logcat` never applied. The CLI streams logs rather
+  # than exposing a filtered tail, so the {log_tag} filter is applied by the pipe.
+  # Other commands this project needs, recorded so no round re-derives them:
+  #   vega project generate            scaffold (templates: helloWorld -> RN 0.83,
+  #                                    helloWorld-rn72, vegaWebview, turbo-module x2)
+  #   npm run build                    react-native build-vega --build-type Release
+  #                                    -> build/{x86_64,armv7,aarch64}-release/*.vpkg
+  #   `vega build` is NOT this: it builds native artifacts only, not the RN app.
+  #   vega run-app <vpkg> <component_id> -d VirtualDevice
+  #   vega device is-app-running --appName <component_id>
+  #   vega virtual-device start | status | stop
+  #   vega device install-app | launch-app | uninstall-app | is-app-running
+  #   vega device copy-logs | doctor   crash reports and ACRs
+  file_tracked: "git ls-files --error-unmatch {path}"
+  file_ignored: "git check-ignore -v {path}"
+
+# --- what varies here and must be recorded on every device/log run ---
+conditions_required: [target_platform, build, content_asset]
+
+gap_sweep_layers: [mobile-tv]
+
+deep_review_agent: null

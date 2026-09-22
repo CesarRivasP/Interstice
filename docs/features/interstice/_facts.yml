@@ -1,0 +1,1071 @@
+# _facts.yml — SINGLE SOURCE OF TRUTH for feature `interstice`
+# Every datum that appears in >1 doc lives HERE and is copied verbatim into prose.
+# Companion file: docs/features/_profile.yml — one per REPO, not per feature.
+# Editing a value here -> run `feature-spec sync interstice` to propagate.
+#
+# STAGE 1. This file + 01-master-plan.md are the decision surface. Docs 02 and 03
+# are written by `implement`, after `review` runs and `status:` flips to `reviewed`.
+#
+# BASIS legend (references/evidence.md):
+#   measured -> evidence: { how, cmd, date, value }
+#   asserted -> falsified_by: <the observation that would kill it>
+#   decided  -> a choice, not a claim about the world.
+#
+# NOTE ON THE HACKATHON NUMBERS. They come from the Devpost rules/resources pages,
+# read through a text proxy: `curl` against devpost.com returns HTTP 202 with an
+# empty body, so there is no re-runnable command behind them. They are `asserted`
+# with a `source:` URL, not `measured`. Re-check them by hand before the deadline.
+
+feature: interstice
+profile: docs/features/_profile.yml
+title: 'Interstice — AI audio description in the gaps between dialogue, on Fire TV'
+status: reviewed
+
+owners:
+  technical: 'César Rivas (CesarRivasP)'
+  external: 'a blind or low-vision validation participant for AC20, not yet identified.
+             Everything else is solo: the Representative on Devpost is the technical owner'
+
+tracking:
+  issues: []
+  pr: null
+  milestone: null
+  branch: main
+  shipped_in: null
+  blocked_by: 'TWO, and they are different kinds.
+                (1) AC20 (decisions.user_validation) needs a participant who is not on
+                this team and runs on their own clock. Recruitment opens in Phase 0, not
+                in Phase 5 where the session sits.
+                (2) D4 — Bedrock is refused at the account level, which blocks C9 and
+                nothing else. It waits on AWS Support or on the hackathon organisers,
+                neither of which is on this team either. Decide by 09-30 per A5.'
+
+dates:
+  drafted: 2026-09-19
+  revisions:
+    - { tag: v1, date: 2026-09-19, note: 'initial decision draft — track, product, hybrid AD path, scope' }
+    - { tag: v2, date: 2026-09-19, note: 'review round R2 — D2 pre-mix fallback, dialogue-bearing asset requirement, multi-frame + rolling context, quality/VoiceView/impact ACs' }
+    - { tag: v3, date: 2026-09-19, note: 'competitive hardening R3 — verbosity levels, dramatis personae, gap visualization, user validation, quality scoring, friction-log shape' }
+    - { tag: v4, date: 2026-09-19, note: 'TypeSafe judgment layer R4 — cast/name normalization (C15) and subtitle injection screening (C16), both text-only judgments' }
+    - { tag: v5, date: 2026-09-19, note: 'review R5 dispositions — multi-frame and verbosity contracts corrected, validation participant promoted to an external dependency, C15/C16 deferred, schedule risk accepted in writing' }
+    - { tag: v6, date: 2026-09-19, note: 'owner confirmed R6 — status draft -> reviewed; docs 02 and 03 come into scope' }
+    - { tag: v7, date: 2026-09-21, note: 'implement R8 — docs 02 / 02b / 03 written; limits.ad.hard_ceiling_words added after writing the word-budget code showed the detailed scale was unreachable' }
+    - { tag: v8, date: 2026-09-22, note: 'execute R9 — Phase 1 scaffold measured; verbosity_scales become targets under one physical ceiling (0.6/0.85/1.0) after running the arithmetic showed v7 clamp left standard == detailed; hard_ceiling_words removed' }
+    - { tag: v9, date: 2026-09-22, note: 'measure R10 — limits.hackathon asserted -> measured and two of its facts corrected; Polly measured working and Bedrock measured blocked (D4, A5); AWS credits requested; four Amazon reference repos/tools recorded that the set did not know existed' }
+    - { tag: v10, date: 2026-09-22, note: 'measure R11 — Vega SDK 0.24.12112 installed and the Virtual Device booted; D3 resolved on its platform half and A4 discarded; _profile.yml build/device_log/force_stop filled from real CLI output' }
+    - { tag: v11, date: 2026-09-22, note: 'measure R12 — D1 resolved FALSE from the media API surface (no frame accessor; video renders to a native surface handle), D2 re-aimed onto AudioPlayer + USAGE_ACCESSIBILITY, limits.vega_media added, manifest.toml added as C17' }
+    - { tag: v12, date: 2026-09-22, note: 'measure R13 — C7 run against the real Tears of Steel subtitles: premise holds (38 gaps, 78.6% describable) but gap != cue; limits.ad.max_cue_ms and min_useful_words added, C7..C10 re-scoped one-to-many, worst_case measured' }
+
+# =====================================================================
+# DECISIONS — premises the prose hangs off. `sync` cannot follow these:
+# changing one means walking its `cited_in:` list by hand.
+# =====================================================================
+decisions:
+
+  hackathon_track:
+    date: 2026-09-19
+    basis: decided
+    what: 'Fire TV is the primary track, on Vega OS, and both mini challenges are
+           entered on top of it: AWS Builder and Open Source (the extracted
+           package, changes C12). A submission may win at most one track prize
+           and one mini-challenge prize.
+           AWS BUILDER DOES NOT REQUIRE BEDROCK — measured against the rules and
+           resources pages in R10: the ask is to "incorporate AWS services with
+           documented integrations", and Bedrock / AgentCore / Strands / Kiro /
+           SageMaker are named as examples followed by "and more". Polly alone
+           satisfies it. This is load-bearing now that D4 has Bedrock blocked at
+           the account level: the mini challenge survives D4, only C9 does not.'
+    why: 'the entrant has years of TV app work; Vega OS is the newest and least
+          crowded surface in the track, and the judges are the team promoting it.'
+    cited_in: ['01 §1', '01 §2', '01 §7']
+
+  hybrid_ad_path:
+    date: 2026-09-19
+    basis: decided
+    what: 'The prepared description track is the guaranteed base path: the pipeline
+           generates it offline and the app consumes it. Live frame capture is an
+           OPTIONAL layer (changes C11, kind: deferred) that ships only if D1 is
+           confirmed. The demo never depends on the optional layer.'
+    why: 'D1 is unverified and gates a whole delivery. A demo with nothing to show
+          on 2026-10-23 scores zero on every criterion.'
+    cited_in: ['01 §2', '01 §3.2', '01 §8']
+
+  demo_asset_licensing:
+    date: 2026-09-19
+    basis: decided
+    what: 'The demo plays an openly licensed asset with published subtitles — a
+           Blender Foundation open movie (CC-BY) is the default candidate — and
+           the asset must carry SUBSTANTIAL DIALOGUE: the gap structure the whole
+           mechanism rests on comes from the subtitle file, so a near-dialogue-free
+           film (Big Buck Bunny, Sintel) collapses the demo into one continuous
+           gap. Candidates: Tears of Steel, Elephants Dream. Subtitle availability
+           and quality are verified in Phase 0, before any pipeline work. No
+           commercial or personally recorded content appears in the app or the
+           submission video.
+           CHOSEN 2026-09-22: TEARS OF STEEL, and the choice is measured rather than
+           argued. Its real English subtitle track (download.blender.org, CC-BY) runs
+           through C7 to 76 cues, 67 speech spans, 38 gaps >= min_gap_ms, 18.6% of
+           the runtime dialogue and 78.6% describable. The substantial-dialogue
+           requirement this decision added in R2 is satisfied with room to spare, and
+           the gap mechanism has 577 seconds to work in. Elephants Dream was not
+           measured — Tears of Steel cleared the bar decisively, so the comparison
+           would have cost time and changed nothing.
+           OPEN, and it belongs to this decision rather than to the pipeline: the
+           film''s dialogue ends at 567s but the asset runs to ~734s, so C7 emits a
+           167-second trailing gap that is the credits. Credits must not be described.
+           Bound the content end before Phase 1 closes — either an explicit
+           content_end_ms on the asset or a rule that drops the trailing gap.'
+    why: 'the rules require the video to carry no unauthorized third-party
+           copyrighted material, and the video is published publicly on YouTube.
+           Content rights are the single most common disqualification in a media
+           hackathon and cost nothing to avoid at design time. The dialogue
+           requirement guards the mechanism itself: no dialogue, no gaps, no
+           demo to show.'
+    cited_in: ['01 §2', '01 §5', '01 §7', '01 §8']
+
+  privacy_optin:
+    date: 2026-09-19
+    basis: decided
+    what: 'The live capture layer (C11) sends a frame of what the viewer is
+           watching to a third party (Bedrock). It is OFF by default, requires an
+           explicit in-app opt-in that names where the frame goes, and the README
+           states it. The prepared path sends nothing at runtime.'
+    why: 'shipping screen content to a cloud model without the viewer saying yes is
+          the gap sweep finding S1; an accessibility product that leaks what a
+          blind user is watching is worse than no product.'
+    cited_in: ['01 §5', '01 §8']
+
+  oss_package_scope:
+    date: 2026-09-19
+    basis: decided
+    what: 'The Open Source mini challenge is entered with `react-native-tv-audio-description`
+           (changes C12): a standalone public repo holding the TV-side description
+           layer — cue scheduling, ducking, remote-control toggle, focus-safe state
+           surface — with a runnable example. It is NOT the pipeline and NOT the app.'
+    why: 'the reusable half is the TV integration, which is the entrant edge; the
+          pipeline is asset-specific glue and nobody would install it.'
+    confirmed_against_rules: 'R10, 2026-09-22. The rules accept "a new repo (with
+          open-source license), a branch, a fork, or a pull request", so a standalone
+          new repository is an explicitly valid entry and not a stretch of the wording.
+          Required submission fields, which C14 must collect: contribution URL,
+          project repository URL, GitHub username, and a description of what was done,
+          how it works and why it matters.'
+    cited_in: ['01 §2', '01 §3.1', '01 §7']
+
+  docs_in_english:
+    date: 2026-09-19
+    basis: decided
+    what: 'The spec set is written in English (`_profile.yml prose_language: en`).'
+    why: 'the repo must be public under an open-source license and judges may open
+          docs/. Submission materials are required to be in English regardless.'
+    cited_in: ['01 §1']
+
+  product_name:
+    date: 2026-09-19
+    basis: decided
+    what: 'The product is named Interstice; `app_id` is com.cesarrivasp.interstice.'
+    why: 'name search found AudioLens taken commercially twice (iZotope; Google Play
+          com.transhumantec.audiolens) and Narra taken by an AI video-narration app
+          (Google Play com.narra.video) — a direct namesake in this exact product
+          space. EchoScene is commercially free but collides with the ECCV 2024
+          paper and repo of the same name in the same CV/AI field. No product
+           collision was found for Interstice in accessibility or audio description.'
+    cited_in: ['01 §2']
+
+  d2_fallback:
+    date: 2026-09-19
+    basis: decided
+    what: 'If D2 fails, the fallback is a SECOND AUDIO TRACK, pre-mixed offline:
+            the pipeline renders ducking and the description cues into one
+            full-length track, and the app toggles description by switching the
+            player audio track — a standard player capability that needs no
+            concurrent streams. Pausing the asset for each cue is the last
+            resort, not the plan.'
+    why: 'pausing the film for several seconds every few minutes breaks the
+           premise of watching a film and makes a poor demo; the pre-mix keeps
+           playback fluid, reuses the offline pipeline that already exists, and
+           costs only per-cue granularity (no mid-cue skip on the fallback
+           track).'
+    cited_in: ['01 §3.2', '01 §8']
+
+  verbosity_levels:
+    date: 2026-09-19
+    basis: decided
+    what: 'The remote exposes three verbosity levels — concise / standard / detailed.
+            limits.ad.max_words_per_cue is the single physical ceiling for all three
+            (the gap is the time available); limits.ad.verbosity_scales are TARGETS
+            as a fraction of it — ×0.6 / ×0.85 / ×1.0, floored. The target is what
+            the C9 prompt asks for; the ceiling is what validation rejects against.
+            No level may exceed the ceiling, and none needs to: detailed simply
+            spends the whole gap. The pipeline regenerates the track per level and
+            the app selects the matching track at runtime.
+            LOOKUP RULE: one track file per level, named
+            `<asset_id>.<verbosity>.track.json` beside the asset, and every track
+            declares its own level in contracts.description_track.verbosity. The app
+            resolves a level switch by that name and falls back to `standard`.'
+    why: 'per-viewer control is what separates a feature from a file (A2) and
+           is demoable on the remote in 10 seconds; it scores design + tech
+           implementation simultaneously and costs one regeneration per level.'
+    cited_in: ['01 §2', '01 §3.1', '01 §7', '01 §8']
+
+  dramatis_personae:
+    date: 2026-09-19
+    basis: decided
+    what: 'The first pipeline pass builds a dramatis personae — a short cast map
+            (name/appearance anchor per principal) — from opening-scene frames +
+            subtitle speaker cues; every subsequent C9 prompt carries it alongside
+            limits.ad.rolling_context_cues so naming stays stable across the film.'
+    why: 'rolling context alone drifts (pronoun drift, the woman/she/name).
+           A named anchor generated once and re-fed is one extra Bedrock call,
+           negligible cost, outsized gain in cue coherence and in the quality
+           story told to judges.'
+    cited_in: ['01 §2', '01 §3.1', '01 §8']
+
+  gap_visualization:
+    date: 2026-09-19
+    basis: decided
+    what: 'The demo video and SUBMISSION.md visualize the gap structure: a
+            timeline strip with dialogue blocks vs gaps, markers for cue
+            placement, and a split-screen before/after (silence vs ducking +
+            description). The gap data comes from C7 and is rendered offline.'
+    why: 'a gap is silence — invisible to a sighted judge watching a 3-minute
+           video. If it is not visualized, the core mechanism does not exist
+           in the judging room.'
+    cited_in: ['01 §2', '01 §3.1', '01 §7', '01 §8']
+
+  user_validation:
+    date: 2026-09-19
+    basis: decided
+    what: 'Before Phase 5, at least one blind or low-vision viewer validates the
+            track: 20–30 min session, with/without description, consent recorded,
+            anonymized quote retained for SUBMISSION.md and the video if
+            permission is given. No PII is stored in the repo.
+            RECRUITMENT OPENS IN PHASE 0 — the participant is outside this team and
+            runs on their own clock (tracking.blocked_by). If nobody is confirmed by
+            10-16 (the start of Phase 4), AC20 is dropped and the submission says so
+            rather than slipping the deadline.'
+    why: 'a sourced coverage figure (AC16) proves scale; a single validated
+           viewer proves the product works for its intended user — the
+           potential-impact criterion is won with a face, not a number alone.'
+    cited_in: ['01 §3.2', '01 §7', '01 §8']
+
+  schedule_risk_accepted:
+    date: 2026-09-19
+    basis: decided
+    accepted_by: 'César Rivas'
+    what: 'v1 -> v4 added two components and nine acceptance criteria without moving
+            a single phase date (review R5-F5). The dates in 01 §3.2 stand as they
+            are, and the one-day submission buffer (10-22) is accepted as spent.
+            ORDER OF SACRIFICE if the clock runs out, decided now rather than at
+            02:00 on 10-22: AC19 (gap visualization) degrades to a static diagram,
+            then AC20 (user validation) is dropped per its own fallback, then AC14
+            (cue scoring) drops from every cue to a stratified sample. AC1..AC13 and
+            the submission itself never yield.'
+    why: 'deferring C15/C16 gave Phase 1 room back, but Phase 4 still holds a
+           full-length cue-by-cue watch and Phase 5 still holds a recruited session
+           plus the video plus the submission. Naming what falls first, in writing,
+           is what makes the buffer being gone a decision instead of a discovery.'
+    cited_in: ['01 §3.2', '01 §8']
+
+  friction_log_shape:
+    date: 2026-09-19
+    basis: decided
+    what: 'FRICTION-LOG.md (C13) entries follow the shape tool | expected |
+            happened | workaround | time_lost, are dated and written DURING the
+            build, and target 5–8 real entries covering Vega/ Bedrock / Polly
+            setup — not a reconstruction at the end.'
+    why: 'the 10% bonus is not guaranteed (accepted risk) and a log written
+           at the end reads as fabricated; a shaped log written as a by-product
+           costs near zero and is the only form that scores.'
+    cited_in: ['01 §3.1', '01 §3.2', '01 §7']
+
+  typesafe_judgment_layer:
+    date: 2026-09-19
+    basis: decided
+    status: deferred
+    what: 'DEFERRED on 2026-09-19 (review R5). The design below stands and the
+            components stay in changes[] as kind: deferred; nothing is built now.
+            TypeSafe (Jev, System One) would be a small text-only judgment
+            layer alongside Bedrock/Polly, in two places only: (1) C15 —
+            a Choice call matches each generated cue''s character reference
+            against the dramatis_personae cast list and normalizes it before
+            synthesis; (2) C16 — a Noul call screens each subtitle line for
+            injection intent before it enters the C9 prompt as context, dropping
+            and logging any line over limits.typesafe.injection_noul_threshold.
+            Jev is text-only (no image/video input) and is NOT used to score
+            AC14 visual fidelity — that stays a human watch per
+            limits.ad.quality_gate.'
+    why: 'naming drift (C2/F3) is today mitigated only by rolling_context_cues,
+           a soft nudge with nothing checking the result; Choice gives a
+           checkable, code-enforced normalization step for near-zero added
+           latency next to one Bedrock multimodal call per gap. Subtitle
+           prompt injection (S2) is today mitigated only on the output side
+           (delimited data + shape validation); Noul adds a cheap pre-input
+           filter as a second layer, and is a defense-in-depth story worth
+           telling judges on a security-conscious build.'
+    why_deferred: 'both problems already carry a mitigation (naming drift:
+           dramatis_personae + rolling_context_cues; subtitle injection: delimited
+           data + output shape validation, over a subtitle file the author chooses);
+           a third non-Amazon vendor adds an API key and a setup step to a repo the
+           judges must run; and review R5 found that C15 rewrites cue text AFTER the
+           word budget is applied, so it can push a cue past its gap — the failure
+           AC4 forbids. Deferring costs nothing today and returns Phase 1 to C7..C10.'
+    reopens_when: 'Phase 1 closes with the pipeline green before 09-30. Reopening
+           brings back AC21/AC22, which were removed from acceptance[] with these
+           entries rather than left as criteria nothing could satisfy.'
+    cited_in: ['01 §2', '01 §3.1', '01 §5', '01 §7', '01 §8']
+
+# =====================================================================
+# DOMAIN FACTS
+# =====================================================================
+limits:
+
+  hackathon:
+    basis: measured
+    source: 'https://amazonappdev2026.devpost.com/rules'
+    evidence: { how: shell, date: 2026-09-22,
+                cmd: 'curl -sS --max-time 45 https://r.jina.ai/https://amazonappdev2026.devpost.com/rules',
+                value: 'Submission Period ... - Friday, October 23, 2026 (12:00 pm Pacific Time);
+                        Judging Period: Monday, November 9, 2026 - Friday, November 20, 2026;
+                        Winners Announced: on or around Thursday, December 3, 2026;
+                        $150 in AWS Promotional Credits ... by October 21st at 12pm PT',
+                note: 'R1 left every value here `asserted` because a direct curl to
+                       devpost returns HTTP 202 with an empty body, so nothing was
+                       re-runnable. The read proxy IS re-runnable, which is what makes
+                       this measured. The dates and the credit amount came back
+                       unchanged from R1 — the two corrections below did not.' }
+    submission_deadline: '2026-10-23 12:00 PT'
+    judging_period: '2026-11-09 .. 2026-11-20'
+    winners_announced: '2026-12-03'
+    video_max_minutes: 3
+    video_language: english
+    aws_credits_usd: 150
+    aws_credits_request_deadline: '2026-10-21 12:00 PT'
+    aws_credits_form: 'https://forms.gle/5hyhr1u6x3fuV2aW7'
+    aws_credits_requested: '2026-09-22 — submitted by the owner. Closes the Phase 0 checklist item.'
+    friction_log_bonus_pct: 10
+    repo_must_be: 'EITHER public with a detectable open-source license file (visible in the
+                   GitHub About section) OR private and shared with testing@devpost.com plus
+                   the six named Amazon Developer Relations GitHub accounts (chris-trag,
+                   knmeiss, giolaq, anishamalde, mosesroth, emersonsklar). Either way the
+                   repository must hold all source, assets and clear setup/run instructions.'
+    firetv_runtime_requirement: 'any framework or language; the requirement is that the
+                                 project RUNS on Fire OS or Vega OS, and the demo video
+                                 shows it running on a real Fire TV device or on the
+                                 Fire TV / Vega simulator. Fire TV is explicitly exempt
+                                 from the runtime-technology-hook rule the other tracks
+                                 carry.'
+    note: 'judging is two stages: stage one pass/fail on baseline viability, stage
+           two on five EQUALLY weighted criteria (tech implementation, design,
+           potential impact, quality of idea, friction-log bonus up to 10%).
+           TWO CORRECTIONS LANDED IN R10, both written wrong since R1.
+           (1) repo_must_be said `public, open-source licensed` full stop. The rules
+           allow a PRIVATE repo shared with the named reviewers as an equal option.
+           This matters: it is the difference between a hard constraint on where
+           credentials and assets may live and a choice.
+           (2) The credit form URL differs between the two pages — rules say
+           forms.gle/5hyhr1u6x3fuV2aW7, resources says forms.gle/GaHFxSbBQNG9Kti6A.
+           aws_credits_form records the RULES url because the rules are the contract.
+           Recorded rather than silently picked, because a later round would find
+           the other link and assume this one was a typo.'
+
+  bedrock:
+    basis: asserted
+    falsified_by: 'a ThrottlingException on the first pipeline run, or a documented
+                   per-account InvokeModel quota different from what is assumed here'
+    blocked_by: D4
+    region: 'us-east-1 — measured 2026-09-22: it carries all three multimodal Nova
+              models. The region was a guess until then.'
+    model_candidates: 'amazon.nova-pro-v1:0 and amazon.nova-lite-v1:0 (both ON_DEMAND
+              + INFERENCE_PROFILE, both accept IMAGE input). amazon.nova-2-lite-v1:0
+              is INFERENCE_PROFILE ONLY — invoking it with a bare model id fails, it
+              needs an inference-profile ARN. Recorded because it is the newest and
+              therefore the one a later round is most likely to reach for by name.'
+    model_chosen: 'undecided until D4 clears. Nova Pro for cue quality (AC14 is scored
+              on it) unless a measured comparison says Lite is close enough; the run is
+              ~40 gaps x 3 verbosity levels + 1 cast pass = ~121 calls, so cost does
+              not decide this.'
+    invoke_rate_per_account: unknown
+    on_throttle: 'exponential backoff, max 5 attempts, then the cue is written with
+                  status: failed and the track still emits'
+    note: 'the pipeline is offline and batched, so a throttle costs wall-clock time,
+           never a broken demo. The number is unknown on purpose — it is asked of
+           the console before the first full run, not guessed here.'
+
+  polly:
+    basis: asserted
+    falsified_by: 'a SynthesizeSpeech rejection on a cue that is under the assumed
+                   character bound'
+    reachable: 'YES — measured 2026-09-22 on the entrant AWS account, us-east-1:
+                `aws polly synthesize-speech --engine neural --voice-id Joanna` returned
+                ContentType audio/mpeg. Polly works on the same credentials Bedrock
+                refuses (D4), which is what proves D4 is Bedrock-specific and not an
+                account-wide or credential problem.'
+    neural_voices_en_us: 'Danielle, Gregory, Joanna, Ruth, Kevin, Salli, Matthew,
+                Kimberly, Kendra, Justin, Joey, Ivy — measured via describe-voices.'
+    voice_chosen: 'Joanna or Matthew. Audio description convention is a neutral,
+                clearly-articulated voice distinct from the film cast, so the viewer
+                never confuses narration with dialogue. Settle it during the AC14 watch,
+                not now.'
+    chars_per_request: unknown
+    note: 'a cue is bounded to `ad.max_words_per_cue`, roughly two orders of
+           magnitude below any documented Polly bound, so this limit is not
+           expected to bind. Confirmed on the first run, not before.'
+
+  ad:
+    basis: decided
+    min_gap_ms: 1500
+    speaking_rate_wpm: 160
+    max_words_per_cue: 'floor((gap_ms - 300) / 1000 * 160 / 60)'
+    duck_target_pct: 25
+    duck_ramp_ms: 200
+    frames_per_gap_max: 3
+    max_cue_ms: 12000
+    min_useful_words: 3
+    rolling_context_cues: 10
+    verbosity_scales: { concise: 0.6, standard: 0.85, detailed: 1.0 }
+    quality_gate: 'every cue rated 1–5 against picture; track mean and worst regenerated before video'
+    note: 'a description that runs past its gap talks over dialogue, which is worse
+            than no description. The 300 ms subtrahend is the ramp plus a margin.
+            frames_per_gap_max bounds the frames sent per Bedrock call (the
+            midpoint, plus per-shot frames when the gap spans a cut) — still one
+            call per cue. rolling_context_cues is how many preceding descriptions
+            are fed back into the prompt so names stay consistent across the film.
+            dramatis personae (decisions.dramatis_personae) is the naming anchor
+            fed alongside rolling context.
+            max_cue_ms AND min_useful_words WERE ADDED IN R13, after running C7
+            against the real subtitle file. Both close holes the spec could not see
+            from prose, because prose imagined a gap as a short interstice between
+            two lines and the data says otherwise.
+            max_cue_ms (12000): a gap is NOT a cue. Tears of Steel has 5 gaps over
+            30 seconds and they carry 68% of all the words in the track; the longest
+            is 167s with a 444-word ceiling. One description covering 167 seconds is
+            not a description, and a single midpoint frame cannot represent a minute
+            of film that contains several shots. A gap longer than max_cue_ms is
+            SPLIT into consecutive cues, each with its own frames and its own budget.
+            38 gaps become ~70 cues at 12s. This makes gap -> cue one-to-many and
+            re-scopes C7, C8, C9 and C10, all of which were written 1:1.
+            min_useful_words (3): 13 of the 38 gaps are 1.5-2.0s and yield 1-2 words
+            at concise verbosity. A two-word description is noise that costs a
+            Bedrock call, a Polly call and an interruption. Below this the gap is
+            skipped and no cue is emitted, which also means the count of cues varies
+            by verbosity level — contracts.description_track already carries
+            verbosity, so a track declares what it contains.
+            VERBOSITY, AND WHY EVERY SCALE IS <= 1.0. max_words_per_cue is a
+            PHYSICAL ceiling: the gap is the time available and no level may
+            exceed it (AC4). So verbosity_scales are TARGETS expressed as a
+            fraction of that ceiling, never multipliers of it — the model is
+            told how many words to aim for, and the ceiling is what validation
+            rejects against. A level above 1.0 is unreachable by construction.
+            This was got wrong twice and both attempts are recorded so a third
+            round does not repeat them: R3 set the scales to x0.6 / x1.0 / x1.35;
+            R8 noticed detailed was unreachable and added a separate clamp
+            (hard_ceiling_words) that subtracted only duck_ramp_ms; R9 RAN the
+            arithmetic and found the clamp changes nothing — 100 ms at 160 wpm is
+            0.27 words, so it never crosses a floor boundary and standard ==
+            detailed at every gap size from 1500 ms to 12000 ms. hard_ceiling_words
+            was removed with that finding. Under the scales above the three levels
+            are strictly distinct at every gap size >= min_gap_ms, which is what
+            AC17 needs and what 02e §B.1 asserts.'
+
+  vega_media:
+    basis: measured
+    evidence: { how: shell, date: 2026-09-22,
+                cmd: 'npm pack @amazon-devices/react-native-w3cmedia@2.3.2 && cat package/dist/index.d.ts package/dist/interface/*.d.ts',
+                value: 'package version 2.3.2; exports and members as listed below' }
+    package: '@amazon-devices/react-native-w3cmedia@2.3.2'
+    note: 'Vega media is W3C MSE/EME — NOT ExoPlayer and NOT react-native-video.
+           Reaching for either is the documented first mistake. These names are the
+           ones 02c Phase 7 must be rebuilt against; it was written against an
+           invented MediaAdapter shape while D3 was still open, which was correct
+           then and is stale now.'
+    video_player: 'class VideoPlayer extends MediaPlayer implements HTMLVideoElement.
+           initialize(): Promise<void> · deinitialize() · deinitializeSync(timeoutInMs)
+           · setSurfaceHandle() · clearSurfaceHandle() · setMediaControlFocus()
+           · getVideoPlaybackQuality() · videoWidth · videoHeight · width · height
+           · poster · playsInline. It does NOT render by itself: the app mounts a
+           KeplerVideoSurfaceView, waits for onSurfaceViewCreated, and passes the
+           handle in. It also builds no media-control GUI — the app owns that.'
+    media_player_members: 'currentTime (get/set) · duration · paused · seeking
+           · volume (get/set, 0.0-1.0) · muted · defaultMuted · audioTracks
+           · videoTracks · textTracks · error (MEDIA_ERR_*)'
+    audio_player: 'class AudioPlayer extends MediaPlayer, constructed as
+           new AudioPlayer(audioType?: AudioContentType, audioUsage?: AudioUsageType).
+           For description cues the correct construction is
+           (AudioContentType.CONTENT_TYPE_SPEECH, AudioUsageType.USAGE_ACCESSIBILITY).'
+    audio_usage_accessibility: 'AudioUsageType.USAGE_ACCESSIBILITY = 5, documented in
+           the SDK as "Audio Usage for Accessibility prompts". This product IS that
+           category. Any D2 runtime test must construct the cue player with it —
+           testing under USAGE_MEDIA would test a different thing and could fail for
+           the wrong reason.'
+    audio_track_switching: 'MediaPlayer.audioTracks: AudioTrackList; AudioTrack has
+           id, kind, label, language and enabled (get/set). This is the typed
+           interface behind decisions.d2_fallback.'
+    no_volume_ramp: 'the W3C volume setter is instantaneous — no ramp parameter exists
+           anywhere in the surface. limits.ad.duck_ramp_ms must be implemented as a
+           stepped fade in JS. 02c Phase 10 assumed the platform ramped and is wrong
+           on that point.'
+    components: 'KeplerVideoSurfaceView (+ onSurfaceViewCreated), KeplerVideoView,
+           KeplerShareableSurfaceView, KeplerCaptionsView'
+    manifest_requirement: 'media services must be declared under [wants] in
+           manifest.toml (changes C17). Missing services cause SILENT playback
+           failure — no video and no error.'
+
+  clip_cache:
+    basis: decided
+    max_clips_in_memory: 8
+    note: 'a Fire TV Stick is a 32-bit process with a small heap. Clips stream from
+           disk; only the next N are resident. Verified on the worst device in the
+           matrix, not on the simulator.'
+
+  typesafe:
+    basis: decided
+    status: 'inactive — C15/C16 are kind: deferred (decisions.typesafe_judgment_layer).
+              Kept so the entries reopen with their bar already stated.'
+    injection_noul_threshold: 0.7
+    note: 'C16 probability threshold above which a subtitle line is treated as
+           suspected injection and dropped from the C9 context, before C9''s own
+           delimited-data + shape validation runs as the second layer. Tuned by
+           hand against the demo asset subtitle file — no other subtitle corpus
+           is in scope for this build. Jev/System One is text-only (no image or
+           video input), so it is never used to judge AC14 visual fidelity;
+           limits.ad.quality_gate stays a human watch for that.'
+
+# =====================================================================
+# SCOPE — two disjoint lists.
+# =====================================================================
+changes:
+
+  # --- app, on device ---
+  - { id: C1, file: src/App.tsx, kind: planned, where: repo,
+      change: 'Vega OS / React Native app shell and navigation' }
+  - { id: C2, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo,
+      change: 'video playback screen; every state (loading, playing, error, empty)
+               names its focus host' }
+  - { id: C3, file: src/ad/CueScheduler.ts, kind: planned, where: repo,
+      change: 'maps playback position to description cues; resyncs after a seek and
+               coalesces key-repeat so a held direction does not fire one cue per
+               key event' }
+  - { id: C4, file: src/ad/DescriptionAudio.ts, kind: planned, where: repo,
+      change: 'plays a description clip while ducking the main track to
+               limits.ad.duck_target_pct and restoring it; stops on background' }
+  - { id: C5, file: src/ad/ADControls.tsx, kind: planned, where: repo,
+      change: 'remote-control surface: toggle description on/off, three verbosity
+               levels per decisions.verbosity_levels (concise/standard/detailed),
+               and the visible+spoken state for every failure branch of the loader;
+               selector is D-pad reachable and VoiceView-announced' }
+  - { id: C6, file: src/ad/TrackLoader.ts, kind: planned, where: repo,
+      change: 'loads and validates the description track against contracts.description_track;
+               bounded clip cache per limits.clip_cache' }
+  - { id: C11, file: src/ad/LiveCapture.ts, kind: deferred, where: repo,
+      change: 'runtime frame capture -> Bedrock -> speech, as an opt-in layer',
+      deferred_because: decisions.hybrid_ad_path,
+      reopens_when: 'D1 is confirmed — a device/simulator run shows a decodable
+                     current frame reaching JS. Today: unverified, spike is Phase 0' }
+
+  # --- pipeline, offline ---
+  - { id: C7, file: pipeline/gaps.ts, kind: planned, where: repo,
+      change: 'parses the asset subtitles (WebVTT or SRT — the timestamp regex
+               accepts both separators) and emits every dialogue gap
+               >= limits.ad.min_gap_ms, merging overlapping speech first so two
+               speakers never manufacture a negative gap. RE-SCOPED R13: it then
+               SPLITS any gap longer than limits.ad.max_cue_ms into consecutive
+               cue windows and DROPS any window whose budget falls under
+               limits.ad.min_useful_words at the requested verbosity. Its output is
+               therefore a cue list, not a gap list — measured on the demo asset as
+               38 gaps becoming ~70 cues. It remains the data source for the gap
+               timeline in the video (AC19), which visualises the gaps AND the
+               split boundaries.' }
+  - { id: C8, file: pipeline/frames.ts, kind: planned, where: repo,
+      change: 'extracts the frames for each CUE via ffmpeg — the midpoint frame,
+               plus per-shot frames (scene detection) when the cue window spans a
+               cut, bounded by limits.ad.frames_per_gap_max. RE-SCOPED R13: per cue,
+               not per gap. A 167-second gap sampled with three frames is three
+               frames for a minute and a half of film; after C7 splits it, each
+               12-second window gets its own three.' }
+  - { id: C9, file: pipeline/describe.ts, kind: planned, where: repo,
+      change: 'dramatis personae pass (one Bedrock call) then per CUE (re-scoped
+               R13 — cues, not gaps): up to
+               limits.ad.frames_per_gap_max frames + surrounding subtitle context
+               + dramatis personae + the last limits.ad.rolling_context_cues
+               descriptions as naming context -> Bedrock (Nova multimodal) ->
+               a description bounded to limits.ad.max_words_per_cue per
+               verbosity scale; subtitle text is passed as delimited data and the
+               response is rejected if it does not match the expected shape (gap
+               sweep S2)' }
+  - { id: C10, file: pipeline/synthesize.ts, kind: planned, where: repo,
+      change: 'Polly synthesis per cue plus emission of the track file matching
+               (note R13: cue count now varies by verbosity level, because
+               limits.ad.min_useful_words drops more windows at concise than at
+               detailed; each track declares its own verbosity and contains its own
+               cue set)
+               contracts.description_track — one file per verbosity level, named
+               per decisions.verbosity_levels and declaring its own level; each cue
+               records every frame it was built from (contracts.description_cue.
+               source_frames_ms, up to limits.ad.frames_per_gap_max)' }
+  - { id: C15, file: pipeline/normalize_cast.ts, kind: deferred, where: repo,
+      deferred_because: decisions.typesafe_judgment_layer,
+      reopens_when: 'Phase 1 closes green before 09-30. On reopening it MUST
+                     re-apply limits.ad.max_words_per_cue after rewriting —
+                     normalization changes the word count and can push a bounded
+                     cue past its gap (review R5-F3, the failure AC4 forbids)',
+      change: 'after C9 returns a cue, a TypeSafe Choice call matches any
+               character reference in the cue text against the
+               dramatis_personae cast list (or "unnamed/none"); code rewrites
+               the reference to the canonical name/pronoun before C10
+               synthesis (decisions.typesafe_judgment_layer)' }
+  - { id: C16, file: pipeline/subtitle_guard.ts, kind: deferred, where: repo,
+      deferred_because: decisions.typesafe_judgment_layer,
+      reopens_when: 'Phase 1 closes green before 09-30',
+      change: 'before a subtitle line is passed into the C9 prompt as context,
+               a TypeSafe Noul call scores the probability that the line reads
+               as an instruction to a model rather than dialogue/dialogue-
+               adjacent text; a line over limits.typesafe.injection_noul_threshold
+               is dropped from context and logged, and C9 keeps its existing
+               delimited-data + shape validation as the second layer
+               (decisions.typesafe_judgment_layer, gap sweep S2)' }
+
+  - { id: C17, file: manifest.toml, kind: planned, where: repo,
+      change: 'the Vega application manifest. REQUIRED by the platform and absent
+               from this spec until R12 — the media stack reads its services from
+               the [wants] section, and the amazon-devices-vega-media-player skill
+               states that missing media services cause SILENT playback failure: no
+               video, no error. That is the worst failure shape for this product,
+               because silence is also what a broken description track looks like
+               (AC8). Declares the package identifier (decisions.product_name,
+               com.cesarrivasp.interstice), the media service dependencies, and the
+               OS version. DRM services (com.amazon.drm.key, com.amazon.drm.crypto)
+               are NOT needed — decisions.demo_asset_licensing uses an openly
+               licensed asset with no DRM.' }
+
+  # --- deliverables that are not code ---
+  - { id: C12, file: 'github.com/CesarRivasP/react-native-tv-audio-description', kind: planned, where: external,
+      change: 'the Open Source mini-challenge entry: the TV-side description layer
+               extracted as a standalone public repo with a runnable example,
+               license and README. Commits must land inside the submission window' }
+  - { id: C13, file: FRICTION-LOG.md, kind: planned, where: repo,
+      change: 'dated friction entries collected WHILE building per
+               decisions.friction_log_shape — tool | expected | happened |
+               workaround | time_lost, 5–8 real entries, never reconstructed at
+               the end' }
+  - { id: C14, file: SUBMISSION.md, kind: planned, where: repo,
+      change: 'demo video script with gap visualization per
+               decisions.gap_visualization (timeline strip + split-screen
+               before/after), product-feedback draft, user-validation quote per
+               decisions.user_validation, and the Devpost field checklist' }
+
+related_docs:
+  # External references found by re-reading the hackathon resources page in R10.
+  # These are READ, never modified — they are not changes[] and must not appear in a
+  # "components that change" table (audit check 7).
+  - { id: R-BUILDER-TOOLS, file: 'https://developer.amazon.com/docs/vega/0.24/mcp-server', where: external,
+      note: 'Amazon Devices Builder Tools — an MCP server and Agent Skills that bring
+             Amazon device knowledge into an AI coding assistant: crash analysis,
+             performance profiling, documentation search, guided app setup. The
+             hackathon lists it first under "Start here". It is the cheapest lever on
+             D3 that exists and it was not known to this set before R10. The path also
+             pins the SDK line in use: vega 0.24.' }
+  - { id: R-VEGA-VIDEO, file: 'https://github.com/AmazonAppDev/vega-video-sample', where: external,
+      note: 'the richest Vega reference per the resources page: W3C media player, focus
+             management, live TV, content launcher. W3C MEDIA PLAYER IS THE FINDING —
+             it means standard media-element semantics, so D2 (duck while a second
+             stream plays) and the VideoPlayer half of 02c Phase 7 are probably answered
+             by reading this sample rather than by a spike.' }
+  - { id: R-MULTI-TV, file: 'https://github.com/AmazonAppDev/react-native-multi-tv-app-sample', where: external,
+      note: 'one codebase across Vega, Android TV, Apple TV and web, with a player and
+             focus handling. Directly validates the MediaAdapter seam of 02c Phase 7 and
+             makes alternatives[A4] (the Fire OS fallback) far cheaper than the spec
+             assumed when it priced that fallback.' }
+  - { id: R-TV-INTERFACES, file: 'https://github.com/AmazonAppDev/vega-tv-interfaces-sample', where: external,
+      note: 'recommended TV UI patterns for focus, i18n, navigation and scrolling —
+             the reference for AC2 (a focus host in every state) and the mobile-tv gap
+             sweep F2 finding it comes from.' }
+
+# =====================================================================
+# HYPOTHESES UNDER INVESTIGATION — all three gate delivery, none is measured.
+# =====================================================================
+defects:
+
+  - id: D4
+    role: blocking
+    claim: 'Amazon Bedrock refuses every InvokeModel and Converse call on AWS account
+            the entrant AWS account, in every region tried, while Polly on the same credentials
+            succeeds. The block is account-scoped and Bedrock-specific.'
+    basis: measured
+    evidence: { how: shell, date: 2026-09-22,
+                cmd: 'aws bedrock-runtime converse --region us-east-1 --model-id amazon.nova-lite-v1:0 --messages ... ; aws bedrock get-foundation-model-availability --region us-east-1 --model-id amazon.nova-lite-v1:0',
+                value: 'ValidationException — "Error 002: Access to Bedrock models is not
+                        allowed for this account"; identical in us-east-1, us-west-2 and
+                        eu-west-1, and identical for InvokeModel and Converse.
+                        get-foundation-model-availability returns regionAvailability
+                        AVAILABLE, entitlementAvailability AVAILABLE, agreementAvailability
+                        AVAILABLE, authorizationStatus NOT_AUTHORIZED.' }
+    falsified_by: 'a successful InvokeModel or Converse on any Nova model from this account'
+    log_line: null
+    status: open
+    outcome: null
+    note: 'RULED OUT by measurement, so no later round re-tests them: not regional (three
+           regions, same error) · not the API shape (InvokeModel and Converse, same error)
+           · not the retired Model-access console page (it is retired; models auto-enable
+           on first invoke, and the first invoke is what fails) · not the credentials or
+           the account state (Polly synthesises audio on the same root session; account
+           created 2018-04-17, state ACTIVE) · not an SCP (the account is not in an
+           Organization).
+           LEADING HYPOTHESIS, unconfirmed: Bedrock carries country availability
+           availability restrictions that other AWS services do not, and this account
+           falls outside the region list that carries it. This produces exactly the
+           observed shape — region, entitlement and
+           agreement all AVAILABLE, authorization denied at account scope.
+           THE AUTHORITATIVE ANSWER IS AN AWS SUPPORT CASE, which is free for account
+           issues. Ask why authorizationStatus is NOT_AUTHORIZED in all regions when
+           Polly works. Working around a geographic restriction is not an option under
+           consideration: the rules require the entrant to be authorized to use every
+           third-party service in accordance with its terms.
+           BLAST RADIUS, measured rather than feared: this blocks C9 (pipeline/describe.ts)
+           and nothing else. C10 is Polly and is unaffected. The Fire TV primary track does
+           not touch AWS at all. The AWS Builder mini challenge does NOT require Bedrock
+           (decisions.hackathon_track) — Polly satisfies it. So D4 costs the vision model,
+           not the entry. A5 is the path if it does not clear.'
+
+  - id: D3
+    role: contributing
+    claim: 'the Vega OS simulator installs and runs on this machine, and plays the
+            demo asset'
+    basis: measured
+    evidence: { how: shell, date: 2026-09-22,
+                cmd: 'bash get_vvm.sh ; vega --version ; vega virtual-device start ; vega virtual-device status ; vega device info',
+                value: 'Active SDK Version: 0.24.12112 / Vega CLI Version: 1.3.4 ·
+                        "Launching virtual device. Waiting for virtual device to boot.
+                        Virtual device ready." · status {"running":true,"process_ids":
+                        {"qemu":68674}} · device info {"architecture":"aarch64",
+                        "profile":"tv","product":"vvrp-tv-arm64","buildDescription":
+                        "OS 1.2 (TV Ship/102282480)","simulated":true,
+                        "inDeveloperMode":true}' }
+    falsified_by: 'the simulator failing to install or start, or refusing to decode
+                   the demo asset'
+    log_line: null
+    status: resolved_partial
+    outcome: 'PLATFORM HALF CONFIRMED, PLAYBACK HALF NOT YET TESTED — and the split
+              matters, so it is recorded rather than rounded up to a pass.
+              CONFIRMED 2026-09-22: the SDK installs on this machine (macOS 26.7,
+              arm64), the Vega Virtual Device boots under QEMU, reports profile "tv"
+              on aarch64, and answers `vega device info` in developer mode. The
+              platform choice is no longer a hypothesis and alternatives[A4] is
+              discarded on that basis.
+              NOT TESTED: "and plays the demo asset". There is no app and no asset
+              yet, so nothing has decoded video on this device. That half closes in
+              02 Phase 0.6 + 02d Phase 13 (AC1), not here. A round that reads this
+              entry as a full pass would skip the only test that proves the product
+              can run at all.'
+    note: 'this was the cheapest and most total risk in the set — if it had been false
+           the whole Vega plan fell back to Fire OS on day 1 rather than on day 30.
+           It was run first, as the plan required, and it held. Phase 0 opened 09-19
+           and D3 closed 09-22, the last day the plan allowed for it.'
+
+  - id: D1
+    role: contributing
+    claim: 'Vega OS exposes the currently rendered video frame to JavaScript at
+            runtime, as a decodable buffer'
+    basis: measured
+    evidence: { how: shell, date: 2026-09-22,
+                cmd: 'npm pack @amazon-devices/react-native-w3cmedia@2.3.2 && tar xzf amazon-devices-react-native-w3cmedia-2.3.2.tgz && cat package/dist/interface/VideoPlayer.d.ts',
+                value: 'the COMPLETE VideoPlayer surface is: initialize, deinitialize,
+                        deinitializeSync, setSurfaceHandle, clearSurfaceHandle,
+                        setMediaControlFocus, handleEvent, getVideoPlaybackQuality,
+                        videoWidth, videoHeight, width, height, poster, playsInline.
+                        No frame accessor of any kind. A grep across the whole package
+                        for ArrayBuffer/Uint8/pixel/bitmap/capture/thumbnail returns
+                        only EME key material (initData, key, iv) and MSE appendBuffer
+                        — all of them INPUTS, none an output.' }
+    falsified_by: 'the media API surface having no frame accessor, or returning an
+                   empty or black buffer on a playing asset'
+    log_line: 'INTERSTICE.frame w=<n> h=<n> bytes=<n>'
+    status: resolved
+    outcome: 'FALSE. There is no frame accessor, and the architecture says why:
+              VideoPlayer never composites into anything JavaScript can read. It
+              renders to a NATIVE SURFACE — the app mounts a KeplerVideoSurfaceView,
+              receives onSurfaceViewCreated, and hands the surface handle to the
+              player via setSurfaceHandle. Pixels go from the decoder to that surface
+              and are never in JS-reachable memory, so there is no drawImage-style
+              path and no buffer to read. This is a property of the design, not a
+              missing feature, so it will not change in a later SDK release.
+              CONSEQUENCE: C11 (src/ad/LiveCapture.ts) stays kind: deferred for this
+              build, permanently rather than pending. Its reopens_when condition —
+              "a device/simulator run shows a decodable current frame reaching JS" —
+              is now known to be unsatisfiable on Vega, and the entry should not be
+              re-proposed without new evidence that the media stack changed.
+              The diagnostic log_line above was never emitted: the question was
+              settled by the API surface before a device run was needed, which is
+              cheaper than the spike 01 §3.2 had budgeted.
+              decisions.hybrid_ad_path is vindicated exactly as written — it made the
+              prepared track the base path BECAUSE D1 was unverified, and D1 is now
+              false. Nothing in the demo moves.'
+    note: 'gates C11 only. The prepared path (C7..C10) does not depend on it, which
+           is the entire point of decisions.hybrid_ad_path.'
+
+  - id: D2
+    role: contributing
+    claim: 'a second audio stream can play on Vega while the video player volume is
+            ducked, without the platform stopping one of them'
+    basis: asserted
+    falsified_by: 'the platform refusing concurrent playback, or the duck call
+                   returning without changing the audible level'
+    log_line: 'INTERSTICE.duck from=<n> to=<n>'
+    status: open
+    outcome: null
+    note: 'gates the product itself, not a layer. If ducking is impossible the
+            fallback is decisions.d2_fallback: a pre-mixed second audio track
+            rendered by the offline pipeline, toggled by audio-track switching.
+            Pausing the asset per cue is the last resort. Decided in Phase 0,
+            not discovered late.
+            RE-AIMED IN R12 BY READING THE API (@amazon-devices/react-native-w3cmedia
+            @2.3.2 type declarations). Three things are now known without a device:
+            (1) DUCKING EXISTS AND IS W3C. MediaPlayer has `get volume(): number` /
+            `set volume(volume: number)` per the HTML spec, so limits.ad.duck_target_pct
+            maps to `player.volume = 0.25`. But the W3C setter is INSTANTANEOUS —
+            there is no ramp parameter anywhere in the surface — so
+            limits.ad.duck_ramp_ms (200) must be implemented in JS as a stepped
+            fade. That is a real change to 02c Phase 10, which wrote
+            `setVolumePct(pct, rampMs)` as though the platform ramped for us.
+            (2) THE SECOND STREAM HAS A FIRST-CLASS CATEGORY FOR THIS EXACT PRODUCT.
+            AudioPlayer is constructed as
+            `new AudioPlayer(audioType?: AudioContentType, audioUsage?: AudioUsageType)`
+            — "Reason for audio playback" — and the enums include
+            AudioContentType.CONTENT_TYPE_SPEECH (1) and
+            AudioUsageType.USAGE_ACCESSIBILITY (5), documented in the SDK as
+            "Audio Usage for Accessibility prompts". The platform anticipates audio
+            that speaks over media for accessibility. This does not PROVE concurrency
+            — only a device run does — but it moves D2 from a hopeful assumption to
+            a documented intent, and it names the construction the runtime test must
+            use. A test that constructs the cue player as USAGE_MEDIA would be
+            testing the wrong thing and could fail for the right reason.
+            (3) THE FALLBACK IS A TYPED API, not a hope. MediaPlayer exposes
+            `get audioTracks(): AudioTrackList`, and AudioTrack carries
+            `get enabled(): boolean` / `set enabled(enabled: boolean)` with id, kind,
+            label and language. decisions.d2_fallback — a pre-mixed second track
+            toggled by track switching — is therefore implementable against a real
+            interface. D2 failing now costs per-cue granularity and nothing
+            architectural.
+            STILL OPEN because concurrency is a runtime property: the device test
+            remains, and it is now a precise one.'
+
+# =====================================================================
+# ALTERNATIVES CONSIDERED
+# =====================================================================
+alternatives:
+
+  - id: A1
+    name: second-screen-companion
+    outcome: discarded
+    because: 'requires a phone held next to the TV. The product thesis is that the
+              television does it alone; ActiView already occupies the phone-synced
+              approach.'
+    basis: asserted
+    depends_on: []
+    falsified_by: 'evidence that blind and low-vision viewers prefer a phone-synced
+                   track over an on-device one'
+
+  - id: A2
+    name: burned-in-description-audio
+    outcome: discarded
+    because: 'a pre-mixed track has no runtime toggle, no verbosity control and no
+              way to skip a cue. It is a file, not a feature.'
+    basis: asserted
+    depends_on: []
+    falsified_by: 'a demo showing per-viewer control over a pre-mixed track'
+
+  - id: A3
+    name: subtitle-tts-without-vision
+    outcome: discarded
+    because: 'reads aloud dialogue that is already audible and says nothing about
+              what is on screen during the gaps. No visual information enters the
+              system, so it fails the premise and the track priority (computer
+              vision) at the same time.'
+    basis: asserted
+    depends_on: []
+    falsified_by: 'a comparison where subtitle-only narration conveys the visual
+                   content of a scene'
+
+  - id: A5
+    name: non-bedrock-vision-provider
+    outcome: open
+    because: 'not yet needed. It becomes the plan only if D4 does not clear in time.
+              C9 is one function behind one call — up to limits.ad.frames_per_gap_max
+              frames plus text in, one bounded description out — so the provider is
+              swappable without touching C7, C8, C10 or anything under src/. Polly stays
+              either way, which keeps the AWS Builder mini challenge intact
+              (decisions.hackathon_track).'
+    basis: asserted
+    depends_on: [D4]
+    falsified_by: 'D4 clearing — a successful Nova invoke on this account returns the
+                   plan to Bedrock and closes this entry as discarded'
+    note: 'Order of preference if it fires, cheapest first: (1) the hackathon organisers,
+           who give $150 of AWS credits and require AWS for a mini challenge and therefore
+           have both the interest and the means to unblock a participant who cannot reach
+           Bedrock from their country — ask before building anything; (2) an AWS account
+           the entrant legitimately holds whose billing country is not restricted;
+           (3) another vision provider for C9 only. Option 3 costs the "Bedrock" line in
+           the write-up and nothing else that is scored.
+           DECIDE BY 09-30, the Phase 1 gate. C9 cannot be written against an unknown
+           provider, and Phase 1 closing green before 09-30 is also what would reopen
+           C15/C16.'
+
+  - id: A4
+    name: fire-os-android-build
+    outcome: discarded
+    because: 'the rules accept Fire OS or a Vega simulator, and Fire OS is the
+              crowded half of the track. Vega is the rarer surface and the one the
+              judging team is promoting.'
+    basis: asserted
+    depends_on: [D3]
+    closed: 'R11, 2026-09-22 — D3 held (defects[D3] carries the measurement; this
+             entry has none of its own, which is why it stays `asserted`).'
+    closed_detail: 'D3 held. The Vega Virtual Device boots on this machine,
+             so the rarer surface is reachable and there is no reason to fall back to
+             the crowded one. This entry stays discarded unless D3 is reopened by a
+             later failure.'
+    falsified_by: 'D3 dying — if the Vega simulator stops running here, this entry
+                   reopens immediately and becomes the plan. The MediaAdapter seam
+                   (02c Phase 7) exists precisely so that reopening costs one
+                   directory, and related_docs[R-MULTI-TV] is the reference for it.'
+
+worst_case:
+  case: demo-asset
+  basis: measured
+  evidence: { how: shell, date: 2026-09-22,
+              cmd: 'npx tsx pipeline/gaps.ts against assets/tears-of-steel.en.srt (C7, Phase 3 code, unmocked)',
+              value: '76 subtitle cues parsed; 67 speech spans after merging 9 overlaps;
+                      38 gaps >= 1500 ms; 136.2s dialogue (18.6% of runtime);
+                      577.0s describable (78.6% of runtime); 1250 words at standard' }
+  asset: 'Tears of Steel (Blender Foundation, CC-BY) — chosen 2026-09-22, see
+          decisions.demo_asset_licensing. Subtitles are SRT, not WebVTT; C7 parses
+          both because its timestamp regex accepts , and . as the millisecond
+          separator. That was written speculatively in Phase 3 and turned out to be
+          load-bearing on the first real file.'
+  runtime_min: 12.2
+  runtime_note: 'ASSUMED 734s (12:14) and NOT yet measured — ffprobe has not run on
+          the video, only on the subtitles. Only the trailing gap depends on it, and
+          that gap is the credits problem below. Measure with ffprobe before Phase 1
+          closes.'
+  dialogue_pct: 18.6
+  describable_pct: 78.6
+  gaps_detected: 38
+  cues_after_split: 70
+  cue_note: 'gaps != cues. 38 gaps become ~70 cues once max_cue_ms splits the long
+          ones — 8 of the 38 exceed 12s. Every earlier estimate in this set assumed
+          one cue per gap and is therefore low by ~84%.'
+  bedrock_calls: 211
+  bedrock_calls_note: '70 cues x 3 verbosity levels + 1 dramatis personae pass. The
+          figure quoted before R13 was ~121, derived from the wrong 1:1 assumption.'
+  est_cost_usd: null
+  est_cost_note: 'still null on purpose — blocked by D4, so no call has ever been
+          priced. Nova Pro at 211 calls is expected to be low single-digit dollars
+          against the 150 of credits, but expected is not measured.'
+
+# =====================================================================
+# CONTRACTS — prose JSON blocks must match these field for field.
+# =====================================================================
+contracts:
+
+  description_track:
+    version: string
+    asset_id: string
+    generated_at: string
+    source_subtitles: string
+    verbosity: 'concise | standard | detailed'
+    model_id: string
+    cues: 'array<description_cue>'
+
+  description_cue:
+    id: string
+    start_ms: int
+    end_ms: int
+    words: int
+    text: string
+    audio_uri: string
+    source_frames_ms: 'array<int>'
+    status: 'ok | failed'
+
+endpoints:
+  bedrock_invoke: 'bedrock-runtime.{AWS_REGION}.amazonaws.com InvokeModel'
+  polly_synthesize: 'polly.{AWS_REGION}.amazonaws.com SynthesizeSpeech'
+  typesafe_systemone: 'api.typesafe.ai/v1/systemone POST (Authorization: Bearer TYPESAFE_API_KEY)'
+
+env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_SUBTITLES_PATH, TYPESAFE_API_KEY]
+
+# =====================================================================
+# VERIFICATION ANCHORS
+# =====================================================================
+tests_baseline:
+  basis: measured
+  evidence: { how: shell, cmd: 'npm test', date: 2026-09-22, exit_code: 0,
+              value: 'Test Files  1 passed (1) / Tests  6 passed (6)',
+              note: 'spec 02 Phase 1 + the first test of Phase 2. The suite is
+                     pipeline/__tests__/budget.test.ts, which asserts the three
+                     verbosity levels are strictly distinct at ten gap sizes and
+                     that none exceeds the ceiling (AC17, AC4). Mutation-checked
+                     the same day: restoring the R3/R8 scales (standard 1.0,
+                     detailed 1.35) turns 2 of the 6 red, so the assertion is a
+                     real oracle and not a happy-path pass. `npm run lint`
+                     (tsc --noEmit) also exits 0 on the same tree.' }
+
+acceptance:
+  - { id: AC1, item: 'the app runs on the Vega simulator and plays the demo asset end to end', status: written }
+  - { id: AC2, item: 'every screen state — loading, playing, error, empty — has a focusable element, and BACK during playback has a stated destination', status: written }
+  - { id: AC3, item: 'description can be toggled on and off from the remote without interrupting playback', status: written }
+  - { id: AC4, item: 'description cues play inside real dialogue gaps and never overlap dialogue', status: written }
+  - { id: AC5, item: 'the main track ducks to limits.ad.duck_target_pct during a cue and returns to full afterwards', status: written }
+  - { id: AC6, item: 'seeking and held-direction key repeat resync the scheduler without firing a cue per key event', status: written }
+  - { id: AC7, item: 'the description track is produced end to end by the pipeline from asset plus subtitles — no cue text is hand-written', status: written }
+  - { id: AC8, item: 'a failed or missing track produces a stated visible and spoken state, not silence', status: written }
+  - { id: AC9, item: 'the live capture layer, if it ships, is off by default and names where the frame goes before the first send', status: written }
+  - { id: AC10, item: 'react-native-tv-audio-description is public, licensed, documented, and has a runnable example, with commits inside the submission window', status: written }
+  - { id: AC11, item: 'FRICTION-LOG.md holds dated entries written during the build, not reconstructed at the end', status: written }
+  - { id: AC12, item: 'the demo video is under 3 minutes, in English, and shows the app running on the target platform', status: written }
+  - { id: AC13, item: 'every Devpost field is submitted before 2026-10-23 12:00 PT, with the primary track and both mini challenges declared', status: written }
+  - { id: AC14, item: 'the author watches the demo asset end to end with the description track and rates every cue 1–5 against the picture; track mean and % failed are recorded and the worst cues are regenerated before the demo video is recorded', status: written }
+  - { id: AC15, item: 'the control surface is exercised under VoiceView: every control is reachable and announces its state, and the demo video shows it', status: written }
+  - { id: AC16, item: 'the submission package cites at least one sourced figure on audio-description coverage; the figure and its source enter the registry before the prose', status: written }
+  - { id: AC17, item: 'three verbosity levels (concise/standard/detailed) are selectable from the remote, rescale max_words_per_cue per limits.ad.verbosity_scales, and are demonstrated in the demo', status: written }
+  - { id: AC18, item: 'a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch', status: written }
+  - { id: AC19, item: 'the submission video visualizes the gap structure (timeline strip with dialogue vs gaps + split-screen before/after with ducking) using data from C7', status: written }
+  - { id: AC20, item: 'at least one blind/low-vision viewer validates the track before Phase 5 (20–30 min, with/without comparison, consent on file); anonymized quote retained for SUBMISSION.md/video', status: written }
+  # AC21 / AC22 were removed on 2026-09-19 (review R5) together with C15/C16.
+  # A criterion whose component is deferred is a criterion nothing can satisfy —
+  # base gap sweep, §Trimming scope. They return verbatim if
+  # decisions.typesafe_judgment_layer.reopens_when fires.
+
+# =====================================================================
+# CROSS-DOC REGISTRY
+# =====================================================================
+docs:
+  - { id: "01", file: 01-master-plan.md, role: master-plan, stage: draft }
+  # Doc 02 is five files. This is a greenfield build — every phase carries a
+  # full-file code block — so one file lands far past the ~600-line threshold in
+  # references/doc-pattern.md §Splitting an oversized doc. Cut on top-level phase
+  # boundaries, reading order preserved, preamble in 02 and not duplicated.
+  - { id: "02", file: 02-implementation-and-e2e.md, role: implementation, stage: reviewed,
+      note: 'the preamble that governs all five, plus Part A phases 0-3: the D3/D2/D1
+             spike gate, the repo scaffold that fills _profile.yml commands.*, the
+             contracts rendered in code, and gap detection (C7).' }
+  - { id: 02b, file: 02b-pipeline-model.md, role: implementation, stage: reviewed,
+      note: 'Part A phases 4-6: frame extraction (C8), description (C9), synthesis and
+             the three per-verbosity track files (C10). Ends where the offline pipeline
+             does — which is also the boundary alternatives[A4] would cut on.' }
+  - { id: 02c, file: 02c-app-playback.md, role: implementation, stage: reviewed,
+      note: 'Part A phases 7-11: the MediaAdapter seam (the only directory that names a
+             platform API, so A4 is a swap and not a rewrite), then C6 TrackLoader,
+             C3 CueScheduler, C4 DescriptionAudio, C5 ADControls.' }
+  - { id: 02d, file: 02d-screens-and-delivery.md, role: implementation, stage: reviewed,
+      note: 'Part A phases 12-17: C2 PlayerScreen, C1 App, the MANUAL deliverables
+             C12/C13/C14, and the removal of the Phase 0 instrumentation — ordered after
+             the last run that reads it, not after the last code phase.' }
+  - { id: 02e, file: 02e-tests-and-done.md, role: implementation, stage: reviewed,
+      note: 'Part B test plan (including the B.0 mock preamble every phase refers to),
+             Part C manual E2E, the Definition of Done against all twenty acceptance[]
+             criteria, and the coverage map against 01 §7. Every Phase N verification
+             line in 02..02d points at a section of this file.' }
+  - { id: "03", file: 03-stakeholder-requirements.md, role: stakeholder, stage: reviewed,
+      note: 'there is no external owner (solo entry). The reader of this doc is the
+             judging panel: what the submission hands over — repo, video, product
+             feedback, friction log, track declarations — and how it is checked.' }
