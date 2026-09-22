@@ -1,4 +1,5 @@
 
+.claude/
 .DS_Store
 .env
 .idea
@@ -7,7 +8,10 @@
 *.iml
 *.log
 *.swp
+# machine-local agent config (symlinked skills)
+# vega build output
 build
+buildinfo.json
 CMakeUserPresets.json
 dist
 node_modules
