@@ -55,6 +55,7 @@ dates:
     - { tag: v10, date: 2026-09-22, note: 'measure R11 — Vega SDK 0.24.12112 installed and the Virtual Device booted; D3 resolved on its platform half and A4 discarded; _profile.yml build/device_log/force_stop filled from real CLI output' }
     - { tag: v11, date: 2026-09-22, note: 'measure R12 — D1 resolved FALSE from the media API surface (no frame accessor; video renders to a native surface handle), D2 re-aimed onto AudioPlayer + USAGE_ACCESSIBILITY, limits.vega_media added, manifest.toml added as C17' }
     - { tag: v12, date: 2026-09-22, note: 'measure R13 — C7 run against the real Tears of Steel subtitles: premise holds (38 gaps, 78.6% describable) but gap != cue; limits.ad.max_cue_ms and min_useful_words added, C7..C10 re-scoped one-to-many, worst_case measured' }
+    - { tag: v13, date: 2026-09-22, note: 'build R14-R16 — C17 manifest written with the real media/audio/input/accessibility service ids and validated; asset duration measured with ffprobe; PlayerScreen first increment against the W3C API' }
 
 # =====================================================================
 # DECISIONS — premises the prose hangs off. `sync` cannot follow these:
@@ -942,11 +943,14 @@ worst_case:
           both because its timestamp regex accepts , and . as the millisecond
           separator. That was written speculatively in Phase 3 and turned out to be
           load-bearing on the first real file.'
-  runtime_min: 12.2
-  runtime_note: 'ASSUMED 734s (12:14) and NOT yet measured — ffprobe has not run on
-          the video, only on the subtitles. Only the trailing gap depends on it, and
-          that gap is the credits problem below. Measure with ffprobe before Phase 1
-          closes.'
+  runtime_min: 12.24
+  runtime_note: 'MEASURED 2026-09-22 with ffprobe on the real video, replacing the
+          assumed 734s of R13: duration 734.166667s, h264 1280x534, AUDIO CODEC MP3
+          (not AAC — worth recording, since a player that only accepts AAC in MP4
+          would fail here and the failure would look like D2). Source is the 372 MB
+          720p .mov from download.blender.org; a 117 MB H.264/AAC MP4 transcode is
+          what the device plays. The trailing-gap arithmetic is now exact: dialogue
+          ends at 567.0s, the asset runs to 734.17s, so the credits gap is 167.17s.'
   dialogue_pct: 18.6
   describable_pct: 78.6
   gaps_detected: 38
@@ -999,9 +1003,11 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-09-22, exit_code: 0,
-              value: 'Test Files  1 passed (1) / Tests  6 passed (6)',
-              note: 'spec 02 Phase 1 + the first test of Phase 2. The suite is
-                     pipeline/__tests__/budget.test.ts, which asserts the three
+              value: 'jest: Tests 6 passed, 6 total · vitest: Test Files 1 passed (1), Tests 6 passed (6)',
+              note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
+                     suite added in R16. `npm test` runs BOTH runners and fails if
+                     either does: jest for the Vega app (test/), vitest for the
+                     pipeline (pipeline/__tests__/). The pipeline suite asserts the three
                      verbosity levels are strictly distinct at ten gap sizes and
                      that none exceeds the ceiling (AC17, AC4). Mutation-checked
                      the same day: restoring the R3/R8 scales (standard 1.0,

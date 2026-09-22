@@ -1,7 +1,20 @@
+# Interstice — Vega OS application manifest (changes C17)
+#
+# [needs] are REQUIRED capabilities; [wants] are OPTIONAL and the app must handle
+# their absence gracefully. Service ids below are taken from the Amazon reference
+# app vega-video-sample, not invented — a missing media service causes SILENT
+# playback failure: no video and no error. That is the worst failure shape this
+# product has, because silence is also what a broken description track looks like
+# (acceptance AC8).
+#
+# DRM services are deliberately ABSENT: the demo asset is openly licensed and
+# unencrypted (decisions.demo_asset_licensing), so com.amazon.drm.key and
+# com.amazon.drm.crypto are not declared.
+
 schema-version = 1
 
 [package]
-title = "Basic UI React Native Application for project interstice"
+title = "Interstice"
 version = "0.1.0"
 id = "com.cesarrivasp.interstice"
 
@@ -9,17 +22,96 @@ id = "com.cesarrivasp.interstice"
 min = "1.2"
 target = "1.2"
 
-[needs]
-[[needs.module]]
-id = "/com.amazon.vega.os@IVega_1_2"
-
-[[needs.module]]
-id = "/com.amazon.kepler.keplerscript_4@IKeplerScript_0"
-
-
 [components]
 [[components.interactive]]
 id = "com.cesarrivasp.interstice.main"
 runtime-module = "/com.amazon.kepler.runtime.react_native_kepler_4@IReactNativeKepler_0"
 launch-type = "singleton"
 categories = ["com.amazon.category.main"]
+
+# ------------------------------------------------------------------------------
+# [needs] — required. The app cannot function without these.
+# ------------------------------------------------------------------------------
+[needs]
+
+[[needs.module]]
+id = "/com.amazon.vega.os@IVega_1_2"
+
+# Media playback.
+[[needs.privilege]]
+id = "com.amazon.media.secureplayback"
+
+# ------------------------------------------------------------------------------
+# [wants] — optional, with graceful fallback in app code.
+# ------------------------------------------------------------------------------
+
+[[needs.module]]
+id = "/com.amazon.kepler.keplerscript_4@IKeplerScript_0"
+
+[[needs.module]]
+id = "/com.amazon.kepler.kepler_media_controls_1@IKeplerMediaControls_0"
+
+[[needs.module]]
+id = "/com.amazon.kepler.keplermediadescriptor_1@IKeplermediadescriptor_1"
+
+[[needs.module]]
+id = "/com.amazon.kepler.w3cmedia_2@IW3cmedia_3"
+
+
+
+
+[wants]
+
+# MediaPlayer / MediaTransform — the W3C VideoPlayer surface.
+[[wants.service]]
+id = "com.amazon.media.server"
+
+[[wants.service]]
+id = "com.amazon.mediametrics.service"
+
+# MediaControls — player session and buffering.
+[[wants.service]]
+id = "com.amazon.media.playersession.service"
+
+[[wants.service]]
+id = "com.amazon.mediabuffer.service"
+
+[[wants.service]]
+id = "com.amazon.mediatransform.service"
+
+# Audio stream. This is the second, concurrent stream that speaks the description
+# cues (defects D2) — without it there is nothing to duck under.
+[[wants.service]]
+id = "com.amazon.audio.stream"
+
+# Volume and other audio controls. This is the ducking itself: limits.ad.duck_target_pct.
+[[wants.service]]
+id = "com.amazon.audio.control"
+
+[[wants.service]]
+id = "com.amazon.audio.system"
+
+# Audio/video playback transport.
+[[wants.service]]
+id = "com.amazon.gipc.uuid.*"
+
+# Remote button events — D-pad navigation, the description toggle and the
+# verbosity selector (acceptance AC2, AC3, AC6, AC17).
+[[wants.service]]
+id = "com.amazon.inputd.service"
+
+# Accessibility. This is an app FOR blind and low-vision viewers; its own control
+# surface must be reachable and announced under VoiceView (acceptance AC15).
+[[wants.privilege]]
+id = "com.amazon.devconf.privilege.accessibility"
+
+# ------------------------------------------------------------------------------
+# [offers] — capabilities this package exposes to the system.
+# ------------------------------------------------------------------------------
+[offers]
+
+[[offers.service]]
+id = "com.amazon.gipc.uuid.*"
+
+[[offers.interaction]]
+id = "com.cesarrivasp.interstice.main"

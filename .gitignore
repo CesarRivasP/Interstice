@@ -8,13 +8,21 @@
 *.iml
 *.log
 *.swp
+# demo video asset — downloaded, never committed (see README)
+# derived media — regenerate per README, never committed
+# eslint plugin state
 # machine-local agent config (symlinked skills)
 # vega build output
+assets/*.mkv
+assets/*.mov
+assets/*.mp4
 build
 buildinfo.json
 CMakeUserPresets.json
 dist
+generated/
 node_modules
 node_modules/
 npm-debug.log
 out/
+src/assets/*.mp4
