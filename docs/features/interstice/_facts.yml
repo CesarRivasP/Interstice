@@ -56,6 +56,8 @@ dates:
     - { tag: v11, date: 2026-09-22, note: 'measure R12 — D1 resolved FALSE from the media API surface (no frame accessor; video renders to a native surface handle), D2 re-aimed onto AudioPlayer + USAGE_ACCESSIBILITY, limits.vega_media added, manifest.toml added as C17' }
     - { tag: v12, date: 2026-09-22, note: 'measure R13 — C7 run against the real Tears of Steel subtitles: premise holds (38 gaps, 78.6% describable) but gap != cue; limits.ad.max_cue_ms and min_useful_words added, C7..C10 re-scoped one-to-many, worst_case measured' }
     - { tag: v13, date: 2026-09-22, note: 'build R14-R16 — C17 manifest written with the real media/audio/input/accessibility service ids and validated; asset duration measured with ffprobe; PlayerScreen first increment against the W3C API' }
+    - { tag: v14, date: 2026-09-25, note: 'measure R20 — the asset''s content end bounded by measurement, not by a rule: blackdetect plus a frame-by-frame read found credits AND a post-credits scene, so worst_case.content_windows replaces the scalar content_end the plan assumed; C7 gains clipToContent and every worst_case figure is re-measured against the clipped track' }
+    - { tag: v15, date: 2026-09-25, note: 'measure R20 — D5 resolved FALSE and D3 fully resolved: the Virtual Device decodes video (253 frames, 0 dropped). URL mode is broken on this SDK and the app now delivers its own bytes through MediaSource; five platform facts recorded, two of which produce confident false negatives if trusted' }
 
 # =====================================================================
 # DECISIONS — premises the prose hangs off. `sync` cannot follow these:
@@ -111,11 +113,17 @@ decisions:
            the gap mechanism has 577 seconds to work in. Elephants Dream was not
            measured — Tears of Steel cleared the bar decisively, so the comparison
            would have cost time and changed nothing.
-           OPEN, and it belongs to this decision rather than to the pipeline: the
-           film''s dialogue ends at 567s but the asset runs to ~734s, so C7 emits a
-           167-second trailing gap that is the credits. Credits must not be described.
-           Bound the content end before Phase 1 closes — either an explicit
-           content_end_ms on the asset or a rule that drops the trailing gap.'
+           RESOLVED 2026-09-25, and the resolution is not the one this decision
+           proposed. Both options it offered were wrong on this asset. An explicit
+           content_end_ms and a rule that drops the trailing gap fail the same way,
+           because Tears of Steel puts a 21-second POST-CREDITS SCENE after its
+           credits: dropping the tail deletes real content, and any single scalar
+           end either keeps the credits or cuts the scene. The asset therefore
+           declares a LIST of describable windows — worst_case.content_windows,
+           measured with blackdetect and confirmed frame by frame — and C7 intersects
+           its gaps with them. Measured effect: the 167s credits gap becomes a 21s
+           film tail plus the post-credits scene, and 125.3s of credits leave the
+           track. See changes[C7] for the rule and worst_case for the numbers.'
     why: 'the rules require the video to carry no unauthorized third-party
            copyrighted material, and the video is published publicly on YouTube.
            Content rights are the single most common disqualification in a media
@@ -541,6 +549,61 @@ limits:
            like an unsupported file and is not one. Both signals must be tracked and
            whichever lands second starts playback.'
 
+    url_mode_broken: 'MEASURED 2026-09-25, and it is the single most expensive fact
+           in this set. URL MODE DOES NOT WORK on SDK 0.24 with w3cmedia 2.3.2.
+           Assigning a URL to .src fails with MEDIA_ERR_SRC_NOT_SUPPORTED (code 4)
+           BEFORE ANY HTTP REQUEST IS ISSUED, with an empty native message and no
+           W3CMEDIA log line — for a remote URL, for a packaged file:// path, and
+           for AudioPlayer as well as VideoPlayer. canPlayType() returns "probably"
+           for the same type it then refuses, so format negotiation is not where it
+           stops. THE WORKAROUND IS THE WHOLE PLAYBACK DESIGN: fetch the bytes in
+           JavaScript and hand them to the same player through a MediaSource. Same
+           device, same session, same footage: .src fails, MSE plays. Confirmed
+           independently in related_docs[R-VEGA-MSE-THREAD] before this set
+           reproduced it. Consequence for changes[C2]: the app owns its own byte
+           delivery, which also means a full feature must be appended in chunks
+           against SourceBuffer.updating rather than in one buffer.'
+
+    mse_path: 'MEASURED 2026-09-25 on the Virtual Device. new MediaSource() ->
+           player.srcObject = source -> "sourceopen" -> addSourceBuffer(mime) ->
+           appendBuffer(bytes) -> "updateend" -> endOfStream() -> loadedmetadata,
+           canplay, playing. Two details that are easy to get wrong and are not in
+           the platform docs: the media must be a FRAGMENTED MP4 (ffmpeg -movflags
+           +frag_keyframe+empty_moov+default_base_moof), and it attaches through
+           srcObject, NOT src. The mime needs full codec parameters —
+           video/mp4; codecs="avc1.42C01E,mp4a.40.2" — because a bare video/mp4 is
+           rejected at addSourceBuffer. MediaSource.isTypeSupported returned true
+           for that string on this device.'
+
+    video_width_unreported: 'MEASURED 2026-09-25. videoWidth and videoHeight stay 0
+           through loadedmetadata, playing and beyond, and the platform''s own
+           "resize" event arrives carrying w=0 h=0. That looks exactly like
+           audio-only playback and is not: 253 frames decoded with 0 dropped at
+           t=3.96s. Reading the package source explains it — VideoPlayer.js:225
+           only assigns videoWidth_ from a resize event, so the value is whatever
+           the platform reported, and here the platform reports zero. DO NOT gate
+           any acceptance criterion on videoWidth; gate it on
+           getVideoPlaybackQuality().totalVideoFrames.'
+
+    run_cmd_is_sandboxed: 'MEASURED 2026-09-25, and it produces CONFIDENT FALSE
+           NEGATIVES. `vega device run-cmd` runs as uid=5000(app_user) inside an app
+           context, not on the device proper: `ps` lists 2 processes (itself and
+           dev_shell_app), and /dev/input reports "No such file or directory" while
+           input injection through the same shell demonstrably works. Any probe run
+           from there that reports a resource ABSENT has reported nothing. This cost
+           a wrong conclusion about the media stack in this very round.'
+
+    input_injection: 'MEASURED 2026-09-25. `inputd-cli button_press <KEY_*>` injects
+           D-pad and remote keys on the Virtual Device, via
+           `vega device run-cmd -c "inputd-cli button_press KEY_ENTER"`, and the key
+           reaches the app (GWSI_LOG "Injected key"). It also offers series,
+           send_text, touch, swipe and get_screen_size. This is the automation path
+           for AC2 (a focus host in every state) and it is not in the CLI''s own
+           command list — it is a binary on the device. Screenshots, by contrast, are
+           NOT available: screenshooter fails at dbus marshalling and
+           gwsi-tool-screenshooter needs com.amazon.dev.shell.service, and the host
+           cannot screencapture the QEMU window without Screen Recording permission.'
+
   clip_cache:
     basis: decided
     max_clips_in_memory: 8
@@ -603,9 +666,16 @@ changes:
                cue windows and DROPS any window whose budget falls under
                limits.ad.min_useful_words at the requested verbosity. Its output is
                therefore a cue list, not a gap list — measured on the demo asset as
-               38 gaps becoming ~70 cues. It remains the data source for the gap
-               timeline in the video (AC19), which visualises the gaps AND the
-               split boundaries.' }
+               38 gaps becoming ~70 cues. EXTENDED R20: clipToContent() intersects
+               the gaps with worst_case.content_windows before any splitting, so a
+               gap that runs into the credits is CLIPPED at the content boundary and
+               a gap that spans a non-content stretch yields one gap per window.
+               An empty window list means the whole asset is content — the pre-R20
+               behaviour, kept so an asset with no measured windows still produces a
+               track; the price of that default is describable credits, and it is an
+               asset-authoring gap, not a silent one. It remains the data source for
+               the gap timeline in the video (AC19), which visualises the gaps AND
+               the split boundaries.' }
   - { id: C8, file: pipeline/frames.ts, kind: planned, where: repo,
       change: 'extracts the frames for each CUE via ffmpeg — the midpoint frame,
                plus per-shot frames (scene detection) when the cue window spans a
@@ -701,6 +771,25 @@ related_docs:
              it means standard media-element semantics, so D2 (duck while a second
              stream plays) and the VideoPlayer half of 02c Phase 7 are probably answered
              by reading this sample rather than by a spike.' }
+  - { id: R-VEGA-MSE-THREAD, file: 'https://community.amazondeveloper.com/t/audioplayer-url-mode-fails-with-media-err-src-not-supported-on-vvd-app-never-connects-to-com-amazon-media-server-both-official-media-samples-also-fail/29117', where: external,
+      note: 'the bug report that resolved defects[D5] without a spike. A developer on
+             an identical stack (SDK 0.24, CLI 1.3.4, w3cmedia 2.3.2, RN 0.83, VVD OS
+             1.2) published the three-way comparison: AudioPlayer.src fails with no
+             HTTP request, VideoPlayer.src fails with no HTTP request, and
+             MediaSource + appendBuffer plays — same device, same session, same
+             footage. It also documents that `vega device run-cmd` is a sandboxed app
+             context whose absent-resource reports are false negatives, and that
+             [needs] service ids are never validated. Amazon confirms in-thread that
+             audio-only playback needs no surface.' }
+  - { id: R-VEGA-ASSETS-THREAD, file: 'https://community.amazondeveloper.com/t/proper-uri-handling-for-local-assets-in-kepler-toastkepler-and-w3c-media-video/27642', where: external,
+      note: 'the packaged-asset path, from Amazon support: put media in ./assets/raw/
+             at the project root, declare [[assets]] source/destination in
+             manifest.toml, and reference it as /pkg/assets/raw/<file> — a plain path,
+             not file:// and not metro''s bundle path. NOT adopted here, because
+             limits.vega_media.url_mode_broken makes every .src path moot whatever
+             the URI looks like. Recorded because it is the answer if URL mode is
+             ever fixed, and because it is the top search result for this symptom
+             and would send a later round down the wrong path.' }
   - { id: R-MULTI-TV, file: 'https://github.com/AmazonAppDev/react-native-multi-tv-app-sample', where: external,
       note: 'one codebase across Vega, Android TV, Apple TV and web, with a player and
              focus handling. Directly validates the MediaAdapter seam of 02c Phase 7 and
@@ -719,12 +808,23 @@ defects:
   - id: D5
     role: blocking
     claim: 'the Vega Virtual Device can decode and render H.264 video at all'
-    basis: asserted
+    basis: measured
+    evidence: { how: device, date: 2026-09-25, n: 2,
+                spread: 'frames 253..253, dropped 0..0, t 3.94..3.96 s',
+                cmd: 'node tools/beacon-server.mjs, app launched on VirtualDevice',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2, simulated, developer mode on',
+                              build: 'Release aarch64, SDK 0.24.12112, CLI 1.3.4, w3cmedia ~2.3.2, RN 0.83',
+                              content_asset: 'src/assets/clip.mp4 — 20.0s of Tears of Steel, H.264 Constrained Baseline L3.0 + AAC-LC, FRAGMENTED mp4, 2628566 bytes, packaged by metro and fetched from file:///pkg/bundle/assets/src/assets/clip.mp4' },
+                value: 'INTERSTICE.player.progress t=3.96 frames=253 dropped=0, and
+                        t=3.94 frames=253 dropped=0 on the second run after the
+                        sourceopen handler was refactored — same frame count from
+                        two builds, which is what makes it a measurement rather
+                        than a sighting' }
     falsified_by: 'any app playing any video on this Virtual Device — including
                    Amazon''s own vega-video-sample, which is the cheapest test'
-    log_line: 'INTERSTICE.player.error code=<n> msg=<native message>'
-    status: open
-    outcome: null
+    log_line: 'INTERSTICE.player.progress t=<s> frames=<n> dropped=<n>'
+    status: resolved
+    outcome: false
     note: 'RAISED 2026-09-22 after six candidate causes were eliminated by
            measurement rather than argument. Every attempt to play a file ends in
            MEDIA_ERR_SRC_NOT_SUPPORTED (code 4) with an EMPTY native message.
@@ -751,10 +851,31 @@ defects:
            PHYSICAL HARDWARE, which has a lead time and a cost and is on the owner''s
            clock — the same class of dependency as AC20 and D4, and it would be
            discovered at the worst possible moment if left unnamed.
-           NEXT TEST, and it is cheap and decisive: build and run
-           related_docs[R-VEGA-VIDEO] (AmazonAppDev/vega-video-sample) on this same
-           Virtual Device. If Amazon''s own reference player cannot play video here,
-           the device is the answer and this app is not the problem.'
+           RESOLVED FALSE 2026-09-25. The Virtual Device decodes video. Measured
+           on it: 253 video frames decoded, 0 dropped, at t=3.96s of the demo clip,
+           with canplay and playing both fired and the clock advancing.
+           THE SEVENTH CAUSE, and it was never in the app: URL MODE IS BROKEN on
+           this SDK — see limits.vega_media.url_mode_broken. Assigning any URL to
+           .src fails with code 4 before one byte is requested, for a remote URL, a
+           packaged file and an AudioPlayer alike. Handing the same bytes to the
+           same player through a MediaSource plays them. That is why all six
+           eliminations held and none of them found it: every one of them assumed
+           the fault was in the content or the path to it, and it was in the source
+           handling on the other side of the assignment.
+           HOW IT WAS FOUND, which is the part worth keeping: NOT by running
+           vega-video-sample. That test was built and installed (it runs; its EPG
+           task crashes with SIGSEGV, which is a second defect in Amazon''s sample
+           and not ours) and it needs UI navigation to reach a player. Reading the
+           platform''s own bug tracker was cheaper and more decisive: another
+           developer on an identical stack had already published the three-way
+           comparison — URL mode fails, MSE plays, same device, same session —
+           see related_docs[R-VEGA-MSE-THREAD]. A day of debugging was already
+           spent by someone else and written down.
+           ON w=0 h=0: videoWidth stays 0 throughout, and the platform''s own
+           resize event carries zeros — see limits.vega_media.video_width_unreported.
+           That is a reporting defect, not audio-only playback. The decoded frame
+           count is what settles it, and a soundtrack over a black surface cannot
+           produce one.'
 
   - id: D4
     role: blocking
@@ -814,9 +935,15 @@ defects:
     falsified_by: 'the simulator failing to install or start, or refusing to decode
                    the demo asset'
     log_line: null
-    status: resolved_partial
-    outcome: 'PLATFORM HALF CONFIRMED, PLAYBACK HALF NOT YET TESTED — and the split
-              matters, so it is recorded rather than rounded up to a pass.
+    status: resolved
+    outcome: 'BOTH HALVES CONFIRMED. The split below is kept as written because it
+              is what made the second half testable instead of assumed.
+              PLAYBACK HALF CONFIRMED 2026-09-25: the demo clip decodes and plays on
+              the Virtual Device — 253 frames, 0 dropped, canplay and playing fired,
+              clock advancing — once the bytes go through a MediaSource rather than
+              through .src (limits.vega_media.url_mode_broken). defects[D5], raised
+              when this half looked impossible, is resolved FALSE.
+              ORIGINAL ENTRY, 2026-09-22:
               CONFIRMED 2026-09-22: the SDK installs on this machine (macOS 26.7,
               arm64), the Vega Virtual Device boots under QEMU, reports profile "tv"
               on aarch64, and answers `vega device info` in developer mode. The
@@ -1002,11 +1129,12 @@ alternatives:
 worst_case:
   case: demo-asset
   basis: measured
-  evidence: { how: shell, date: 2026-09-22,
-              cmd: 'npx tsx pipeline/gaps.ts against assets/tears-of-steel.en.srt (C7, Phase 3 code, unmocked)',
+  evidence: { how: shell, date: 2026-09-25,
+              cmd: 'npx tsx against assets/tears-of-steel.en.srt through pipeline/gaps.ts (C7, unmocked)',
               value: '76 subtitle cues parsed; 67 speech spans after merging 9 overlaps;
-                      38 gaps >= 1500 ms; 136.2s dialogue (18.6% of runtime);
-                      577.0s describable (78.6% of runtime); 1250 words at standard' }
+                      38 raw gaps >= 1500 ms, 39 after clipToContent; 136.2s dialogue
+                      (18.6% of runtime); 451.8s describable after clipping (61.5% of
+                      the asset, 74.2% of content) against 577.0s before it' }
   asset: 'Tears of Steel (Blender Foundation, CC-BY) — chosen 2026-09-22, see
           decisions.demo_asset_licensing. Subtitles are SRT, not WebVTT; C7 parses
           both because its timestamp regex accepts , and . as the millisecond
@@ -1021,15 +1149,42 @@ worst_case:
           what the device plays. The trailing-gap arithmetic is now exact: dialogue
           ends at 567.0s, the asset runs to 734.17s, so the credits gap is 167.17s.'
   dialogue_pct: 18.6
-  describable_pct: 78.6
-  gaps_detected: 38
-  cues_after_split: 70
-  cue_note: 'gaps != cues. 38 gaps become ~70 cues once max_cue_ms splits the long
-          ones — 8 of the 38 exceed 12s. Every earlier estimate in this set assumed
-          one cue per gap and is therefore low by ~84%.'
-  bedrock_calls: 211
-  bedrock_calls_note: '70 cues x 3 verbosity levels + 1 dramatis personae pass. The
-          figure quoted before R13 was ~121, derived from the wrong 1:1 assumption.'
+  describable_pct: 61.5
+  describable_pct_note: 'OF THE WHOLE ASSET, after clipping to content_windows —
+          74.2% of the content itself. Was 78.6% until R20, which is the figure
+          before the credits were excluded and is no longer the operative number:
+          125.3s of it was credits. Both are true of the same run; this one is the
+          one the pipeline can actually describe.'
+  gaps_detected: 39
+  gaps_note: 'MORE gaps after clipping, not fewer — 38 became 39. The trailing gap
+          straddled the credits, so intersecting it with the windows split it into
+          the 21s film tail and the post-credits scene. The count going up while the
+          describable time goes down is the whole shape of the finding.'
+  content_windows:
+    basis: measured
+    evidence: { how: shell, date: 2026-09-25,
+                cmd: 'ffmpeg -i assets/tears-of-steel.mp4 -vf blackdetect=d=0.4:pic_th=0.98:pix_th=0.10 -an -f null -',
+                value: 'black at 0-8.92, 64.46-69.92, 588.0-589.0, 707.17-709.5, 730.33-734.13' }
+    windows: [ { start_ms: 0, end_ms: 588000, label: film },
+               { start_ms: 709500, end_ms: 730333, label: post-credits } ]
+    note: 'blackdetect gives the CUT POINTS; it cannot tell credits from a wordless
+          scene, so each boundary was confirmed by extracting the frame on either
+          side and looking at it. 587.5s is the film, 590.0s is "Written and Directed
+          by IAN HUBERT"; 709.6s through 726s is a junkyard scene with a character in
+          it. That second window is the finding: an automatic trailing-gap rule, and
+          a scalar content_end, both delete it. Nothing here generalises to another
+          asset — windows are measured per asset and declared, never inferred.'
+  cues_after_split: 60
+  cue_note: 'gaps != cues. The 39 clipped gaps become 60 cues once max_cue_ms splits
+          the long ones — 9 of the 39 exceed 12s, and the longest gap is now 62s
+          rather than 167s. Before clipping the same arithmetic gave 70 cues from 38
+          gaps, which is the R13 figure; the 10 cues that went away were credits.
+          Every estimate before R13 assumed one cue per gap and is low by ~56%.'
+  bedrock_calls: 181
+  bedrock_calls_note: '60 cues x 3 verbosity levels + 1 dramatis personae pass. It
+          has now moved twice: ~121 before R13 (wrong 1:1 assumption), 211 after R13
+          (70 cues), 181 after R20 (credits no longer described). Each move was a
+          measurement, not a re-estimate.'
   est_cost_usd: null
   est_cost_note: 'still null on purpose — blocked by D4, so no call has ever been
           priced. Nova Pro at 211 calls is expected to be low single-digit dollars
@@ -1071,8 +1226,8 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 # =====================================================================
 tests_baseline:
   basis: measured
-  evidence: { how: shell, cmd: 'npm test', date: 2026-09-22, exit_code: 0,
-              value: 'jest: Tests 6 passed, 6 total · vitest: Test Files 1 passed (1), Tests 6 passed (6)',
+  evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, exit_code: 0,
+              value: 'jest: Tests 8 passed, 8 total · vitest: Test Files 2 passed (2), Tests 13 passed (13)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the
@@ -1080,9 +1235,14 @@ tests_baseline:
                      verbosity levels are strictly distinct at ten gap sizes and
                      that none exceeds the ceiling (AC17, AC4). Mutation-checked
                      the same day: restoring the R3/R8 scales (standard 1.0,
-                     detailed 1.35) turns 2 of the 6 red, so the assertion is a
-                     real oracle and not a happy-path pass. `npm run lint`
-                     (tsc --noEmit) also exits 0 on the same tree.' }
+                     detailed 1.35) turns 2 of them red, so the assertion is a
+                     real oracle and not a happy-path pass. R20 added the gaps
+                     suite (clipToContent against worst_case.content_windows) and
+                     two app tests that pin the MSE path — one asserts .src stays
+                     EMPTY, which is the regression that limits.vega_media.url_mode_broken
+                     would otherwise re-introduce silently. `npm run lint`
+                     (eslint + tsc --noEmit) also exits 0 on the same tree, with two
+                     informational warnings.' }
 
 acceptance:
   - { id: AC1, item: 'the app runs on the Vega simulator and plays the demo asset end to end', status: written }

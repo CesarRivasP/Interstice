@@ -99,6 +99,55 @@ export function findGaps(subs: Subtitle[], assetDurationMs: number): Gap[] {
   return gaps;
 }
 
+/**
+ * A span of the asset that may be described. Everything outside these windows is
+ * NOT content — credits, bumpers, a distributor sting — and a description placed
+ * there narrates typography over music.
+ *
+ * Declared per asset and MEASURED, not inferred: there is no reliable way to tell
+ * credits from a wordless scene by looking at the pixels, and the demo asset proves
+ * why guessing is unsafe. Tears of Steel puts a 21-second POST-CREDITS SCENE after
+ * 119 seconds of credits, so the obvious rule — "drop the trailing gap" — would
+ * delete real content, which is exactly the material a sighted viewer keeps and a
+ * blind viewer loses.
+ */
+export interface ContentWindow {
+  start_ms: number;
+  end_ms: number;
+  /** for the log line and the AC19 timeline; not load-bearing */
+  label?: string;
+}
+
+/**
+ * Intersect gaps with the asset's describable windows.
+ *
+ * An empty window list means the whole asset is content — the previous behaviour,
+ * kept deliberately so an asset with no measured windows still produces a track
+ * rather than nothing. The cost of that default is describable credits, which is
+ * an asset-authoring gap and is stated as one.
+ *
+ * A gap that straddles a window boundary is CLIPPED, not dropped, and a gap that
+ * spans two windows yields one clipped gap per window.
+ */
+export function clipToContent(gaps: Gap[], windows: ContentWindow[]): Gap[] {
+  if (windows.length === 0) return gaps;
+
+  const clipped: Gap[] = [];
+  for (const g of gaps) {
+    for (const w of windows) {
+      const start = Math.max(g.start_ms, w.start_ms);
+      const end = Math.min(g.end_ms, w.end_ms);
+      if (end - start >= AD.MIN_GAP_MS) {
+        clipped.push({ ...g, start_ms: start, end_ms: end, duration_ms: end - start });
+      }
+    }
+  }
+
+  return clipped
+    .sort((a, b) => a.start_ms - b.start_ms)
+    .map((g, index) => ({ ...g, index }));
+}
+
 export function logGaps(gaps: Gap[]): void {
   const durations = gaps.map((g) => g.duration_ms);
   console.log(

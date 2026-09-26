@@ -52,6 +52,42 @@ Amazon feedback is not diluted by things Amazon cannot act on.
 - **time_lost:** 20 min
 - **what would have helped:** the 400 page is a generic Amazon sign-in error with nothing tying it back to the CLI handshake. Saying "you are signed in to a different Amazon identity than the AWS console" would have taken this from twenty minutes to one.
 
+### 2026-09-25 — W3C `src` playback is broken on the Virtual Device, and every signal points at your file
+
+- **tool:** `@amazon-devices/react-native-w3cmedia` 2.3.2, Vega SDK 0.24, VVD OS 1.2
+- **expected:** `player.src = <uri>` loads the media, per the W3C Media API the package implements and the platform's own URL-mode documentation.
+- **happened:** `MEDIA_ERR_SRC_NOT_SUPPORTED` (code 4) **before a single byte is requested** — verified against a host access log that recorded zero requests. Empty native message, no `W3CMEDIA` log line at any priority. The same failure for a remote URL, for a packaged `file://` path, and for `AudioPlayer` as well as `VideoPlayer`. `canPlayType()` returned `"probably"` for the exact type the player then refused.
+- **workaround:** fetch the bytes in JavaScript and hand them to the same player through a `MediaSource` — `srcObject`, not `src`, and a **fragmented** MP4. Same device, same session, same footage: `.src` fails, MSE plays 253 frames with 0 dropped.
+- **time_lost:** ~4 hours across four sessions
+- **what would have helped:** three things, each small. (1) `canPlayType()` exists precisely so an app can avoid this call, and it answered `"probably"` — that disagreement is a bug in its own right. (2) The error is indistinguishable from a genuinely unsupported file, so all six of our eliminations went looking at the asset: format, container, codec profile, packaging, path, byte-reachability. Any diagnostic that said *rejected before fetch* would have redirected us in one run. (3) One line in the media troubleshooting docs — *if URL playback fails, try the same content over MSE to isolate source handling from the pipeline* — would have saved all of it.
+
+### 2026-09-25 — `videoWidth` reports 0 on a video that is demonstrably decoding
+
+- **tool:** `@amazon-devices/react-native-w3cmedia` 2.3.2
+- **expected:** after `loadedmetadata`, `videoWidth`/`videoHeight` carry the frame size.
+- **happened:** both stay `0` through `loadedmetadata`, `playing` and beyond — and the platform's own `resize` event arrives carrying `w=0 h=0`. That is the exact signature of audio-only playback, on a stream that was decoding 253 video frames with none dropped.
+- **workaround:** gate on `getVideoPlaybackQuality().totalVideoFrames` instead. Reading the package source explains the zeros: `VideoPlayer.js:225` only assigns `videoWidth_` from a `resize` event, so it reports whatever the platform sent, and the platform sent zero.
+- **time_lost:** 25 min
+- **what would have helped:** a `resize` event with real dimensions. Failing that, a documented note that `videoWidth` is unreliable on the Virtual Device — it is the first thing anyone checks when a video does not appear.
+
+### 2026-09-25 — `vega device run-cmd` is a sandboxed app context, and says a resource is absent when it simply cannot see it
+
+- **tool:** Vega CLI 1.3.4
+- **expected:** a device shell for inspecting the device.
+- **happened:** it runs as `uid=5000(app_user)` inside an app context. `ps` lists two processes — itself and `dev_shell_app` — so the entire system is invisible, and `/dev/input` reports `No such file or directory` while key injection through that same shell works. Every probe run from there that reports something **absent** has reported nothing at all.
+- **workaround:** stop concluding anything negative from it. Positive results are still trustworthy; that is how `inputd-cli` was found.
+- **time_lost:** 30 min, and it nearly produced a wrong root cause — the same trap another developer reported publicly, concluding the device had no audio hardware while its boot chime was audible.
+- **what would have helped:** a permission-denied path that says so instead of reporting the resource as missing. `ENOENT` and *you are not allowed to see this* are different answers and only one of them is true.
+
+### 2026-09-25 — no screenshot path for the Virtual Device
+
+- **tool:** Vega CLI 1.3.4 / VVD
+- **expected:** some way to see what the device is showing, to verify a UI or debug a black screen.
+- **happened:** `vega device` has no capture command. On-device, `screenshooter` fails at dbus marshalling (`null value passed for arg 1`) and `gwsi-tool-screenshooter` needs `com.amazon.dev.shell.service`, which is not running. Host-side, the QEMU window cannot be captured without granting Screen Recording permission, and `osascript` is denied assistive access.
+- **workaround:** none for pixels. Everything in this build is verified through log lines and decoded-frame counts instead, which is why an HTTP beacon exists in this repo at all.
+- **time_lost:** 45 min across two sessions
+- **what would have helped:** `vega device screenshot`. It is the single most useful missing command for a TV platform, where the whole product is what is on the screen.
+
 ---
 
 ## Toolchain

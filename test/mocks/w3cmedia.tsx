@@ -14,6 +14,12 @@
 import * as React from 'react';
 import { View, ViewProps } from 'react-native';
 
+/** every player and media source the component under test constructed */
+export const instances: { players: VideoPlayer[]; sources: MediaSource[] } = {
+  players: [],
+  sources: [],
+};
+
 export const surfaceCallbacks: {
   created: Array<(handle: string) => void>;
   destroyed: Array<(handle: string) => void>;
@@ -21,6 +27,7 @@ export const surfaceCallbacks: {
 
 export class VideoPlayer {
   src = '';
+  srcObject: unknown = null;
   currentTime = 0;
   duration = 0;
   paused = true;
@@ -32,6 +39,10 @@ export class VideoPlayer {
 
   readonly calls: string[] = [];
   private listeners = new Map<string, Array<() => void>>();
+
+  constructor() {
+    instances.players.push(this);
+  }
 
   initialize = jest.fn(async () => { this.calls.push('initialize'); });
   deinitialize = jest.fn(async () => { this.calls.push('deinitialize'); });
@@ -54,6 +65,62 @@ export class VideoPlayer {
 }
 
 export class AudioPlayer extends VideoPlayer {}
+
+/**
+ * Minimal SourceBuffer / MediaSource, mirroring only what limits.vega_media
+ * records and changes[C2] calls: the MSE path exists because URL mode is broken
+ * on this SDK (limits.vega_media.url_mode_broken).
+ */
+export class SourceBuffer {
+  updating = false;
+  readonly appended: number[] = [];
+  private listeners = new Map<string, Array<() => void>>();
+
+  addEventListener(type: string, fn: () => void): void {
+    const l = this.listeners.get(type) ?? [];
+    l.push(fn);
+    this.listeners.set(type, l);
+  }
+
+  appendBuffer(data: Uint8Array): void {
+    this.appended.push(data.byteLength);
+    (this.listeners.get('updateend') ?? []).forEach((fn) => fn());
+  }
+}
+
+export class MediaSource {
+  static isTypeSupported = jest.fn(() => true);
+
+  readyState: 'closed' | 'open' | 'ended' = 'closed';
+  readonly buffers: SourceBuffer[] = [];
+  private listeners = new Map<string, Array<() => void>>();
+
+  constructor() {
+    instances.sources.push(this);
+  }
+
+  addEventListener(type: string, fn: () => void): void {
+    const l = this.listeners.get(type) ?? [];
+    l.push(fn);
+    this.listeners.set(type, l);
+  }
+
+  addSourceBuffer(_type: string): SourceBuffer {
+    const b = new SourceBuffer();
+    this.buffers.push(b);
+    return b;
+  }
+
+  endOfStream(): void {
+    this.readyState = 'ended';
+  }
+
+  /** test helper — the platform opens the source once it is attached */
+  open(): void {
+    this.readyState = 'open';
+    (this.listeners.get('sourceopen') ?? []).forEach((fn) => fn());
+  }
+}
 
 export enum AudioContentType {
   CONTENT_TYPE_NONE = 0,

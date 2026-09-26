@@ -462,3 +462,47 @@ The native error message, once logged, is **empty**. No media decode error appea
 **Validation:** `npm test` exit 0 · `npm run lint` exit 0 · `audit.py` → 0 contradictions, 0 drift.
 **Still open:** `D5` **new, and it gates `D3`'s playback half** · `D3` playback · `D2` — its test cannot run until something plays · `D4` Bedrock, **decide by 09-30** · credits bound · `AC20`, **drop-dead 10-16**.
 **Next mode:** run `vega-video-sample` on this Virtual Device. One answer, two outcomes: it plays and the fault is in this app, or it does not and the demo needs hardware. Either way the next step after it is unambiguous, which is why it comes before writing another line of player code.
+
+---
+
+## R20 · 2026-09-25 · claude-opus-5 (Claude Code) · D5 resolved FALSE, D3 closed, and the asset's content end bounded
+**Read:** `_facts.yml` · `_log.md` (through R19 end) · `@amazon-devices/react-native-w3cmedia@2.3.2` source · the Vega community bug tracker
+**Log read through:** R19
+
+### The video plays.
+`INTERSTICE.player.progress t=3.96 w=0 h=0 paused=false frames=253 dropped=0` — on the Virtual Device, from the packaged demo clip. `canplay` and `playing` both fired, the clock advances, **253 frames decoded and none dropped**. `defects[D5]` is resolved **FALSE**, `defects[D3]` closes its playback half after four rounds open, and no hardware purchase is needed for `AC1`/`AC12`.
+
+**R20-F1 `FUNCTIONAL`, and it was never in this app: URL MODE IS BROKEN on this SDK.** Assigning any URL to `player.src` fails with `MEDIA_ERR_SRC_NOT_SUPPORTED` **before a single byte is requested** — remote URL, packaged `file://` path, `AudioPlayer` and `VideoPlayer` alike — with an empty native message and no `W3CMEDIA` log line at any priority. `canPlayType()` answers `"probably"` for the exact type the player then refuses. Handing the same bytes to the same player through a `MediaSource` plays them. Recorded as `limits.vega_media.url_mode_broken` and `.mse_path`.
+
+**This explains why R19's six eliminations all held and none of them found it.** Every one assumed the fault was in the content or in the path to it — format, ordering, reachability, packaging, codec profile, empty src. The fault was on the other side of the assignment, in source handling that never ran. A seventh guess of the same kind would have failed too, which is exactly why R19 stopped instead of guessing again.
+
+### How it was found, which is the part worth keeping.
+**Not** by running `vega-video-sample`, the test R19 named. That test was run: the sample builds (after working around a `min-release-age` / `--before` conflict in its Shaka postinstall), installs and launches — and reaching a player needs D-pad navigation on a device this project cannot screenshot. Its own EPG task crashes with `SIGSEGV` on launch, which is a defect in Amazon's sample, not evidence about ours.
+
+What resolved it was **reading the platform's bug tracker**: a developer on an identical stack (SDK 0.24, CLI 1.3.4, w3cmedia 2.3.2, RN 0.83, VVD OS 1.2) had already published the decisive three-way comparison — `AudioPlayer.src` fails with no HTTP request, `VideoPlayer.src` fails with no HTTP request, `MediaSource` + `appendBuffer` plays — same device, same session, same footage. Recorded as `related_docs[R-VEGA-MSE-THREAD]`. **The cheapest decisive test was not a test.** A day of this debugging had already been done by someone else and written down, and the set had no habit of looking there.
+
+### Three platform facts that produce confident WRONG answers.
+Each is now in `limits.vega_media`, because each one nearly cost a wrong conclusion in this round:
+- **`video_width_unreported`** — `videoWidth`/`videoHeight` stay `0` through `loadedmetadata` and `playing`, and the platform's own `resize` event arrives carrying zeros. That is the exact signature of audio-only playback on a stream decoding 253 frames. `VideoPlayer.js:225` only assigns the value from a `resize` event, so it reports what the platform sent. **Gate on `getVideoPlaybackQuality().totalVideoFrames`, never on `videoWidth`.**
+- **`run_cmd_is_sandboxed`** — `vega device run-cmd` runs as `uid=5000(app_user)` in an app context. `ps` lists two processes and `/dev/input` reports `No such file or directory` while key injection through that same shell demonstrably works. Any probe there that reports a resource **absent** has reported nothing.
+- **`input_injection`** — `inputd-cli button_press KEY_ENTER` injects D-pad and remote keys, confirmed reaching the app. It is a binary on the device, not a CLI command, and it is the automation path for `AC2`. Screenshots are the opposite story: no path exists, host-side or device-side.
+
+### The content end, and why both fixes the plan proposed were wrong.
+`decisions.demo_asset_licensing` left one item open, due before Phase 1 closes: the 167-second trailing gap that is the credits. It offered an explicit `content_end_ms` or a rule dropping the trailing gap. **Measuring the asset killed both.** `blackdetect` plus a frame-by-frame read found credits from 588.0s **and a 21-second post-credits scene at 709.5s**. A scalar end or a drop-the-tail rule deletes it — real content, of exactly the kind a sighted viewer keeps and a blind viewer loses.
+
+So the asset declares a **list** of describable windows (`worst_case.content_windows`, `basis: measured`) and `C7` gains `clipToContent`, which intersects gaps with them. Measured effect: **38 gaps become 39** — the trailing gap straddled the boundary and split into the film's tail plus the post-credits scene — describable time falls from 577.0s to **451.8s** (61.5% of the asset, 74.2% of its content), the longest gap from 167s to 62s, cues from 70 to **60**, and Bedrock calls from 211 to **181**. The count rising while the time falls is the whole shape of the finding.
+
+A residual risk is stated rather than hidden: an asset with no measured windows is treated as content end to end, and describes its own credits. That is an asset-authoring gap, not a silent failure.
+
+### Edits
+`_facts.yml` — `defects[D5]` resolved false with evidence · `defects[D3]` resolved in full · `limits.vega_media` +`url_mode_broken` +`mse_path` +`video_width_unreported` +`run_cmd_is_sandboxed` +`input_injection` · `worst_case` re-measured (+`content_windows`, +`gaps_note`, +`describable_pct_note`) · `decisions.demo_asset_licensing` open item closed · `changes[C7]` extended · `related_docs` +`R-VEGA-MSE-THREAD` +`R-VEGA-ASSETS-THREAD` · `tests_baseline` re-measured · revisions v14, v15.
+`01-master-plan.md` — §2 the D3 playback half and the content-end resolution, §5 cost figures, §7 two checklist items, §8 two risk rows retired.
+`src/screens/PlayerScreen.tsx` rewritten onto MSE · `src/assets/clip.mp4` re-encoded fragmented · `pipeline/gaps.ts` +`clipToContent` · `pipeline/__tests__/gaps.test.ts` new · `test/mocks/w3cmedia.tsx` +`MediaSource`/`SourceBuffer`/instance registry · `test/App.spec.tsx` +2 · `FRICTION-LOG.md` +4 entries.
+
+**Validation:** `npm test` exit 0 — jest **8 passed**, vitest **13 passed (2 files)** · `npm run lint` exit 0 (2 informational warnings) · `npm run build` exit 0 · app installed and playing on the Virtual Device · `audit.py` → see below.
+
+**Revision ordering slipped a third time** — the insert anchor matches the newest tag, so prepending puts the new entry first. Fixed in-round again. It is now three rounds in a row and belongs in the skill, not in a reviewer's memory.
+
+**Still open:** `D2` — its runtime test is unblocked for the first time, because something finally plays · `D4` Bedrock, **decide by 09-30** · `AC20`, **drop-dead 10-16** · `review` over the moved scope, then regenerate `02` Phase 3, `02b` Phases 4–6 and `02c` Phases 7/10, all of which were written against `.src` playback and a 1:1 gap-to-cue pipeline.
+
+**Next mode:** `review`, then `implement` over the stale phases. The platform is no longer the unknown; the plan's shape is.
