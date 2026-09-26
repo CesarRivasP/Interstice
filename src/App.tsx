@@ -2,7 +2,6 @@ import React, {useCallback, useState} from 'react';
 import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import {PlayerScreen} from './screens/PlayerScreen';
 import {createVegaAdapter} from './platform/vega';
-import {probeRangeSupport} from './platform/vega/rangeProbe';
 import {log} from './diagnostics';
 
 // Required rather than referenced by string so that metro bundles it into the
@@ -77,10 +76,6 @@ log(`INTERSTICE.asset.cue uri=${resolvedCue?.uri ?? 'NONE'}`);
 // pipeline/__tests__/seam.test.ts, not by good intentions.
 const media = createVegaAdapter();
 
-// TEMPORARY (R34) — measures whether a byte-range fetch works on a packaged
-// path, which is what limits.mse_buffer's window depends on. Removed with the
-// rest of the Phase 0 instrumentation once AC23 has read it.
-void probeRangeSupport(resolved?.uri ?? '');
 
 /**
  * One title. `decisions.demo_asset_licensing` — openly licensed, dialogue

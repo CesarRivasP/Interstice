@@ -244,7 +244,9 @@ This phase used to carry a conditional fourth output: a full-length pre-mixed au
 
 `decisions.d2_fallback` stays in the registry rather than being deleted, because concurrency has **not** been retested on physical hardware. If it fails there, this is the phase that changes, and the filtergraph it would need (`amix` plus `volume` over the same cue list) is the same work it always was.
 
-**Contracts implemented:** `changes[C10]`, `contracts.description_track` (every field), `contracts.description_cue` (every field), `decisions.verbosity_levels` (lookup rule + per-level regeneration), `endpoints.polly_synthesize`, `limits.polly`, `limits.vega_media.mse_path`, `env_vars` (`POLLY_VOICE_ID`, `DEMO_ASSET_MANIFEST`), `worst_case`
+> **The asset is cut here too, by `changes[C26]` (`pipeline/segment.ts`).** `limits.vega_media.no_range_requests`: a `Range` request on a packaged path returns status `200` and the whole file, so the app cannot read part of one. The track's asset therefore ships as fragmented-MP4 segments plus an init segment, written into `contracts.asset_manifest.segments`, and `changes[C20]` appends them a window at a time.
+
+**Contracts implemented:** `changes[C10]`, `changes[C26]`, `contracts.description_track` (every field), `contracts.description_cue` (every field), `decisions.verbosity_levels` (lookup rule + per-level regeneration), `endpoints.polly_synthesize`, `limits.polly`, `limits.vega_media.mse_path`, `env_vars` (`POLLY_VOICE_ID`, `DEMO_ASSET_MANIFEST`), `worst_case`
 
 **Phase 6 verification:** `⟨commands.tests⟩` → a line containing `⟨commands.tests_expect⟩` (Polly and ffmpeg mocked). Then the contract assertion in `02e` §B.2, run against the **real** emitted file: `out/tears-of-steel.standard.track.json` validates field-for-field against `contracts.description_track`. One further check that a mock cannot make: **take one emitted `.m4a` and append it through a `MediaSource` on the device**, exactly as `02c` Phase 10 does. A file that validates as a track and cannot be appended still fails every cue in it.
 

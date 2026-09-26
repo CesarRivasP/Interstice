@@ -1011,3 +1011,34 @@ The whole chain, from `pipeline/segment.ts` output to a playing picture.
 **Validation:** `npm test` exit 0 — jest 65, vitest **56** across 7 files · `npm run lint` exit 0 · `audit.py` clean · device run quoted above.
 **Still open:** `AC23`'s evict half, on hardware · the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15` hardware-only.
 **Next mode:** `C10` emitting segments and a manifest, so `src/App.tsx` stops hand-listing them.
+
+---
+
+## R36 · 2026-09-26 · claude-opus-5 (Claude Code) · the scope drift I introduced, and the check that stops it recurring
+**Read:** `_facts.yml` (v17) · `_log.md` (through R35 end)
+**Log read through:** R35
+**Found, by comparing the tree against the registry rather than by an audit check:** EIGHT components built between R22 and R35 have no `changes[]` entry — `pipeline/budget.ts`, `pipeline/types.ts`, `pipeline/manifest.ts`, `pipeline/segment.ts`, `src/ad/duck.ts`, `src/diagnostics.ts`, `src/platform/MediaAdapter.ts`, `src/platform/vega/index.tsx`, `src/platform/vega/SegmentBuffer.ts`, `src/platform/vega/rangeProbe.ts`. `changes[]` IS the scope of this set, and it has been describing a smaller project than the one on disk for fifteen rounds.
+**Why no check caught it:** audit check 7 (scope parity) is one of the human-pass checks. The script compares `changes[]` against the DOCS; nothing compared it against the TREE. This is the drift the skill exists to prevent, introduced by the agent that runs the skill.
+**Also found:** `src/components/Tile.tsx` and `src/data/tiles.tsx` are `vega project generate` template leftovers that nothing imports — except `test/Tile.spec.tsx`, which keeps them green. A test whose only purpose is to stop dead code from being noticed is a small lie about coverage, in a repository a judge will clone and read.
+**About to do:** register the real components, delete the dead ones, and add the tree-vs-registry comparison as a mechanical check so this cannot recur silently.
+### R36-F1: the registry described a smaller project than the one on disk
+Ten source files had no `changes[]` entry. Registered as `C18`–`C26`: the `MediaAdapter` seam, its Vega implementation, `SegmentBuffer`, `duck.ts`, `diagnostics.ts`, `types.ts`, `budget.ts`, `manifest.ts` and `segment.ts`.
+
+**`changes[]` is what `review` sweeps, what `implement` writes phases against, and what anyone reading this project uses to know what it consists of.** A file the registry has never heard of is outside all three — so for fifteen rounds the gap sweep could not have found a hazard in `SegmentBuffer`, and a cold reader would have been handed a component list missing the platform seam.
+
+**No check caught it, and the reason is worth recording.** `audit.py` check 7 is scope parity, it is a HUMAN-pass check, and it compares `changes[]` against the **documents**. Nothing compared it against the **tree**. So the whole apparatus was consistent with itself and wrong about the world — which is the exact failure this skill exists to prevent, produced by the agent running the skill.
+
+Fixed mechanically as well as in data: `pipeline/__tests__/scope.test.ts` walks `src/` and `pipeline/` and fails if any source file is undeclared. Mutation-checked — an empty `src/unregistered_probe.ts` turns it red and removing it turns it green. The audit then caught the other half: four of the new entries were registered but cited in no document, so they are now cited where they belong (`02c` §7.3, `02d` Phase 12 and Phase 17, `02b2` Phase 6).
+
+### R36-F2: two tests existed only to keep dead code green
+`src/components/Tile.tsx` and `src/data/tiles.tsx` are `vega project generate` leftovers that **nothing imports** — except `test/Tile.spec.tsx`, which kept them passing. A test whose only purpose is to stop dead code from being noticed is a small lie about coverage, and this repository is one a judge clones and reads. All three deleted; the jest count fell from 65 to 63, and that fall is the honest direction.
+
+Also deleted: `src/platform/vega/rangeProbe.ts`. It answered its question in R34 and the answer is in `limits.vega_media.no_range_requests`. A probe kept past its result is future confusion about whether it still measures something.
+
+### Dependencies on the owner, since it was asked
+Four, and none blocks any remaining code: the **Bedrock use-case form** (blocks `C9` and everything downstream of it), the **question to the organisers**, the **`AC20` participant** (drop-dead **10-16**), and **physical hardware** for `AC5`, `AC15` and `AC23`.
+
+**Edits:** `_facts.yml` (`changes[C18..C26]`, `tests_baseline`) · `pipeline/__tests__/scope.test.ts` new · deleted `src/components/Tile.tsx`, `src/data/tiles.tsx`, `test/Tile.spec.tsx`, `src/platform/vega/rangeProbe.ts` · `02b2`, `02c`, `02d` citations · `_profile.yml`.
+**Validation:** `npm test` exit 0 — jest **63**, vitest **58** across 8 files · `npm run lint` exit 0 · `npm run build` exit 0 · `audit.py` clean · scope check mutation-checked.
+**Still open:** unchanged — the form, `AC20`, and the three hardware criteria.
+**Next mode:** `C10` emitting segments and a manifest, so `src/App.tsx` stops hand-listing them.

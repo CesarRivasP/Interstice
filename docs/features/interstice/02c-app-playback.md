@@ -147,7 +147,7 @@ export interface MediaAdapter {
 | `VideoSurface` added | mounting the surface IS platform code: on Vega it is `KeplerVideoSurfaceView`, and the handle it returns has to reach the player. A screen importing it directly would put a platform symbol straight back into `src/screens/`. |
 | `play(uri)` keeps its shape | but its contract now says implementations must not assume the platform fetches. Vega's defect stays inside Vega's directory. |
 
-### 7.3 — The Vega implementation is an extraction, not a spike
+### 7.3 — The Vega implementation (`C19`) is an extraction, not a spike
 
 `src/platform/vega/index.ts` was previously `[MANUAL]` with a `throw`, because `D3` was open and **no Vega API name in this set had ever been observed**. That is no longer true: every symbol is measured and recorded in `limits.vega_media`, and working code that uses all of them is already in the repository.
 
