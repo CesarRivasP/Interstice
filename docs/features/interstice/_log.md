@@ -829,3 +829,25 @@ Filled the gap in `test/setup.ts` rather than mocking the module, so the distinc
 **Validation:** `npm test` exit 0 — jest **65**, vitest 46 · `npm run lint` exit 0 · `audit.py` clean · package **2.69 MB** · device run quoted above.
 **Still open:** `D4` **decide by 09-30 — four days** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only · `limits.mse_buffer` unimplemented.
 **Next mode:** `D4` is the one with a date on it and it is not a coding task. Everything downstream of `C9` — the tracks, `AC7`, `AC14`, `AC18`, the cost figure — waits on an answer from AWS or the organisers, and the case is now one sentence long.
+
+---
+
+## R30 · 2026-09-26 · claude-opus-5 (Claude Code) · D4 re-measured after redemption; the last cheap discriminator named
+**Read:** `_facts.yml` (v17) · `_log.md` (through R29 end)
+**Log read through:** R29
+**Did:** re-ran `defects[D4]` a third time, and found a hole in my own sequence. R23 tested Bedrock after the credits were **granted** but before they were **redeemed** — and redemption required a payment method on file, which is the one account-state change in this whole episode that could plausibly have mattered. Tested now, post-redemption: **byte-identical**, `authorizationStatus NOT_AUTHORIZED` beside three `AVAILABLE`s. `n: 3`, spread recorded.
+
+**The owner pasted the retired model-access console page.** Its content was already eliminated in R10 — the page is retired, models auto-enable on first invoke, and the first invoke is what fails — and the two control mechanisms it names are both eliminated here: IAM identity policies do not apply to root, and the account is not in an Organization so there are no SCPs.
+
+But it named one thing worth acting on: the **console playground**. Every measurement in this set is on the CLI path. The console invokes over a different path with a console session, and the two outcomes split cleanly:
+- it fails identically → the account-scope conclusion is confirmed from a second independent route, and the support case gets shorter;
+- it **succeeds** → the fault is in the API/credential path rather than the account, which is a different and far more fixable problem, and `D4` stops being a blocker.
+
+Browser-only, so it belongs to the owner. Recorded in `defects[D4]` as NOT YET RUN rather than left as a suggestion in a chat log.
+
+**Also drafted, and deliberately NOT committed:** an AWS support case and a message to the hackathon organisers. The support case carries the account id once filled in and this repository is public. The organisers' message asks the cheaper of the two questions — whether the AWS Builder mini challenge requires a specific service or any AWS service with a documented integration. `decisions.hackathon_track` already reads it as the latter, Polly works, and a one-line confirmation there turns `D4` from a blocker into the cost of one feature.
+
+**Edits:** `_facts.yml` (`defects[D4]` evidence `n: 3` with the redemption spread; two additions to the eliminated list; the console-playground discriminator).
+**Validation:** `audit.py` → clean.
+**Still open:** `D4` **decide by 09-30 — four days** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
+**Next mode:** the owner runs the playground test and sends the two messages; code continues on anything not downstream of `C9`.

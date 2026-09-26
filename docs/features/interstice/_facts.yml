@@ -1093,8 +1093,8 @@ defects:
             the entrant AWS account, in every region tried, while Polly on the same credentials
             succeeds. The block is account-scoped and Bedrock-specific.'
     basis: measured
-    evidence: { how: shell, date: 2026-09-25, n: 2,
-                spread: 'identical on both runs, 3 days apart, across an AWS credit grant',
+    evidence: { how: shell, date: 2026-09-26, n: 3,
+                spread: 'byte-identical on all three runs — 2026-09-22, 2026-09-25 (after the credit GRANT) and 2026-09-26 (after the credit REDEMPTION, which required a payment method on file)',
                 cmd: 'aws bedrock-runtime converse --region us-east-1 --model-id amazon.nova-lite-v1:0 --messages ... ; aws bedrock get-foundation-model-availability --region us-east-1 --model-id amazon.nova-lite-v1:0',
                 value: 'ValidationException — "Error 002: Access to Bedrock models is not
                         allowed for this account"; identical in us-east-1, us-west-2 and
@@ -1126,8 +1126,11 @@ defects:
              list-foundation-models` succeeds and returns the whole Nova catalogue. The
              account authenticates to Bedrock, is authorised to enumerate its models, and
              the models exist in the region. Only the DATA plane refuses.
-           · NOT FUNDING. The AWS promotional credits were granted on 2026-09-25 and the
-             error did not change by one character. That was stated as the expectation
+           · NOT FUNDING, and tested TWICE because the grant and the redemption are
+             different events. Granted 2026-09-25: no change. REDEEMED 2026-09-26,
+             which required a payment method on file and therefore altered account
+             state in the one way that could plausibly have mattered: no change, and
+             authorizationStatus still NOT_AUTHORIZED beside three AVAILABLEs. That was stated as the expectation
              BEFORE the retest rather than explained after it — credits are billing and
              this is an authorization refusal — and it is now measured rather than argued.
            So the refusal is precise: inference only, account scope, with credentials,
@@ -1137,6 +1140,14 @@ defects:
            falls outside the region list that carries it. This produces exactly the
            observed shape — region, entitlement and
            agreement all AVAILABLE, authorization denied at account scope.
+           NOT YET RUN, and it is the last cheap discriminator: INVOKE NOVA FROM THE
+           BEDROCK CONSOLE PLAYGROUND. Every measurement so far is on the CLI path.
+           The console invokes over a different path with a console session, so the
+           two outcomes split cleanly: it fails identically and the account-scope
+           conclusion is confirmed from a second independent route, which makes the
+           support case shorter; it SUCCEEDS and the fault is in the API/credential
+           path rather than the account, which is a different and far more fixable
+           problem. It is browser-only, so it belongs to the owner.
            THE AUTHORITATIVE ANSWER IS AN AWS SUPPORT CASE, which is free for account
            issues. Ask why authorizationStatus is NOT_AUTHORIZED in all regions when
            Polly works. Working around a geographic restriction is not an option under
