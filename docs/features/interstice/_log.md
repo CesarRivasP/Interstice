@@ -559,3 +559,46 @@ Written as the first increment of `changes[C4]` rather than as a throwaway probe
 **Still open:** `D4` Bedrock, **decide by 09-30** · `AC20`, **drop-dead 10-16** · `AC5` audible ducking, on hardware · `AC21` the `limits.mse_buffer` numbers, on the worst device.
 
 **Next mode:** `implement` over the stale phases — `02` Phase 3, `02b` Phases 4–6, `02c` Phases 7 and 10. All four were written against `.src` playback, a platform that seeks for you, and a 1:1 gap-to-cue pipeline. None of those three is true any more.
+
+---
+
+## R22 · 2026-09-25 · claude-opus-5 (Claude Code) · implement over the stale phases; code first, prose anchored to it
+**Read:** `_facts.yml` (v16) · `_log.md` (through R21 end)
+**Log read through:** R21
+**Preconditions checked before starting, per the skill's three:** `review` ran in R21 and all seven findings carry a disposition (all `confirmed`) · `status: reviewed` · every `changes[]` entry carries a `kind:`.
+**Did:** regenerated every phase written against a platform that no longer exists as described — `.src` playback, a player that seeks for you, a 1:1 gap-to-cue pipeline, and a volume ramp the platform does not have. `sync` could not have repaired any of it: it propagates values, and what changed is shape.
+
+### Code written before the prose that describes it
+Four phases were documenting modules that did not exist, and two were documenting modules that did. Writing the code first and anchoring the doc to it is the discipline that has held all round; it also surfaced three things prose alone would not have.
+
+- **`limits.ad.max_cue_ms` and `min_useful_words` were in the registry since R13 and had never reached the code.** `AD` carried neither. The one-to-many rescope existed entirely on paper — `gaps.ts` still emitted gaps. Wired both, then wrote `splitIntoCues`.
+- **`pipeline/manifest.ts` new (`R21-F5`)** — `contracts.asset_manifest` given a real parser, with two rejections worth their own tests: overlapping windows (they would double-describe the overlap, and nothing downstream could tell it was a manifest error) and a **missing** `content_windows` key, which is not the same as an empty one. `[]` is an author declaring the whole asset describable; absent is an author who forgot.
+- **`CueWindow.part_index` / `part_count` added, and the reason is a bug the rescope would have shipped.** A window split out of the middle of a long gap has `before === null && after === null` — **identical to the gap that opens the film**. `C9`'s prompt branched on exactly that and would have told the model *"this silence opens the film"* for every middle window of every split gap. Nothing throws, every cue comes back, and the descriptions are subtly about the wrong thing. This is the shape of error a 1:1→1:many change makes, and it is why the phases had to be regenerated rather than patched.
+
+### Two measurements that corrected numbers already in the registry
+- **Cue counts are per level: 47 / 55 / 60** (concise / standard / detailed), 629 / 916 / 1127 words. Every earlier figure came from `ceil(duration / max_cue_ms)` and assumed 60 cues at all three levels. **Bedrock calls: 181 → 163.** The 181 was the last figure in this set derived by multiplying rather than running.
+- **The cue sets NEST** — `concise ⊆ standard ⊆ detailed`, measured on the demo asset and pinned by a test. Window boundaries depend only on duration; verbosity decides only which windows fall under the useful-words floor, and that threshold is monotonic. So `C8` extracts frames **once** against the widest set and the narrower levels look theirs up by window key — a third of the ffmpeg work. Keyed by `start_ms-end_ms` and never by index, because indices renumber per level and an index join would pair a cue with another cue's frames while the frame count still looked right.
+
+### What each regenerated phase now says
+- **`02` Phase 3** — parse, merge, **clip**, **split**, plus the manifest and how to produce `content_windows` for any asset (`blackdetect` gives the cuts; a human looks at the frame either side, because no filter tells credits from a wordless scene).
+- **`02b` Phase 4** — frames per **cue**, not per gap, plus the extract-once scheme above.
+- **`02b` Phase 5** — `describeCue`, keyed by window, with the middle-window prompt branch; and a `D4` banner at the top, because this phase is written and **cannot be run**.
+- **`02b2` Phase 6** (new file) — `C10` emits **fragmented `audio/mp4` AAC-LC**, not MP3. Polly cannot produce that container, so the shape is Polly → MP3 → ffmpeg → `.m4a`, and the intermediate is deleted so nobody references the file the app cannot play.
+- **`02c` Phase 7** — the seam, with its justification **replaced rather than quietly kept**. It existed because `D3` was open and `A4` would reopen; both are settled, so that reason is gone. It is kept for a stronger one: `changes[C12]` is a published package called *react-native-tv-audio-description*, and `MediaAdapter` is its public API. `setVolumePct` lost its `rampMs` parameter (`no_volume_ramp` is measured) and gained `onStalled` (`R21-F3`).
+- **`02c2` Phases 10–11** (new file) — `src/ad/duck.ts` holds the JS fade, **once**, so it cannot become three per-platform copies; `D2`'s fallback branch is marked as not running.
+- **`02d` Phase 12** — `C2` owns byte delivery, with the four obligations that follow (`R21-F1/F2/F3/F6`) and a `stalled` screen state that is spoken, not just shown.
+- **`02e`** — the Definition of Done grew two rows and a note.
+
+### R22-F1, and it is a naming collision the audit could not see
+`AC21` and `AC22` **already existed**: written in R3, retired in R5 with `C15`/`C16`, and `decisions.typesafe_judgment_layer` says they return **verbatim** if that decision reopens. R21 gave those ids to two brand-new criteria. Renumbered to `AC23`/`AC24`, with a comment in `acceptance[]` marking 21/22 reserved. A reopened criterion that silently means something else is worse than a gap in the numbering, and no mechanical check catches it — the retired ids live in prose, not in the registry.
+
+### Splits
+Both `02b` and `02c` passed 600 lines while being regenerated and were cut on phase boundaries per `references/doc-pattern.md`: `02b2-track-output.md` (Phase 6) and `02c2-audio-and-controls.md` (Phases 10–11). Registered in `docs[]`, continuation pointers updated, and the "set of N" line swept across all seven files. Nothing was summarised — a split that compresses loses exactly the paste-ready blocks the doc exists for.
+
+**Edits:** `_facts.yml` (`worst_case` re-measured with `cues_by_verbosity` and `words_by_verbosity`; `bedrock_calls` 181 → 163; `AC21/22` → `AC23/24` plus the reserved note; `docs[]` +`02b2` +`02c2`; `tests_baseline` re-measured) · `_profile.yml` (`tests_expect`) · `02`, `02b`, `02b2`, `02c`, `02c2`, `02d`, `02e` · `pipeline/budget.ts` (+`MAX_CUE_MS`, `MIN_USEFUL_WORDS`) · `pipeline/gaps.ts` (+`splitIntoCues`, `CueWindow`) · `pipeline/manifest.ts` new · `assets/tears-of-steel.manifest.json` new · two test suites.
+
+**Validation:** `npm test` exit 0 — jest **8**, vitest **30** across 3 files · `npm run lint` exit 0 · `audit.py` → **clean, every mechanized check passed**.
+
+**Still open:** `D4` Bedrock, **decide by 09-30** · `AC20`, **drop-dead 10-16** · `AC5` audible ducking and `AC23` the memory bound, both on hardware.
+
+**Next mode:** build. The plan and the platform finally describe the same thing, and `02` Phase 4 onward is now executable prose — except `02b` Phase 5, which is written and blocked on `D4`.

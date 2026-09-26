@@ -9,6 +9,8 @@ export const AD = {
   FRAMES_PER_GAP_MAX: 3,       // limits.ad.frames_per_gap_max
   ROLLING_CONTEXT_CUES: 10,    // limits.ad.rolling_context_cues
   BUDGET_MARGIN_MS: 300,       // the `- 300` in limits.ad.max_words_per_cue
+  MAX_CUE_MS: 12000,           // limits.ad.max_cue_ms
+  MIN_USEFUL_WORDS: 3,         // limits.ad.min_useful_words
 } as const;
 
 /**

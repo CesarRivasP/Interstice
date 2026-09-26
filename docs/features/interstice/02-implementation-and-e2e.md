@@ -12,7 +12,7 @@
 
 > **Doc 02 is five files, and this is the first.** It carries the preamble that governs all five, plus **Part A, Phases 0–3**: the spike gate, the repo scaffold, the contracts rendered in code, and gap detection (`C7`). This is a greenfield build — every phase carries a full-file code block — so the implementation document is split on top-level phase boundaries per `references/doc-pattern.md` §Splitting an oversized doc. No technical content differs from a single-file version.
 >
-**The set of five:** `02` (preamble, Phases 0–3: spike gate, scaffold, contracts in code, gap detection) · `02b` (Phases 4–6: frames, description, synthesis) · `02c` (Phases 7–11: the platform seam and the playback layer) · `02d` (Phases 12–17: screens, shell, the `[MANUAL]` deliverables) · `02e` (Part B test plan, Part C manual E2E, the Definition of Done, and the coverage map against `01-master-plan.md` §7).
+**The set of seven:** `02` (preamble, Phases 0–3: spike gate, scaffold, contracts in code, gap detection) · `02b` (Phases 4–5: frames, description) · `02b2` (Phase 6: synthesis and the track files) · `02c` (Phases 7–9: the platform seam, the loader, the scheduler) · `02c2` (Phases 10–11: description audio, the control surface) · `02d` (Phases 12–17: screens, shell, the `[MANUAL]` deliverables) · `02e` (Part B test plan, Part C manual E2E, the Definition of Done, and the coverage map against `01-master-plan.md` §7).
 
 ---
 
@@ -377,137 +377,84 @@ export function wordCeiling(gapMs: number): number {
 
 ---
 
-## Phase 3 — `pipeline/gaps.ts` (`C7`) — every dialogue gap ≥ 1500 ms
+## Phase 3 — `pipeline/gaps.ts` + `pipeline/manifest.ts` (`C7`) — dialogue gaps, clipped to content, split into cues
 
-**File:** `pipeline/gaps.ts` (new)
-**Anchor:** new file, full contents below.
-**Maps to:** `_facts.yml changes[C7]`, `limits.ad.min_gap_ms`, `AC4`, `AC19`
+**Files:** `pipeline/gaps.ts`, `pipeline/manifest.ts`, `assets/<asset_id>.manifest.json`
+**Anchor:** both modules exist on disk as of R22; read them rather than retyping them, and change only what a later round names.
+**Maps to:** `_facts.yml changes[C7]`, `contracts.asset_manifest`, `limits.ad.min_gap_ms`, `limits.ad.max_cue_ms`, `limits.ad.min_useful_words`, `worst_case.content_windows`, `AC4`, `AC19`
 
-**What changes:** the WebVTT file becomes a list of gaps. This is the whole timing foundation — the hard problem is solved by data that ships with the asset rather than by inference (`01-master-plan.md` §2) — and it is also the data source the gap-timeline visualization renders from (`decisions.gap_visualization`, `AC19`, consumed in `02d` Phase 16).
+**What changes:** the subtitle file becomes a list of **cue windows**. This is the whole timing foundation — the hard problem is solved by data that ships with the asset rather than by inference (`01-master-plan.md` §2) — and it is also the data source the gap-timeline visualization renders from (`decisions.gap_visualization`, `AC19`, consumed in `02d` Phase 16).
 
-Three things the naive version gets wrong, all handled below: subtitles that **overlap** (two speakers) must be merged before differencing or they manufacture negative gaps; the span **before the first** subtitle and **after the last** are real gaps and are usually the longest in the film; and a gap is bounded by the asset duration, not by the last caption.
+**The module is four steps, and three of them exist because the first version was wrong in a way only real data showed:**
 
-**Code:**
+| step | function | why it is not optional |
+|---|---|---|
+| parse | `parseWebVtt` | accepts `,` and `.` as the millisecond separator. Written speculatively; the real demo asset turned out to be SRT, so it was load-bearing on the first file. |
+| merge | `mergeSpeech` | two speakers overlapping would otherwise manufacture **negative** gaps. |
+| clip | `clipToContent` | gaps that run into the credits are clipped at the content boundary. Without it the track describes 119 seconds of scrolling names. |
+| split | `splitIntoCues` | **a gap is not a cue.** Gaps past `limits.ad.max_cue_ms` become consecutive windows, and windows too short for `limits.ad.min_useful_words` are dropped. |
 
-`pipeline/gaps.ts` (new file, full contents):
+Three further things the naive version gets wrong: the span **before the first** subtitle and **after the last** are real gaps and are usually the longest in the film; a gap is bounded by the asset duration, not by the last caption; and the **cue count is not the same at every verbosity level**, which `02b` Phase 6 depends on.
 
-```ts
-import { AD } from './budget.js';
+### 3.1 — The asset manifest, which is where the content windows come from
 
-export interface Subtitle {
-  start_ms: number;
-  end_ms: number;
-  text: string;
-}
+`contracts.asset_manifest` is a file beside the asset. It exists because of `R21-F5`: `worst_case.content_windows` is a **measurement recorded in the registry**, and the registry is a specification, not a program input. Given nowhere to read the windows from, an implementer inlines *Tears of Steel*'s credits boundary into `gaps.ts`, where the next asset silently inherits it.
 
-export interface Gap {
-  index: number;
-  start_ms: number;
-  end_ms: number;
-  duration_ms: number;
-  /** the subtitle immediately before this gap, or null if the gap opens the asset */
-  before: Subtitle | null;
-  /** the subtitle immediately after this gap, or null if the gap closes the asset */
-  after: Subtitle | null;
-}
+`assets/tears-of-steel.manifest.json`, measured in R20:
 
-const TIMING = /^(\d{1,3}:\d{2}:\d{2}[.,]\d{3})\s*-->\s*(\d{1,3}:\d{2}:\d{2}[.,]\d{3})/;
-
-export function parseTimestamp(ts: string): number {
-  const m = /^(\d{1,3}):(\d{2}):(\d{2})[.,](\d{3})$/.exec(ts.trim());
-  if (!m) throw new Error(`INTERSTICE.gaps.badTimestamp ts=${ts}`);
-  const [, h, min, s, ms] = m as unknown as [string, string, string, string, string];
-  return ((Number(h) * 60 + Number(min)) * 60 + Number(s)) * 1000 + Number(ms);
-}
-
-export function parseWebVtt(source: string): Subtitle[] {
-  const subs: Subtitle[] = [];
-  const blocks = source.replace(/\r\n/g, '\n').split(/\n{2,}/);
-
-  for (const block of blocks) {
-    const lines = block.split('\n').filter((l) => l.trim() !== '');
-    const timingLine = lines.find((l) => TIMING.test(l));
-    if (!timingLine) continue; // WEBVTT header, NOTE blocks, cue identifiers alone
-
-    const m = TIMING.exec(timingLine)!;
-    const start_ms = parseTimestamp(m[1]!);
-    const end_ms = parseTimestamp(m[2]!);
-    const text = lines
-      .slice(lines.indexOf(timingLine) + 1)
-      .join(' ')
-      .replace(/<[^>]+>/g, '') // strip WebVTT inline tags (<v Speaker>, <i>)
-      .trim();
-
-    if (end_ms > start_ms) subs.push({ start_ms, end_ms, text });
-  }
-
-  return subs.sort((a, b) => a.start_ms - b.start_ms);
-}
-
-/**
- * Overlapping or touching subtitles are one span of speech. Differencing without
- * this step manufactures negative gaps wherever two speakers overlap.
- */
-export function mergeSpeech(subs: Subtitle[]): Subtitle[] {
-  const merged: Subtitle[] = [];
-  for (const s of subs) {
-    const last = merged[merged.length - 1];
-    if (last && s.start_ms <= last.end_ms) {
-      last.end_ms = Math.max(last.end_ms, s.end_ms);
-      last.text = `${last.text} ${s.text}`.trim();
-    } else {
-      merged.push({ ...s });
-    }
-  }
-  return merged;
-}
-
-/** _facts.yml changes[C7]: every dialogue gap >= limits.ad.min_gap_ms. */
-export function findGaps(subs: Subtitle[], assetDurationMs: number): Gap[] {
-  const speech = mergeSpeech(subs);
-  const gaps: Gap[] = [];
-  let cursor = 0;
-  let before: Subtitle | null = null;
-
-  const push = (start: number, end: number, after: Subtitle | null) => {
-    const duration = end - start;
-    if (duration >= AD.MIN_GAP_MS) {
-      gaps.push({
-        index: gaps.length,
-        start_ms: start,
-        end_ms: end,
-        duration_ms: duration,
-        before,
-        after,
-      });
-    }
-  };
-
-  for (const s of speech) {
-    push(cursor, s.start_ms, s);       // the span before this line of dialogue
-    cursor = s.end_ms;
-    before = s;
-  }
-  push(cursor, assetDurationMs, null); // the span after the last line
-
-  return gaps;
-}
-
-export function logGaps(gaps: Gap[]): void {
-  const durations = gaps.map((g) => g.duration_ms);
-  console.log(
-    `INTERSTICE.gaps.found n=${gaps.length} min_ms=${AD.MIN_GAP_MS}` +
-      ` shortest_ms=${durations.length ? Math.min(...durations) : 0}` +
-      ` longest_ms=${durations.length ? Math.max(...durations) : 0}`,
-  );
+```json
+{
+  "version": "1",
+  "asset_id": "tears-of-steel",
+  "media_uri": "assets/tears-of-steel.mp4",
+  "subtitles_uri": "assets/tears-of-steel.en.srt",
+  "duration_ms": 734167,
+  "content_windows": [
+    { "start_ms": 0, "end_ms": 588000, "label": "film" },
+    { "start_ms": 709500, "end_ms": 730333, "label": "post-credits" }
+  ],
+  "byte_index": null
 }
 ```
 
-> **The gap that opens the asset and the gap that closes it are usually the longest.** They are also the two most valuable description slots in a film — the establishing shot and the last image. `findGaps` emits both, and `before`/`after` are `null` there, which Phase 5 must handle rather than assume a neighbouring subtitle exists.
+> **How to produce `content_windows` for any asset.** `ffmpeg -i <asset> -vf blackdetect=d=0.4:pic_th=0.98:pix_th=0.10 -an -f null -` gives the cut points; then **look at the frame on either side of each one**. `blackdetect` finds cuts, not credits, and no filter can tell a credit roll from a wordless scene. On the demo asset the frame at 587.5 s is the film and the frame at 590.0 s is *"Written and Directed by IAN HUBERT"* — and the frames at 709.6–726 s are a **post-credits scene**, which is why a scalar `content_end` was rejected.
 
-**Contracts implemented:** `changes[C7]`, `limits.ad.min_gap_ms`
+`parseManifest` throws rather than returning a partial object, and two of its rejections are worth stating because they are the ones a hand-written manifest gets wrong:
 
-**Phase 3 verification:** `⟨commands.tests⟩ pipeline/__tests__/gaps.test.ts` → a line containing `⟨commands.tests_expect⟩`. Assertions in `02e` §B.1, including the overlap case, both boundary gaps, and the sub-threshold rejection.
+- **overlapping windows are rejected** — `clipToContent` emits one clipped gap *per window*, so a gap inside two overlapping windows is described twice over the same seconds, and nothing downstream can tell that it was a manifest error;
+- **a MISSING `content_windows` key is rejected, an EMPTY one is accepted.** They are not the same: `[]` is an author declaring the whole asset describable, an absent key is an author who forgot. Only the second is a mistake worth stopping for. The empty case still logs `INTERSTICE.manifest.noWindows ... credits WILL be described`, where someone reading the log will see it.
+
+### 3.2 — Gaps, clipped
+
+`findGaps(subs, durationMs)` differences merged speech against the asset duration and keeps every span ≥ `limits.ad.min_gap_ms`. `clipToContent(gaps, windows)` then intersects the result with the manifest's windows.
+
+> **Clipping can produce MORE gaps than it started with, and on the demo asset it does: 38 become 39.** The trailing gap straddled the content boundary, so intersecting split it into the film's tail and the post-credits scene. Describable time falls (577.0 s → 451.8 s) while the count rises. An implementation that assumes clipping only removes things is wrong in a way no test on short synthetic input will show.
+
+> **The gap that opens the asset and the gap that closes it are usually the longest,** and they are the two most valuable description slots in a film — the establishing shot and the last image. `findGaps` emits both with `before`/`after` set to `null`, which `02b` Phase 5 must handle rather than assume a neighbouring subtitle exists.
+
+### 3.3 — Cues, split
+
+`splitIntoCues(gaps, verbosity)` is the R13 finding in code. Five gaps in the demo asset run past 30 seconds and carry **68% of all the words**; one description covering 167 seconds is not a description, and `limits.ad.frames_per_gap_max` frames cannot represent it.
+
+Three properties that are contract, not detail, and each has a test in `02e` §B.1:
+
+1. **Windows tile their gap exactly** — the first starts where the gap starts, the last ends where it ends, and each begins where the previous ended. A rounding scheme that leaves a hole puts description over dialogue.
+2. **`before`/`after` are carried only by the windows that touch them.** A middle window has silence on both sides; giving it a neighbour it does not have feeds `C9` a false premise about what was just said.
+3. **`word_target ≤ word_ceiling`, always** — the target is what the prompt asks for at this level, the ceiling is what the window can physically carry at `limits.ad.speaking_rate_wpm`. The ceiling does not vary by verbosity, because the gap is the gap.
+
+**Measured on the demo asset (R22), and this is the number `02b` Phase 6 sizes itself against:**
+
+| verbosity | cues | words |
+|---|---|---|
+| concise | 47 | 629 |
+| standard | 55 | 916 |
+| detailed | 60 | 1127 |
+
+> **The cue count differs by level, and that is the design rather than a wart.** `concise` asks for 60% of the ceiling, so more short windows fall under the `limits.ad.min_useful_words` floor and are dropped. This is precisely why `C10` writes **one track file per level**, each declaring its own cue set — a single track with a shared cue list would be wrong at two levels out of three. Every figure before R22 came from `ceil(duration / max_cue_ms)` and assumed 60 cues at all three levels; running the real splitter moved the Bedrock call estimate from 181 to **163**.
+
+**Contracts implemented:** `changes[C7]`, `contracts.asset_manifest`, `contracts.content_window`, `limits.ad.min_gap_ms`, `limits.ad.max_cue_ms`, `limits.ad.min_useful_words`
+
+**Phase 3 verification:** `⟨commands.tests⟩` → a line containing `⟨commands.tests_expect⟩`. Assertions in `02e` §B.1 cover the overlap case, both boundary gaps, the sub-threshold rejection, the clip that splits one gap into two, the exact tiling, the dropped short window, and the level-to-level cue-count difference.
 
 ---
 

@@ -1280,7 +1280,9 @@ worst_case:
               value: '76 subtitle cues parsed; 67 speech spans after merging 9 overlaps;
                       38 raw gaps >= 1500 ms, 39 after clipToContent; 136.2s dialogue
                       (18.6% of runtime); 451.8s describable after clipping (61.5% of
-                      the asset, 74.2% of content) against 577.0s before it' }
+                      the asset, 74.2% of content) against 577.0s before it;
+                      splitIntoCues then yields 47 / 55 / 60 cues and 629 / 916 / 1127
+                      words at concise / standard / detailed' }
   asset: 'Tears of Steel (Blender Foundation, CC-BY) — chosen 2026-09-22, see
           decisions.demo_asset_licensing. Subtitles are SRT, not WebVTT; C7 parses
           both because its timestamp regex accepts , and . as the millisecond
@@ -1321,16 +1323,27 @@ worst_case:
           a scalar content_end, both delete it. Nothing here generalises to another
           asset — windows are measured per asset and declared, never inferred.'
   cues_after_split: 60
-  cue_note: 'gaps != cues. The 39 clipped gaps become 60 cues once max_cue_ms splits
-          the long ones — 9 of the 39 exceed 12s, and the longest gap is now 62s
-          rather than 167s. Before clipping the same arithmetic gave 70 cues from 38
-          gaps, which is the R13 figure; the 10 cues that went away were credits.
-          Every estimate before R13 assumed one cue per gap and is low by ~56%.'
-  bedrock_calls: 181
-  bedrock_calls_note: '60 cues x 3 verbosity levels + 1 dramatis personae pass. It
-          has now moved twice: ~121 before R13 (wrong 1:1 assumption), 211 after R13
-          (70 cues), 181 after R20 (credits no longer described). Each move was a
-          measurement, not a re-estimate.'
+  cues_by_verbosity: { concise: 47, standard: 55, detailed: 60 }
+  cue_note: 'gaps != cues, and THE COUNT IS NOT THE SAME AT EVERY LEVEL. The 39
+          clipped gaps become 47 / 55 / 60 cues at concise / standard / detailed —
+          measured R22 by running splitIntoCues, not by arithmetic. cues_after_split
+          above is the detailed figure, the largest, which is what sizes the worst
+          case. The spread is limits.ad.min_useful_words doing its job: concise asks
+          for 60% of the ceiling, so more short windows fall under the 3-word floor
+          and are dropped. This is exactly why changes[C10] writes one track file
+          per level rather than one track with a shared cue list — a shared list
+          would be wrong at two levels out of three.
+          Lineage: 1:1 per gap before R13; 70 cues after R13; 60 after R20 removed
+          the credits; 47/55/60 after R22 ran the real splitter instead of
+          ceil(duration / max_cue_ms).'
+  words_by_verbosity: { concise: 629, standard: 916, detailed: 1127 }
+  bedrock_calls: 163
+  bedrock_calls_note: '47 + 55 + 60 cues across the three levels, plus 1 dramatis
+          personae pass. It has now moved three times and every move was a
+          measurement, not a re-estimate: ~121 before R13 (wrong 1:1 assumption),
+          211 after R13 (70 cues), 181 after R20 (credits removed, but still
+          assuming 60 cues at EVERY level), 163 after R22 measured the per-level
+          counts. The 181 figure was the last one derived by multiplication.'
   est_cost_usd: null
   est_cost_note: 'still null on purpose — blocked by D4, so no call has ever been
           priced. Nova Pro at 211 calls is expected to be low single-digit dollars
@@ -1390,8 +1403,8 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 # =====================================================================
 tests_baseline:
   basis: measured
-  evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, exit_code: 0,
-              value: 'jest: Tests 8 passed, 8 total · vitest: Test Files 2 passed (2), Tests 13 passed (13)',
+  evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, n: 1, exit_code: 0,
+              value: 'jest: Tests 8 passed, 8 total · vitest: Test Files 3 passed (3), Tests 30 passed (30)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the
@@ -1404,7 +1417,10 @@ tests_baseline:
                      suite (clipToContent against worst_case.content_windows) and
                      two app tests that pin the MSE path — one asserts .src stays
                      EMPTY, which is the regression that limits.vega_media.url_mode_broken
-                     would otherwise re-introduce silently. `npm run lint`
+                     would otherwise re-introduce silently. R22 added the manifest
+                     suite and the splitIntoCues suite, including the NESTING property
+                     (concise subset-of standard subset-of detailed) that changes[C8]
+                     relies on to extract frames once instead of three times. `npm run lint`
                      (eslint + tsc --noEmit) also exits 0 on the same tree, with two
                      informational warnings.' }
 
@@ -1428,20 +1444,24 @@ acceptance:
   - { id: AC17, item: 'three verbosity levels (concise/standard/detailed) are selectable from the remote, rescale max_words_per_cue per limits.ad.verbosity_scales, and are demonstrated in the demo', status: written }
   - { id: AC18, item: 'a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch', status: written }
   - { id: AC19, item: 'the submission video visualizes the gap structure (timeline strip with dialogue vs gaps + split-screen before/after with ducking) using data from C7', status: written }
-  - { id: AC21, item: 'the app plays the full-length demo asset without exceeding memory on the worst device in the matrix: limits.mse_buffer holds, SourceBuffer.remove() runs behind the playhead, and no QuotaExceededError is raised across an end-to-end watch', status: written }
-  - { id: AC22, item: 'a stall — bytes running short mid-playback — produces a stated visible and spoken state rather than a frozen picture, and a seek outside the buffered window either resolves or says why it cannot', status: written }
   - { id: AC20, item: 'at least one blind/low-vision viewer validates the track before Phase 5 (20–30 min, with/without comparison, consent on file); anonymized quote retained for SUBMISSION.md/video', status: written }
   # AC21 / AC22 were removed on 2026-09-19 (review R5) together with C15/C16.
   # A criterion whose component is deferred is a criterion nothing can satisfy —
   # base gap sweep, §Trimming scope. They return verbatim if
   # decisions.typesafe_judgment_layer.reopens_when fires.
+  # AC21 and AC22 are RESERVED, not free. They were written in R3, retired in R5
+  # with changes[C15]/[C16], and decisions.typesafe_judgment_layer says they
+  # return VERBATIM if that decision reopens. R21's two new criteria were first
+  # written as AC21/AC22 and renumbered to AC23/AC24 in R22 on finding this.
+  - { id: AC23, item: 'the app plays the full-length demo asset without exceeding memory on the worst device in the matrix: limits.mse_buffer holds, SourceBuffer.remove() runs behind the playhead, and no QuotaExceededError is raised across an end-to-end watch', status: written }
+  - { id: AC24, item: 'a stall — bytes running short mid-playback — produces a stated visible and spoken state rather than a frozen picture, and a seek outside the buffered window either resolves or says why it cannot', status: written }
 
 # =====================================================================
 # CROSS-DOC REGISTRY
 # =====================================================================
 docs:
   - { id: "01", file: 01-master-plan.md, role: master-plan, stage: draft }
-  # Doc 02 is five files. This is a greenfield build — every phase carries a
+  # Doc 02 is seven files. This is a greenfield build — every phase carries a
   # full-file code block — so one file lands far past the ~600-line threshold in
   # references/doc-pattern.md §Splitting an oversized doc. Cut on top-level phase
   # boundaries, reading order preserved, preamble in 02 and not duplicated.
@@ -1450,13 +1470,21 @@ docs:
              spike gate, the repo scaffold that fills _profile.yml commands.*, the
              contracts rendered in code, and gap detection (C7).' }
   - { id: 02b, file: 02b-pipeline-model.md, role: implementation, stage: reviewed,
-      note: 'Part A phases 4-6: frame extraction (C8), description (C9), synthesis and
-             the three per-verbosity track files (C10). Ends where the offline pipeline
-             does — which is also the boundary alternatives[A4] would cut on.' }
+      note: 'Part A phases 4-5: frame extraction (C8) and description (C9). Phase 6 was
+             split out into 02b2 in R22 when this file passed 600 lines.' }
+  - { id: 02b2, file: 02b2-track-output.md, role: implementation, stage: reviewed,
+      note: 'Part A phase 6: synthesis (C10) — Polly, the fragmented-AAC container that
+             limits.vega_media.url_mode_broken forces, and the three per-verbosity track
+             files. Ends where the offline pipeline does — which is also the boundary
+             alternatives[A4] would cut on.' }
   - { id: 02c, file: 02c-app-playback.md, role: implementation, stage: reviewed,
-      note: 'Part A phases 7-11: the MediaAdapter seam (the only directory that names a
-             platform API, so A4 is a swap and not a rewrite), then C6 TrackLoader,
-             C3 CueScheduler, C4 DescriptionAudio, C5 ADControls.' }
+      note: 'Part A phases 7-9: the MediaAdapter seam (the only directory that names a
+             platform API — kept after A4 was discarded because it is the public API of
+             changes[C12]), then C6 TrackLoader and C3 CueScheduler. Phases 10-11 were
+             split out into 02c2 in R22 when this file passed 600 lines.' }
+  - { id: 02c2, file: 02c2-audio-and-controls.md, role: implementation, stage: reviewed,
+      note: 'Part A phases 10-11: C4 DescriptionAudio with the JS volume fade that
+             limits.vega_media.no_volume_ramp forces, and C5 ADControls.' }
   - { id: 02d, file: 02d-screens-and-delivery.md, role: implementation, stage: reviewed,
       note: 'Part A phases 12-17: C2 PlayerScreen, C1 App, the MANUAL deliverables
              C12/C13/C14, and the removal of the Phase 0 instrumentation — ordered after

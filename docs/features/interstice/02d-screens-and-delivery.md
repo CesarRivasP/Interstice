@@ -9,7 +9,7 @@
 > **The preamble of `02-implementation-and-e2e.md` governs this file too** — language and layout, the `⟨commands.*⟩` notation, the logging convention, the "registry keys are the contract" rule, and the three deferred components (`C11`, `C15`, `C16`) that appear in none of the five halves. It is not repeated here.
 > Split per `references/doc-pattern.md` §Splitting an oversized doc. No technical content differs from a single-file version.
 
-**The set of five:** `02` (preamble, Phases 0–3: spike gate, scaffold, contracts in code, gap detection) · `02b` (Phases 4–6: frames, description, synthesis) · `02c` (Phases 7–11: the platform seam and the playback layer) · `02d` (Phases 12–17: screens, shell, the `[MANUAL]` deliverables) · `02e` (Part B test plan, Part C manual E2E, the Definition of Done, and the coverage map against `01-master-plan.md` §7).
+**The set of seven:** `02` (preamble, Phases 0–3: spike gate, scaffold, contracts in code, gap detection) · `02b` (Phases 4–5: frames, description) · `02b2` (Phase 6: synthesis and the track files) · `02c` (Phases 7–9: the platform seam, the loader, the scheduler) · `02c2` (Phases 10–11: description audio, the control surface) · `02d` (Phases 12–17: screens, shell, the `[MANUAL]` deliverables) · `02e` (Part B test plan, Part C manual E2E, the Definition of Done, and the coverage map against `01-master-plan.md` §7).
 
 ---
 
@@ -41,18 +41,29 @@ Phase 12 names a focus host in every screen state (`AC2`).
 
 ## Phase 12 — `src/screens/PlayerScreen.tsx` (`C2`) — a focus host in every state
 
-**File:** `src/screens/PlayerScreen.tsx` (new)
-**Anchor:** new file, full contents below.
-**Maps to:** `_facts.yml changes[C2]`, `AC1`, `AC2`, `AC8`
+**File:** `src/screens/PlayerScreen.tsx` (exists since R20 — **extend and rewire**, do not start from a blank file)
+**Anchor:** the file on disk already holds the byte-delivery increment described in §12.1. This phase moves it behind `MediaAdapter` (`02c` Phase 7), adds the window, and adds the states §12.2 lists.
+**Maps to:** `_facts.yml changes[C2]`, `limits.mse_buffer`, `limits.vega_media.url_mode_broken`, `AC1`, `AC2`, `AC8`, `AC23`, `AC24`
 
-**What changes:** the screen that wires everything together. The `mobile-tv` gap sweep finding it answers (`F2`) is specific and fatal: **a screen state whose only focusable element unmounts leaves the D-pad dead** — no focus, no key events, and the only way out is force-stopping the app. Every one of the four states below therefore names its focus host explicitly, and `BACK` during playback has a stated destination rather than whatever the navigator defaults to.
+**What changes:** the screen that wires everything together —  and, since R20, **the screen that delivers the film's bytes**. The `mobile-tv` gap sweep finding it answers (`F2`) is specific and fatal: **a screen state whose only focusable element unmounts leaves the D-pad dead** — no focus, no key events, and the only way out is force-stopping the app. Every one of the four states below therefore names its focus host explicitly, and `BACK` during playback has a stated destination rather than whatever the navigator defaults to.
 
 | state | focus host | `BACK` goes to |
 |---|---|---|
-| loading | the loading `View` itself (`accessible`, focusable) | the title list |
+| loading / buffering | the loading `View` itself (`accessible`, focusable) | the title list |
 | playing | the `ADControls` toggle (`hasTVPreferredFocus`) | the title list, playback stopped |
+| **stalled** | the stalled `View` (`accessibilityRole="alert"`) | the title list |
 | error | the error `View` (`accessibilityRole="alert"`) | the title list |
 | empty (track missing) | the `ADControls` alert `View` | the title list |
+
+### 12.1 — This screen owns byte delivery, and that is scope rather than detail
+
+`limits.vega_media.url_mode_broken`: there is no URI you can give the player that will make it fetch anything. The app creates a `MediaSource`, attaches it with `srcObject`, and appends the bytes itself. Three obligations follow, and each was a `review` finding in R21 rather than something the first version anticipated:
+
+- **`R21-F1` — bound what is resident.** The first increment reads the whole file with one `arrayBuffer()`. That is correct for the 2.6 MB demo clip and an **OOM for the real asset**, which is a 12.24-minute, 117 MB transcode on a device that `limits.clip_cache` already describes as a 32-bit process with a small heap — and `SourceBuffer` carries its own quota besides, raising `QuotaExceededError` independently of the heap. Append in `limits.mse_buffer.chunk_bytes` slices against `SourceBuffer.updating`, keep `ahead_s` buffered forward, drop anything more than `behind_s` behind the playhead with `SourceBuffer.remove()`. **`AC23` is what turns those three numbers from `decided` into measured**, and it runs on the worst device in the matrix, not here.
+- **`R21-F2` — a seek outside the window has no bytes.** URL mode used to let the platform fetch byte ranges; now the app must, and a fragmented MP4 carries no index to find them with. `contracts.asset_manifest.byte_index` supplies one. A seek the app cannot serve resolves into the stalled state below rather than into a frozen picture.
+- **`R21-F3` — a stall is not an error.** When bytes run short the player emits `waiting`/`stalled` and **never** `error`. A screen that listens only for `onError` leaves the viewer with a still frame and silence. For this app's users that is indistinguishable from the film simply not being interesting any more, which is the precise failure `AC8` forbids one layer up. `AC24` is the criterion.
+- **`R21-F6` — abort on unmount.** The in-flight `fetch` is tied to an `AbortController`, so leaving the screen mid-buffer stops the transfer instead of finishing it into a component that no longer exists.
+
 
 **Code:**
 
@@ -76,7 +87,7 @@ export interface PlayerScreenProps {
   onExit: () => void; // AC2: BACK's stated destination — the title list
 }
 
-type ScreenState = 'loading' | 'playing' | 'error';
+type ScreenState = 'loading' | 'playing' | 'stalled' | 'error';
 
 export function PlayerScreen({
   media, readJson, assetDir, assetId, onExit,
@@ -128,12 +139,22 @@ export function PlayerScreen({
 
     const offPosition = media.video.onPosition((ms) => scheduler.current!.tick(ms));
     const offSeek = media.video.onSeek(resync);          // AC6
+    // AC22 / R21-F3: running dry raises no error, so it needs its own listener
+    // and its own state. Without this the screen stays in `playing` forever.
+    const offStalled = media.video.onStalled(() => {
+      console.log('INTERSTICE.player.stalled');
+      void audio.current?.stop();  // never leave the film ducked under a stall
+      setScreen('stalled');
+    });
     const offError = media.video.onError((err) => {
       console.log(`INTERSTICE.player.error msg=${err.message}`);
       setScreen('error');
     });
 
-    return () => { offPosition(); offSeek(); offError(); void audio.current?.stop(); };
+    return () => {
+      offPosition(); offSeek(); offStalled(); offError();
+      void audio.current?.stop();
+    };
   }, [media]);
 
   // --- AC2: BACK has one stated destination from every state ---
@@ -153,6 +174,16 @@ export function PlayerScreen({
     return (
       <View accessible accessibilityRole="progressbar" accessibilityLabel="Loading title">
         <Text>Loading…</Text>
+      </View>
+    );
+  }
+
+  if (screen === 'stalled') {
+    // AC22: spoken, not just shown. A frozen picture says nothing to this app's
+    // users, and a stall raises no error for anything else to report.
+    return (
+      <View accessible accessibilityRole="alert" accessibilityLabel="The video paused while it loads more. Press back to return to the list.">
+        <Text>Buffering…</Text>
       </View>
     );
   }
@@ -185,9 +216,11 @@ export function PlayerScreen({
 
 > **The verbosity switch re-runs the loader and nothing else.** The video keeps playing, the position is untouched, and the scheduler is reloaded with the new track's cues. That is what "switches verbosity between three levels without restart" means in `AC17`, and it is also why `TrackLoader` falls back to `standard` rather than failing — a missing level must not stop the film.
 
-**Contracts implemented:** `changes[C2]`, `AC1`, `AC2`, `AC3`, `AC6`, `AC8`, `AC17`
+**Contracts implemented:** `changes[C2]`, `limits.mse_buffer`, `limits.vega_media.url_mode_broken`, `limits.vega_media.surface_races_init`, `AC1`, `AC2`, `AC3`, `AC6`, `AC8`, `AC17`, `AC23`, `AC24`
 
-**Phase 12 verification:** `⟨commands.tests⟩ src/screens/__tests__/PlayerScreen.test.ts` → a line containing `⟨commands.tests_expect⟩`. The focus-host claim per state is only fully verifiable on a device — `02e` §C.3 is the `[MANUAL]` D-pad walk that closes `AC2`.
+> **Do not lose the surface race while rewiring.** `limits.vega_media.surface_races_init`: `initialize()` and the platform handing over the video surface are independent async signals with no guaranteed order, and on the Virtual Device the surface won by **26 ms**. Starting playback from the surface callback alone plays a player with nothing attached and yields `MEDIA_ERR_SRC_NOT_SUPPORTED`, which reads exactly like an unsupported file and is not one. The dual readiness tracking in the file on disk exists for that, and it is invisible until it is removed.
+
+**Phase 12 verification:** `⟨commands.tests⟩` → a line containing `⟨commands.tests_expect⟩`. The suite already pins two of this phase's invariants (`test/App.spec.tsx`): that a surface-created handler is registered before playback, and that `.src` stays **empty** while media is attached through `srcObject`. The focus-host claim per state is only fully verifiable on a device — `02e` §C.3 is the `[MANUAL]` D-pad walk that closes `AC2`, and `AC23`'s memory bound needs the worst device in the matrix.
 
 ---
 

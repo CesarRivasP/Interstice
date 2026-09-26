@@ -9,7 +9,7 @@
 > **The preamble of `02-implementation-and-e2e.md` governs this file too** — language and layout, the `⟨commands.*⟩` notation, the logging convention, the "registry keys are the contract" rule, and the three deferred components (`C11`, `C15`, `C16`) that appear in none of the five halves. It is not repeated here.
 > Split per `references/doc-pattern.md` §Splitting an oversized doc. No technical content differs from a single-file version.
 
-**The set of five:** `02` (preamble, Phases 0–3: spike gate, scaffold, contracts in code, gap detection) · `02b` (Phases 4–6: frames, description, synthesis) · `02c` (Phases 7–11: the platform seam and the playback layer) · `02d` (Phases 12–17: screens, shell, the `[MANUAL]` deliverables) · `02e` (Part B test plan, Part C manual E2E, the Definition of Done, and the coverage map against `01-master-plan.md` §7).
+**The set of seven:** `02` (preamble, Phases 0–3: spike gate, scaffold, contracts in code, gap detection) · `02b` (Phases 4–5: frames, description) · `02b2` (Phase 6: synthesis and the track files) · `02c` (Phases 7–9: the platform seam, the loader, the scheduler) · `02c2` (Phases 10–11: description audio, the control surface) · `02d` (Phases 12–17: screens, shell, the `[MANUAL]` deliverables) · `02e` (Part B test plan, Part C manual E2E, the Definition of Done, and the coverage map against `01-master-plan.md` §7).
 
 ---
 
@@ -23,7 +23,7 @@ Same tag + date spine as `01-master-plan.md` and `02`.
 
 ### 2026-09-19 — v5: review R5 dispositions
 
-`AC21`/`AC22` left `acceptance[]` with `C15`/`C16`, so the Definition of Done below carries twenty criteria, not twenty-two. The corrected contracts (`source_frames_ms` as an array, `verbosity` as a field) are what §B.2 asserts against.
+`AC23`/`AC24` left `acceptance[]` with `C15`/`C16`, so the Definition of Done below carries twenty criteria, not twenty-two. The corrected contracts (`source_frames_ms` as an array, `verbosity` as a field) are what §B.2 asserts against.
 
 ---
 
@@ -247,7 +247,7 @@ Play through 20+ consecutive cues without seeking and confirm `INTERSTICE.cache.
 
 # Acceptance criteria (Definition of Done)
 
-Verbatim from `_facts.yml acceptance[]`, all twenty, with where each is closed.
+Verbatim from `_facts.yml acceptance[]`, all twenty-two, with where each is closed.
 
 | id | criterion | closed by |
 |---|---|---|
@@ -271,8 +271,12 @@ Verbatim from `_facts.yml acceptance[]`, all twenty, with where each is closed.
 | AC18 | a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch | `02b` Phase 5, `02d` Phase 16.2 |
 | AC19 | the submission video visualizes the gap structure (timeline strip with dialogue vs gaps + split-screen before/after with ducking) using data from C7 | `02` Phase 3 (data), `02d` Phase 16.1 |
 | AC20 | at least one blind/low-vision viewer validates the track before Phase 5 (20–30 min, with/without comparison, consent on file); anonymized quote retained for SUBMISSION.md/video | `02` Phase 0.5 (recruit), `02d` Phase 16.4 |
+| AC23 | the app plays the full-length demo asset without exceeding memory on the worst device in the matrix: `limits.mse_buffer` holds, `SourceBuffer.remove()` runs behind the playhead, and no `QuotaExceededError` is raised across an end-to-end watch | `02d` Phase 12, §C.8 |
+| AC24 | a stall — bytes running short mid-playback — produces a stated visible and spoken state rather than a frozen picture, and a seek outside the buffered window either resolves or says why it cannot | `02d` Phase 12, §B.1, §C.8 |
 
-> `AC21` / `AC22` were removed on 2026-09-19 (review R5) together with `C15`/`C16`. A criterion whose component is deferred is a criterion nothing can satisfy. They return verbatim if `decisions.typesafe_judgment_layer.reopens_when` fires.
+> **`AC21` and `AC22` are reserved, not free.** They were written in R3 and retired on 2026-09-19 (review R5) together with `C15`/`C16` — a criterion whose component is deferred is a criterion nothing can satisfy — and `decisions.typesafe_judgment_layer` says they return **verbatim** if that decision reopens. R21's two new criteria were first written as `AC21`/`AC22` and renumbered to `AC23`/`AC24` in R22 on finding the collision. Retired ids are not recycled here, because a reopened criterion that silently means something else is worse than a gap in the numbering.
+
+> **`AC23` and `AC24` come from `review` R21, not from the original set.** They exist because `limits.vega_media.url_mode_broken` moved byte delivery into the app: the first is the memory bound on a buffer the app now owns, the second is the state a viewer gets when that buffer runs dry. Both are on the worst device in the matrix and neither can close on the simulator.
 
 ---
 
