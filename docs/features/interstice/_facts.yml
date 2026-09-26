@@ -59,6 +59,7 @@ dates:
     - { tag: v14, date: 2026-09-25, note: 'measure R20 — the asset''s content end bounded by measurement, not by a rule: blackdetect plus a frame-by-frame read found credits AND a post-credits scene, so worst_case.content_windows replaces the scalar content_end the plan assumed; C7 gains clipToContent and every worst_case figure is re-measured against the clipped track' }
     - { tag: v15, date: 2026-09-25, note: 'measure R20 — D5 resolved FALSE and D3 fully resolved: the Virtual Device decodes video (253 frames, 0 dropped). URL mode is broken on this SDK and the app now delivers its own bytes through MediaSource; five platform facts recorded, two of which produce confident false negatives if trusted' }
     - { tag: v16, date: 2026-09-25, note: 'review R21 — sweep over the scope R20 moved: 7 findings, all confirmed. C2 now owns byte delivery so limits.mse_buffer bounds it, C4/C6/C10 re-scoped because url_mode_broken applies to AudioPlayer too, contracts.asset_manifest gives content_windows a runtime home, AC21/AC22 added. D6 raised and resolved TRUE the same day; D2 resolved TRUE — concurrent streams and ducking both hold on the device' }
+    - { tag: v17, date: 2026-09-25, note: 'measure R23 — AWS credits granted and D4 re-measured across the grant: byte-identical refusal, plus two new eliminations (the Bedrock CONTROL plane works and lists the full Nova catalogue; funding is not the variable). C10 container chain validated with real Polly bytes' }
 
 # =====================================================================
 # DECISIONS — premises the prose hangs off. `sync` cannot follow these:
@@ -360,6 +361,16 @@ limits:
     aws_credits_request_deadline: '2026-10-21 12:00 PT'
     aws_credits_form: 'https://forms.gle/5hyhr1u6x3fuV2aW7'
     aws_credits_requested: '2026-09-22 — submitted by the owner. Closes the Phase 0 checklist item.'
+    aws_credits_granted: '2026-09-25 — granted, reported by the owner. The request
+                   deadline (aws_credits_request_deadline) is therefore moot for this
+                   entry. NOT A RESOLUTION OF defects[D4]: credits are billing, and
+                   the measured D4 error is an authorization refusal
+                   (Error 002: Access to Bedrock models is not allowed for this
+                   account), not a funding one. Recorded separately so that a later
+                   round cannot read the grant as the fix. EXPIRY AND AMOUNT NOT YET
+                   RECORDED — ask the owner; a credit that expires before 10-23 buys
+                   nothing, and worst_case.est_cost_usd is still null because no call
+                   has ever been priced.'
     friction_log_bonus_pct: 10
     repo_must_be: 'EITHER public with a detectable open-source license file (visible in the
                    GitHub About section) OR private and shared with testing@devpost.com plus
@@ -413,11 +424,33 @@ limits:
     basis: asserted
     falsified_by: 'a SynthesizeSpeech rejection on a cue that is under the assumed
                    character bound'
-    reachable: 'YES — measured 2026-09-22 on the entrant AWS account, us-east-1:
-                `aws polly synthesize-speech --engine neural --voice-id Joanna` returned
-                ContentType audio/mpeg. Polly works on the same credentials Bedrock
-                refuses (D4), which is what proves D4 is Bedrock-specific and not an
-                account-wide or credential problem.'
+    reachable: 'YES — measured 2026-09-22 and again 2026-09-25 on the entrant AWS
+                account, us-east-1: `aws polly synthesize-speech --engine neural
+                --voice-id Joanna` returned ContentType audio/mpeg, 11996 bytes for 33
+                characters. Polly works on the same credentials Bedrock refuses (D4),
+                which is what proves D4 is Bedrock-specific and not an account-wide or
+                credential problem.'
+    container_chain:
+      basis: measured
+      evidence: { how: device, date: 2026-09-25, n: 1,
+                  spread: 'single run',
+                  cmd: 'aws polly synthesize-speech ... ; ffmpeg -c:a aac -movflags +frag_keyframe+empty_moov+default_base_moof ; npm run build ; vega device install-app ; launch',
+                  conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2, simulated',
+                                build: 'Release aarch64, SDK 0.24.12112, w3cmedia ~2.3.2, RN 0.83',
+                                content_asset: 'Polly neural Joanna, 33 characters, re-encoded to fragmented mp4 AAC-LC 96 kbps, 2.015 s, 25674 bytes' },
+                  value: 'cue.audio mse_supported=true bytes=25674 state=canplay ->
+                          playing -> ended t=2.02, with player.progress frames=235
+                          dropped=0 sampled mid-cue' }
+      note: 'THE WHOLE OF changes[C10] OUTPUT PATH, END TO END, WITH REAL ARTEFACTS:
+             Polly speaks, ffmpeg repackages to fragmented mp4, metro bundles it, the
+             app fetches it on device, appends it to a SourceBuffer and plays it over
+             a running film while the main track ducks. Every step of 02b2 Phase 6.1
+             is now measured rather than designed. The earlier D6/D2 run used a clip
+             synthesised with macOS `say`; this one is the real vendor output, which
+             matters because the container came out of a different encoder.
+             ffprobe on the result: ftyp / moov / moof / mdat — fragmented, as
+             limits.vega_media.mse_path requires. A plain mp4 puts its index last and
+             appendBuffer rejects it.'
     neural_voices_en_us: 'Danielle, Gregory, Joanna, Ruth, Kevin, Salli, Matthew,
                 Kimberly, Kendra, Justin, Joey, Ivy — measured via describe-voices.'
     voice_chosen: 'Joanna or Matthew. Audio description convention is a neutral,
@@ -1003,14 +1036,22 @@ defects:
             the entrant AWS account, in every region tried, while Polly on the same credentials
             succeeds. The block is account-scoped and Bedrock-specific.'
     basis: measured
-    evidence: { how: shell, date: 2026-09-22,
+    evidence: { how: shell, date: 2026-09-25, n: 2,
+                spread: 'identical on both runs, 3 days apart, across an AWS credit grant',
                 cmd: 'aws bedrock-runtime converse --region us-east-1 --model-id amazon.nova-lite-v1:0 --messages ... ; aws bedrock get-foundation-model-availability --region us-east-1 --model-id amazon.nova-lite-v1:0',
                 value: 'ValidationException — "Error 002: Access to Bedrock models is not
                         allowed for this account"; identical in us-east-1, us-west-2 and
                         eu-west-1, and identical for InvokeModel and Converse.
                         get-foundation-model-availability returns regionAvailability
                         AVAILABLE, entitlementAvailability AVAILABLE, agreementAvailability
-                        AVAILABLE, authorizationStatus NOT_AUTHORIZED.' }
+                        AVAILABLE, authorizationStatus NOT_AUTHORIZED.
+                        RE-MEASURED 2026-09-25 after limits.hackathon.aws_credits_granted:
+                        byte for byte the same ValidationException, plus two NEW
+                        discriminators — `bedrock list-foundation-models` returns the FULL
+                        Nova catalogue (nova-pro, nova-lite, nova-micro, nova-canvas,
+                        nova-reel, nova-2-lite, nova-2-sonic, nova-2-multimodal-embeddings),
+                        and `polly synthesize-speech --engine neural` returns 11996 bytes
+                        of audio/mpeg on the same session.' }
     falsified_by: 'a successful InvokeModel or Converse on any Nova model from this account'
     log_line: null
     status: open
@@ -1022,6 +1063,18 @@ defects:
            the account state (Polly synthesises audio on the same root session; account
            created 2018-04-17, state ACTIVE) · not an SCP (the account is not in an
            Organization).
+           RULED OUT 2026-09-25, and these two matter most for a support case because
+           together they eliminate everything except the account entitlement itself:
+           · NOT THE CONTROL PLANE, and not model availability. `bedrock
+             list-foundation-models` succeeds and returns the whole Nova catalogue. The
+             account authenticates to Bedrock, is authorised to enumerate its models, and
+             the models exist in the region. Only the DATA plane refuses.
+           · NOT FUNDING. The AWS promotional credits were granted on 2026-09-25 and the
+             error did not change by one character. That was stated as the expectation
+             BEFORE the retest rather than explained after it — credits are billing and
+             this is an authorization refusal — and it is now measured rather than argued.
+           So the refusal is precise: inference only, account scope, with credentials,
+           region, service reachability, model existence and billing all eliminated.
            LEADING HYPOTHESIS, unconfirmed: Bedrock carries country availability
            availability restrictions that other AWS services do not, and this account
            falls outside the region list that carries it. This produces exactly the

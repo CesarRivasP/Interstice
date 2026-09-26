@@ -602,3 +602,45 @@ Both `02b` and `02c` passed 600 lines while being regenerated and were cut on ph
 **Still open:** `D4` Bedrock, **decide by 09-30** · `AC20`, **drop-dead 10-16** · `AC5` audible ducking and `AC23` the memory bound, both on hardware.
 
 **Next mode:** build. The plan and the platform finally describe the same thing, and `02` Phase 4 onward is now executable prose — except `02b` Phase 5, which is written and blocked on `D4`.
+
+---
+
+## R23 · 2026-09-25 · claude-opus-5 (Claude Code) · credits granted, D4 unchanged, and C10's output path measured end to end
+**Read:** `_facts.yml` (v16) · `_log.md` (through R22 end)
+**Log read through:** R22
+**Did:** recorded the grant, re-measured `D4`, and then spent the live AWS session on something that was not blocked.
+
+### `D4` is unchanged, and the prediction was made before the test
+The credits were granted on 09-25. `InvokeModel` and `Converse` return **byte for byte the same** `ValidationException — Error 002: Access to Bedrock models is not allowed for this account`. The stub above stated the expectation before the retest rather than explaining it afterwards, which is the only reason this counts as a measurement of the hypothesis and not a rationalisation of a disappointment.
+
+**Two new eliminations, and they are the ones a support case needs:**
+- **The Bedrock CONTROL plane works.** `aws bedrock list-foundation-models` returns the full Nova catalogue — `nova-pro`, `nova-lite`, `nova-micro`, `nova-canvas`, `nova-reel`, `nova-2-lite`, `nova-2-sonic`, `nova-2-multimodal-embeddings`. So the account authenticates to Bedrock, is authorised to enumerate its models, and the models exist in the region. **Only the data plane refuses.**
+- **Funding is not the variable.** A credit grant changed nothing. That kills the most natural wrong theory before anyone spends a day on it.
+
+The refusal is now characterised in one sentence: **inference only, account scope, with credentials, region, service reachability, model existence and billing all eliminated by measurement.** That is what goes in the support case, and it is a much shorter case than the one available three days ago.
+
+`decisions.hackathon_track` already said the AWS Builder mini takes any AWS service with a documented integration. Polly is that service, it works, and the credits now pay for it.
+
+### The live session spent on something not blocked
+Polly synthesised a real cue (neural, Joanna, 33 characters, 11996 bytes of `audio/mpeg`), and the whole of `02b2` Phase 6.1's output path ran with it, end to end, on the device:
+
+```
+Polly -> mp3 -> ffmpeg fragmented mp4 (ftyp/moov/moof/mdat) -> metro bundle
+-> device fetch -> appendBuffer -> AudioPlayer -> ended t=2.02
+```
+```
+INTERSTICE.cue.audio mse_supported=true bytes=25674 state=canplay
+INTERSTICE.cue.duck main_volume=0.25
+INTERSTICE.player.progress t=3.90 paused=false frames=235 dropped=0   <- mid-cue
+INTERSTICE.cue.audio state=ended t=2.02
+```
+
+**Why this was worth doing rather than waiting for `D4`.** The `D6`/`D2` run in R21 used a clip synthesised with macOS `say`. This one is the real vendor output, and it came out of a **different encoder** — the container decision in `changes[C10]` was designed against a measurement of someone else's file. Now the exact chain `C10` will run is measured on the exact platform it has to play on. `C9` is blocked; `C10` never was, and the two were only entangled by habit.
+
+**Edits:** `_facts.yml` (`limits.hackathon.aws_credits_granted`; `defects[D4]` evidence re-measured with `n: 2` and two new eliminations; `limits.polly.container_chain` new, `basis: measured`; revision v17) · `01-master-plan.md` (§7 checklist, §8 risk row) · `src/assets/cue.m4a` replaced with the Polly artefact.
+
+**Validation:** `audit.py` → clean, every mechanized check passed · measured on the Virtual Device as quoted.
+
+**Still open:** `D4` — **decide by 09-30**, and the support case is now cheap to write · `AC20`, **drop-dead 10-16** · `AC5` and `AC23` on hardware.
+
+**Next mode:** ask the owner for the credit amount and expiry — a credit that lapses before 2026-10-23 buys nothing — then build `C8` onward, which is unblocked.
