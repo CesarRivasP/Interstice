@@ -1150,6 +1150,12 @@ defects:
               takes an opaque blob of at least 1100 bytes, which is the serialised
               console form; guessing its schema, or inventing business details to send
               to a vendor, is not something this set will do).
+              THE FORM GATES EVERY MODEL, NOT ONLY ANTHROPIC''S — measured 2026-09-26.
+              The retired Model access page says use-case details are needed "for
+              Anthropic models". Invoking anthropic.claude-haiku-4-5 returns the SAME
+              Error 002 as Nova, and surfaces no form. So the documented scope of the
+              requirement is narrower than its actual scope, and nothing in the
+              console or the API offers the form to fill.
               WHY IT TOOK SIX ROUNDS, recorded because the lesson is the reusable part:
               Error 002 says "Access to Bedrock models is not allowed for this account"
               and NEVER mentions a form. get-foundation-model-availability reports
