@@ -1115,8 +1115,8 @@ defects:
             the entrant AWS account, in every region tried, while Polly on the same credentials
             succeeds. The block is account-scoped and Bedrock-specific.'
     basis: measured
-    evidence: { how: shell, date: 2026-09-26, n: 4,
-                spread: 'byte-identical on all four runs — 2026-09-22, 2026-09-25 (after the credit GRANT), 2026-09-26 (after the credit REDEMPTION, which required a payment method on file), and 2026-09-26 from the BEDROCK CONSOLE PLAYGROUND, which is a different code path with a console session rather than CLI credentials',
+    evidence: { how: shell, date: 2026-09-26, n: 5,
+                spread: 'byte-identical on all four runs — 2026-09-22, 2026-09-25 (after the credit GRANT), 2026-09-26 (after the credit REDEMPTION, which required a payment method on file), 2026-09-26 from the BEDROCK CONSOLE PLAYGROUND (a different code path with a console session), and 2026-09-26 from a NEWLY CREATED IAM USER holding bedrock:InvokeModel — three identities, two code paths, one answer',
                 cmd: 'aws bedrock-runtime converse --region us-east-1 --model-id amazon.nova-lite-v1:0 --messages ... ; aws bedrock get-foundation-model-availability --region us-east-1 --model-id amazon.nova-lite-v1:0',
                 value: 'ValidationException — "Error 002: Access to Bedrock models is not
                         allowed for this account"; identical in us-east-1, us-west-2 and
@@ -1155,8 +1155,35 @@ defects:
              authorizationStatus still NOT_AUTHORIZED beside three AVAILABLEs. That was stated as the expectation
              BEFORE the retest rather than explained after it — credits are billing and
              this is an authorization refusal — and it is now measured rather than argued.
-           So the refusal is precise: inference only, account scope, with credentials,
-           region, service reachability, model existence and billing all eliminated.
+           RULED OUT 2026-09-26, and this one was tested because AWS SUPPORT PROPOSED
+           IT: NOT THE IDENTITY. Support''s first diagnosis was that using the account
+           root was itself the cause. A dedicated IAM user was created with
+           bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream and the discovery
+           actions. Same Error 002. With that same user `bedrock list-foundation-models`
+           and `polly describe-voices` both SUCCEED, so the credentials are valid and
+           the Bedrock permissions are real, while invoke-model and converse are refused.
+           THE DISCRIMINATOR, and it is the cleanest evidence here: the same IAM user
+           calling an API it genuinely lacks permission for
+           (`account get-contact-information`) returns AccessDeniedException. Calling
+           Bedrock inference, which it HAS permission for, returns ValidationException
+           / Error 002. AWS distinguishes the two cases and this is not the permission
+           one — a missing policy cannot produce a ValidationException. Both errors were
+           produced from one set of credentials minutes apart.
+           So the refusal is precise: inference only, account scope, independent of
+           identity, with credentials, region, service reachability, model existence and
+           billing-by-credit all eliminated.
+           NEW HYPOTHESIS 2026-09-26, from the amazon-bedrock skill''s troubleshooting
+           table: BILLING INSTRUMENT OR CURRENCY. That table documents
+           INVALID_PAYMENT_INSTRUMENT as "an account billing issue, not Bedrock",
+           resolved by setting a credit card as the default payment method or adding USD
+           payment profiles. Different error string, same SHAPE — an account-level
+           billing condition gating model access — and consistent with every
+           measurement here: account scope, all regions, control plane unaffected
+           because it bills nothing, Polly unaffected, and promotional credits
+           irrelevant because a credit balance is not a payment instrument. NOT YET
+           CHECKED: it lives in the Billing console under Payment preferences and
+           belongs to the owner. Worth stating plainly — that skill has NO entry for
+           Error 002 itself, so this is not a documented common failure.
            LEADING HYPOTHESIS, unconfirmed: Bedrock carries country availability
            availability restrictions that other AWS services do not, and this account
            falls outside the region list that carries it. This produces exactly the

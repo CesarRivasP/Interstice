@@ -875,3 +875,30 @@ Neither is committed. The support case carries the account id once filled in and
 **Validation:** `audit.py` → clean.
 **Still open:** `D4` — **decide by 09-30, four days**, and no longer a technical question · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
 **Next mode:** `limits.mse_buffer` and `AC23` — the last large piece that does not depend on Bedrock.
+
+---
+
+## R32 · 2026-09-26 · claude-opus-5 (Claude Code) · support's hypothesis tested and disproven; a new one from a skill
+**Read:** `_facts.yml` (v17) · `_log.md` (through R31 end) · skill `amazon-bedrock`
+**Log read through:** R31
+**Did:** AWS Support's first reply proposed that using the account **root** was itself the cause. The owner created an IAM user with explicit Bedrock permissions. Tested: **same `Error 002`**, character for character. `n: 5` — three identities, two code paths, one answer.
+
+**The cleanest piece of evidence in this whole episode fell out of it.** With that same IAM user, minutes apart:
+```
+aws account get-contact-information --profile interstice   -> AccessDeniedException
+aws bedrock-runtime invoke-model   --profile interstice ... -> ValidationException / Error 002
+```
+When that user lacks a permission, AWS says `AccessDeniedException`. When it **has** the permission — proven by `list-foundation-models` and `polly describe-voices` both succeeding on the same credentials — Bedrock says `ValidationException`. **A missing policy cannot produce a ValidationException.** Two error classes from one identity, and the difference is the argument.
+
+This is the second time an outside diagnosis has been tested rather than argued with (the first was the credit grant in R23), and the second time the prediction was written down before the test. That is the only thing that makes either of them a measurement.
+
+**A new hypothesis, and it did not come from reasoning harder.** The `amazon-bedrock` skill's troubleshooting table has **no entry for Error 002** — worth recording, because it means this is not a documented common failure. It does document `INVALID_PAYMENT_INSTRUMENT` as *"an account billing issue, not Bedrock"*, fixed by a default credit card or a **USD payment profile**. Different string, same shape: an account-level billing condition gating model access.
+
+It fits every measurement — account scope, all regions, control plane unaffected because it bills nothing, Polly unaffected, credits irrelevant because a credit balance is not a payment instrument. **Not yet checked**; it lives in the Billing console and belongs to the owner. Recorded in `defects[D4]` as a named hypothesis rather than left as a hunch in a chat log.
+
+**Second support reply drafted** (`scratchpad/d4-support-reply-2.txt`, not committed) leading with the disproof, then the `AccessDenied` vs `ValidationException` discriminator, then the billing question.
+
+**Edits:** `_facts.yml` (`defects[D4]`: `n: 5`, the identity elimination with the discriminator, the billing-instrument hypothesis, and the note that the Bedrock skill documents no Error 002).
+**Validation:** `audit.py` → clean.
+**Still open:** `D4` — **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
+**Also noted, unrelated to D4:** installing the AWS agent toolkit wrote an `aws-mcp` server into `~/.claude.json` **globally**, plus Codex, Cursor, Gemini CLI and OpenCode. The repo's own convention is per-project MCP with local scope, never global. Flagged to the owner; not changed without asking.
