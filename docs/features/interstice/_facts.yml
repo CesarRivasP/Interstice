@@ -1093,8 +1093,8 @@ defects:
             the entrant AWS account, in every region tried, while Polly on the same credentials
             succeeds. The block is account-scoped and Bedrock-specific.'
     basis: measured
-    evidence: { how: shell, date: 2026-09-26, n: 3,
-                spread: 'byte-identical on all three runs — 2026-09-22, 2026-09-25 (after the credit GRANT) and 2026-09-26 (after the credit REDEMPTION, which required a payment method on file)',
+    evidence: { how: shell, date: 2026-09-26, n: 4,
+                spread: 'byte-identical on all four runs — 2026-09-22, 2026-09-25 (after the credit GRANT), 2026-09-26 (after the credit REDEMPTION, which required a payment method on file), and 2026-09-26 from the BEDROCK CONSOLE PLAYGROUND, which is a different code path with a console session rather than CLI credentials',
                 cmd: 'aws bedrock-runtime converse --region us-east-1 --model-id amazon.nova-lite-v1:0 --messages ... ; aws bedrock get-foundation-model-availability --region us-east-1 --model-id amazon.nova-lite-v1:0',
                 value: 'ValidationException — "Error 002: Access to Bedrock models is not
                         allowed for this account"; identical in us-east-1, us-west-2 and
@@ -1140,14 +1140,17 @@ defects:
            falls outside the region list that carries it. This produces exactly the
            observed shape — region, entitlement and
            agreement all AVAILABLE, authorization denied at account scope.
-           NOT YET RUN, and it is the last cheap discriminator: INVOKE NOVA FROM THE
-           BEDROCK CONSOLE PLAYGROUND. Every measurement so far is on the CLI path.
-           The console invokes over a different path with a console session, so the
-           two outcomes split cleanly: it fails identically and the account-scope
-           conclusion is confirmed from a second independent route, which makes the
-           support case shorter; it SUCCEEDS and the fault is in the API/credential
-           path rather than the account, which is a different and far more fixable
-           problem. It is browser-only, so it belongs to the owner.
+           RUN 2026-09-26, and it closes the characterisation: THE BEDROCK CONSOLE
+           PLAYGROUND FAILS IDENTICALLY. Nova Lite, us-east-1, from the browser with
+           a console session rather than CLI credentials — the same
+           ValidationException, the same Error 002, character for character. So it is
+           NOT the API path, NOT the SDK, NOT request signing and NOT the CLI
+           credentials. Two independent routes, one answer. The refusal is at the
+           account, and nothing an app can do changes it.
+           WHAT REMAINS is therefore not a debugging step. It is a question for AWS
+           (why is this account NOT_AUTHORIZED) and a question for the organisers
+           (whether the AWS Builder mini challenge needs Bedrock specifically). Both
+           were drafted 2026-09-26 and are on the owner''s clock.
            THE AUTHORITATIVE ANSWER IS AN AWS SUPPORT CASE, which is free for account
            issues. Ask why authorizationStatus is NOT_AUTHORIZED in all regions when
            Polly works. Working around a geographic restriction is not an option under

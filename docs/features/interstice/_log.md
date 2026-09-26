@@ -851,3 +851,27 @@ Browser-only, so it belongs to the owner. Recorded in `defects[D4]` as NOT YET R
 **Validation:** `audit.py` → clean.
 **Still open:** `D4` **decide by 09-30 — four days** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
 **Next mode:** the owner runs the playground test and sends the two messages; code continues on anything not downstream of `C9`.
+
+---
+
+## R31 · 2026-09-26 · claude-opus-5 (Claude Code) · D4 characterised as far as measurement can take it
+**Read:** `_facts.yml` (v17) · `_log.md` (through R30 end)
+**Log read through:** R30
+**Did:** the owner ran the console-playground test R30 named. **It fails identically** — Nova Lite, us-east-1, from the browser with a console session rather than CLI credentials, same `ValidationException`, same `Error 002`, character for character.
+
+**That closes the characterisation.** Two independent code paths, one answer. It is not the SDK, not request signing, not the CLI credentials and not the API shape. The refusal is at the account, and nothing this app or this repository can do changes it.
+
+**`defects[D4]` is now `n: 4`** across four runs and three account states — before the credit grant, after the grant, after the redemption (which required a payment method on file), and from the console. Byte-identical every time. A defect measured four times through three state changes is not a flaky one.
+
+**What remains is not a debugging step, and saying so is the point.** Every further hour spent on this inside the repository is an hour spent on a question the repository cannot answer. Two messages, drafted and on the owner's clock:
+- an **AWS support case** asking why `authorizationStatus` is `NOT_AUTHORIZED` beside three `AVAILABLE`s, with the eight eliminations attached so nobody re-runs them;
+- a **question to the organisers**, which is the cheaper of the two: `decisions.hackathon_track` already reads the AWS Builder mini challenge as satisfied by any AWS service with a documented integration, Polly works and is now paid for by the credits, and a one-line confirmation turns `D4` from a blocker into the cost of one feature.
+
+Neither is committed. The support case carries the account id once filled in and this repository is public — the same rule that kept the credit code out of it.
+
+**The seam is why waiting is cheap.** `C9` is one function behind one call (`invokeNova` in `pipeline/describe.ts`). `alternatives[A5]`'s third rung — a non-Bedrock vision provider for `C9` alone — touches that function and nothing in `C7`, `C8`, `C10` or `src/`. So there is no reason to spend build time on the swap before **09-30**: the decision is cheap to execute late precisely because the scope was isolated early.
+
+**Edits:** `_facts.yml` (`defects[D4]` evidence `n: 4` with the console path in the spread; the discriminator moved from NOT YET RUN to RUN with its result; the remaining work restated as questions rather than as debugging).
+**Validation:** `audit.py` → clean.
+**Still open:** `D4` — **decide by 09-30, four days**, and no longer a technical question · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
+**Next mode:** `limits.mse_buffer` and `AC23` — the last large piece that does not depend on Bedrock.
