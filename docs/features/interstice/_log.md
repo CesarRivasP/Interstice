@@ -756,3 +756,40 @@ Four that carry a `Fails if:`:
 **Validation:** `npm test` exit 0 — jest **48**, vitest 44 · `npm run lint` exit 0 · `audit.py` → clean · the announce guard mutation-checked.
 **Still open:** `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` all hardware-only.
 **Next mode:** the `MediaAdapter` seam (`02c` Phase 7) — extract what `PlayerScreen` and `DescriptionAudio` already do into `src/platform/vega/`, which is the last structural move before `C2`/`C1` wire the whole thing together.
+
+---
+
+## R28 · 2026-09-25 · claude-opus-5 (Claude Code) · the MediaAdapter seam, and three defects a fake could not show
+**Read:** `_facts.yml` (v17) · `_log.md` (through R27 end) · `02c` Phase 7 · `02c2` Phase 10
+**Log read through:** R27
+**About to do:** build `src/platform/MediaAdapter.ts` and `src/platform/vega/index.ts` by EXTRACTING what `PlayerScreen` and `DescriptionAudio` already do, plus `src/ad/duck.ts` for the JS fade. The check that says it worked is structural and mechanical: `rg "@amazon-devices/react-native-w3cmedia" src/ --glob '!src/platform/**'` must return nothing, and it returns two files today.
+**Scope stated before starting, so its absence is not read as an oversight:** the `limits.mse_buffer` WINDOW is NOT in this round. Windowed append needs `contracts.asset_manifest.byte_index` to serve a seek, and that is its own piece of work with its own acceptance criterion (`AC23`). This round keeps the whole-file append that works today and marks the seam where the window goes.
+### Done
+`src/platform/MediaAdapter.ts`, `src/platform/vega/index.tsx`, `src/ad/duck.ts`; `PlayerScreen`, `DescriptionAudio` and `App` rewired. **The seam holds, and it is now a test rather than a sentence** — `pipeline/__tests__/seam.test.ts` walks `src/` and fails if any file outside `src/platform/` names a platform package, or if anything but `App.tsx` chooses a platform. A check that lives only in a document runs when somebody remembers it, and this one decays silently: the first import added outside the seam costs nothing and breaks nothing, and by the time `changes[C12]` is packaged the seam is a comment.
+
+The interface needed four things it did not have — `open`/`play`/`pause`/`destroy` (as first written it described observation and volume, and the screen still had to reach the platform to start anything), and `VideoSurface`, because mounting the surface **is** platform code and a screen importing it directly puts a platform symbol straight back where the seam removed it.
+
+Tests above the seam now use a **fake adapter written against the interface**, not against Vega. `test/PlayerScreen.spec.tsx` loads no platform module at all, which is the behavioural half of the structural check.
+
+### Three defects, and the third one is the reason this round ran on hardware
+- **`R28-F1` — a cue in flight outlived the screen.** Unmount mid-cue and its `await` chain keeps going, then its `finally` ramps the volume of a player that has been destroyed, after `stop()` already restored it. Fixed with a generation counter, and `rampVolumePct` gained a cancellation check: **a fade is a loop that outlives the reason it started**, and one that has been superseded should stop rather than finish travelling toward a target nobody wants. Jest reported it as *"Cannot log after tests are done"*, which is the same defect wearing a smaller hat.
+- **`R28-F2` — the cue's `setTimeout` was never cleared.** Leaving the screen within two seconds fired a cue at an adapter being torn down, and two seconds is exactly the window a viewer changes their mind in.
+- **`R28-F3` — `waiting` fires during NORMAL startup**, 2 ms after `play()` resolved, on a clip that then played to the end. `stalled` was written as terminal, so the app announced *"Buffering"* over a film that was playing perfectly well — to a viewer who cannot see that it is. The seam gained `onPlaying` and the state became one playback can leave.
+
+**`R28-F3` is the round's argument for itself.** No fake emits a spurious `waiting`; the fake emits what the interface says it may, and the interface was written from what the code already did. Only the device produced it. A refactor validated solely against a fake adapter — which is what a green suite invited here — would have shipped a permanent "Buffering" overlay and called the seam finished.
+
+### Not built, stated rather than implied
+The `limits.mse_buffer` **window**. Windowed append needs `contracts.asset_manifest.byte_index` to serve a seek, and it has its own criterion (`AC23`) measured on the worst device. The whole-file append that works today is kept and marked at the seam it belongs to. Anything feature-length still runs this process out of heap, which is a real limit and is written down where the code is rather than only in a plan.
+
+**Edits:** `src/platform/MediaAdapter.ts`, `src/platform/vega/index.tsx`, `src/ad/duck.ts`, `test/fakes/adapter.tsx`, `test/PlayerScreen.spec.tsx`, `pipeline/__tests__/seam.test.ts` new · source media moved `assets/` → `media/` (+ `.gitignore`, manifest, README, two suites) · `src/screens/PlayerScreen.tsx`, `src/ad/DescriptionAudio.ts`, `src/App.tsx`, `test/App.spec.tsx` rewritten · `02c` Phase 7 interface synced · `_facts.yml` (`limits.vega_media.waiting_fires_at_start`, `changes[C2].built`, `[C4].built`, `tests_baseline`).
+### R28-F4, found by eye while checking something else: the package was 497 MB
+`react-native build-vega` copies the **entire project-root `assets/` directory** into the package, verbatim, whether or not anything references it. The demo film and its 720p source lived there for the offline pipeline, so a 372 MB `.mov` and a 117 MB `.mp4` were riding to the device on every install. Nothing in the build output says so, `install-app` reports plain `success`, and **the app ran normally the whole time**.
+
+Source media moved to `media/`. Package: **497 MB → 2.68 MB**, 185× smaller. Recorded as `limits.vega_media.build_packages_assets_dir` with the rule stated plainly — *`assets/` at the project root is device space* — because the trap is silent and the next person to put a working file there will be me.
+
+For a hackathon judged by people who clone and build, a half-gigabyte artifact is the first impression.
+
+**Validation:** `npm test` exit 0 — jest **59**, vitest **46** across 6 files · `npm run lint` exit 0 · `tsc --noEmit` clean · seam check mechanical · **on the device**: `player.opened bytes=2628566` → `play resolved` → `player.stalled` → **`player.resumed from=stalled`** 1.4 s later → `cue.fire` → `cue.audio state=ended t=2.02`. The `resumed` line is instrumentation added for this round: the stall recovery had no log of its own, and a state change nobody can observe is a state change nobody can verify.
+**Still open:** `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only · `limits.mse_buffer` unimplemented.
+**Four defects this round, and three of them needed the device or the filesystem — none of the three could have come from a unit test.**
+**Next mode:** `C1` App shell and navigation, then `02d` Phase 17 — removing the Phase 0 instrumentation, which is ordered after the last run that reads it rather than after the last code phase.

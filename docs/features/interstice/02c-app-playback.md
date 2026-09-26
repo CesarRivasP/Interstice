@@ -99,6 +99,15 @@ export interface VideoPlayer {
    * is indistinguishable from the film having stopped being interesting.
    */
   onStalled(cb: () => void): Unsubscribe;
+  /**
+   * Fires when playback is actually running ('playing').
+   *
+   * The counterpart to `onStalled`, and not optional: MSE emits `waiting` at the
+   * START of normal playback while the first frames decode, so a screen that
+   * treats stalling as terminal shows "Buffering" over a film that is playing
+   * fine. Measured on the device in R28 — 2 ms after `play()` resolved.
+   */
+  onPlaying(cb: () => void): Unsubscribe;
   onEnded(cb: () => void): Unsubscribe;
   onError(cb: (err: Error) => void): Unsubscribe;
 }
@@ -133,6 +142,9 @@ export interface MediaAdapter {
 |---|---|
 | `setVolumePct(pct, rampMs)` → `setVolumePct(pct)` | `limits.vega_media.no_volume_ramp`, measured. The ramp is JS, written once in Phase 10. |
 | `onStalled` added | `R21-F3`. The app owns byte delivery now, so running dry is reachable — and it raises no `error`. |
+| `onPlaying` added | `R28-F3`, found by the device rather than by a test. MSE emits `waiting` **at the start of normal playback**, 2 ms after `play()` resolved, so `stalled` has to be a state playback can leave. |
+| `open(uri)` / `play()` / `pause()` / `destroy()` added | the interface as first written had no way to say *play this asset* — it described observation and volume, and the screen still had to reach the platform to start anything. |
+| `VideoSurface` added | mounting the surface IS platform code: on Vega it is `KeplerVideoSurfaceView`, and the handle it returns has to reach the player. A screen importing it directly would put a platform symbol straight back into `src/screens/`. |
 | `play(uri)` keeps its shape | but its contract now says implementations must not assume the platform fetches. Vega's defect stays inside Vega's directory. |
 
 ### 7.3 — The Vega implementation is an extraction, not a spike

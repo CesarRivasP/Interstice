@@ -17,7 +17,7 @@ const track = (over: Partial<DescriptionTrack> = {}): DescriptionTrack => ({
   version: '1',
   asset_id: 'tears-of-steel',
   generated_at: '2026-09-25T00:00:00.000Z',
-  source_subtitles: 'assets/tears-of-steel.en.srt',
+  source_subtitles: 'media/tears-of-steel.en.srt',
   verbosity: 'standard',
   model_id: 'amazon.nova-lite-v1:0',
   cues: [cue()],
@@ -74,8 +74,8 @@ describe('loadTrack — decisions.verbosity_levels lookup rule', () => {
 
   it('resolves the requested level by its file name', async () => {
     const result = await loadTrack(
-      reader({ 'assets/tears-of-steel.detailed.track.json': track({ verbosity: 'detailed' }) }),
-      'assets',
+      reader({ 'media/tears-of-steel.detailed.track.json': track({ verbosity: 'detailed' }) }),
+      'media',
       'tears-of-steel',
       'detailed',
     );
@@ -86,8 +86,8 @@ describe('loadTrack — decisions.verbosity_levels lookup rule', () => {
   // the feature working when only `standard` was generated.
   it('falls back to standard when the requested level was never generated', async () => {
     const result = await loadTrack(
-      reader({ 'assets/tears-of-steel.standard.track.json': track() }),
-      'assets',
+      reader({ 'media/tears-of-steel.standard.track.json': track() }),
+      'media',
       'tears-of-steel',
       'detailed',
     );
@@ -101,10 +101,10 @@ describe('loadTrack — decisions.verbosity_levels lookup rule', () => {
   it('does NOT fall back when the requested level is malformed', async () => {
     const result = await loadTrack(
       reader({
-        'assets/tears-of-steel.detailed.track.json': { not: 'a track' },
-        'assets/tears-of-steel.standard.track.json': track(),
+        'media/tears-of-steel.detailed.track.json': { not: 'a track' },
+        'media/tears-of-steel.standard.track.json': track(),
       }),
-      'assets',
+      'media',
       'tears-of-steel',
       'detailed',
     );
@@ -112,7 +112,7 @@ describe('loadTrack — decisions.verbosity_levels lookup rule', () => {
   });
 
   it('reports missing when nothing is there, which AC8 turns into a spoken state', async () => {
-    const result = await loadTrack(reader({}), 'assets', 'tears-of-steel', 'standard');
+    const result = await loadTrack(reader({}), 'media', 'tears-of-steel', 'standard');
     expect(result).toMatchObject({ ok: false, reason: 'missing' });
   });
 });

@@ -13,9 +13,12 @@
 # eslint plugin state
 # machine-local agent config (symlinked skills)
 # vega build output
-assets/*.mkv
-assets/*.mov
-assets/*.mp4
+# Source media lives in media/, NOT in assets/. The Vega build copies the whole
+# project-root assets/ directory into the package verbatim, so a 117 MB film
+# left there ships to the device — see FRICTION-LOG 2026-09-25.
+media/*.mkv
+media/*.mov
+media/*.mp4
 build
 buildinfo.json
 CMakeUserPresets.json

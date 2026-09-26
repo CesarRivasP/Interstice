@@ -1,138 +1,67 @@
-import {
-  AudioContentType,
-  AudioPlayer,
-  AudioUsageType,
-  MediaSource,
-  type VideoPlayer,
-} from '@amazon-devices/react-native-w3cmedia';
-import {log} from '../diagnostics';
+import type { MediaAdapter } from '../platform/MediaAdapter';
+import { AD } from '../../pipeline/budget';
+import type { DescriptionCue } from '../../pipeline/types';
+import { rampVolumePct } from './duck';
 
 /**
- * First increment of changes[C4]. It plays one description clip over the main
- * track while ducking it, which is the whole product in miniature.
+ * `_facts.yml changes[C4]` — duck, speak, restore.
  *
- * It exists now, ahead of the scheduler, because it is the test for two open
- * hypotheses and they gate everything downstream of them:
- *
- *   defects[D6] — can an AudioPlayer on this device take an audio-only
- *     SourceBuffer at all? limits.vega_media.url_mode_broken removed the only
- *     documented way to play a clip, and MSE was measured working for VIDEO,
- *     with a surface attached. Audio-only is a different question and nothing in
- *     this set had answered it.
- *   defects[D2] — does a second stream play while the main track ducks, or does
- *     the platform stop one of them?
- *
- * Clips are appended whole rather than windowed: limits.mse_buffer is about the
- * feature-length asset in changes[C2], and a cue is seconds long.
+ * `defects[D2]` resolved TRUE on 2026-09-25: a cue played its full duration
+ * while the film kept decoding with zero dropped frames. So this plays a second
+ * stream rather than switching a pre-mixed track, and `decisions.d2_fallback`
+ * stays in the registry only for hardware, where concurrency is untested.
  */
+export class DescriptionAudio {
+  private active = false;
+  /**
+   * Bumped by `stop()`. A cue in flight when the screen unmounts keeps running —
+   * its `await` chain does not know the component is gone — and its `finally`
+   * would then ramp the volume on a player that has been destroyed, after
+   * `stop()` already restored it. Found by a test complaining that it logged
+   * after the run finished, which is the same defect wearing a smaller hat.
+   */
+  private generation = 0;
 
-/** limits.ad.duck_target_pct as a W3C volume. */
-const DUCK_VOLUME = 0.25;
+  constructor(private readonly media: MediaAdapter) {
+    // mobile-tv gap sweep F5: backgrounding during playback must stop the clip
+    // and restore the main level, or the app returns ducked and silent.
+    this.media.lifecycle.onBackground(() => {
+      if (!this.active) return;
+      console.log('INTERSTICE.audio.background active=true');
+      void this.stop();
+    });
+  }
 
-/**
- * AAC-LC in a FRAGMENTED mp4 — the container discipline of
- * limits.vega_media.mse_path, applied to audio. Polly's default MP3 cannot be
- * appended to a SourceBuffer, which is why changes[C10] emits this instead.
- */
-const CUE_MIME = 'audio/mp4; codecs="mp4a.40.2"';
-
-export interface CuePlayback {
-  /** resolves when the cue has finished and the main track is back to full */
-  done: Promise<void>;
-}
-
-/**
- * Play one description cue, ducking `main` for its duration.
- *
- * `main` is ducked before the first byte is appended and restored on `ended`
- * OR on failure — a cue that fails must not leave the film at 25% forever,
- * which is the failure mode that turns one bad clip into an unwatchable film.
- */
-export function playCue(uri: string, main: VideoPlayer | null): CuePlayback {
-  const done = (async () => {
-    const player = new AudioPlayer(
-      AudioContentType.CONTENT_TYPE_SPEECH,
-      AudioUsageType.USAGE_ACCESSIBILITY,
-    );
-    const restore = () => {
-      if (main) main.volume = 1;
-    };
+  async speak(cue: DescriptionCue): Promise<void> {
+    if (this.active) return; // a cue already speaking is never interrupted by another
+    this.active = true;
+    const mine = this.generation;
+    const stale = () => mine !== this.generation;
 
     try {
-      await player.initialize();
-
-      const supported = MediaSource.isTypeSupported(CUE_MIME);
-      log(`INTERSTICE.cue.audio mse_supported=${supported} uri=${uri}`);
-      if (!supported) {
-        log('INTERSTICE.cue.audio state=unsupported');
-        return;
-      }
-
-      const source = new MediaSource();
-
-      await new Promise<void>((resolve, reject) => {
-        player.addEventListener('error', () => {
-          const code = player.error?.code ?? -1;
-          const msg =
-            (player.error as {message?: string} | null)?.message ?? 'none';
-          log(`INTERSTICE.cue.audio state=error code=${code} msg=${msg}`);
-          reject(new Error(`cue media error ${code}`));
-        });
-
-        player.addEventListener('canplay', () => {
-          log('INTERSTICE.cue.audio state=canplay');
-          // Duck HERE, not at append time: the gap between "we decided to speak"
-          // and "sound comes out" is dead air at 25% otherwise.
-          if (main) {
-            main.volume = DUCK_VOLUME;
-            log(`INTERSTICE.cue.duck main_volume=${main.volume}`);
-          }
-          player
-            .play()
-            .then(() => log('INTERSTICE.cue.audio state=playing'))
-            .catch((err: Error) => reject(err));
-        });
-
-        player.addEventListener('ended', () => {
-          log(
-            `INTERSTICE.cue.audio state=ended t=${player.currentTime.toFixed(
-              2,
-            )}`,
-          );
-          resolve();
-        });
-
-        source.addEventListener('sourceopen', () => {
-          appendWhole(source, uri).catch(reject);
-        });
-
-        // srcObject, not src — see limits.vega_media.url_mode_broken.
-        player.srcObject = source;
-      });
+      console.log(`INTERSTICE.audio.duck id=${cue.id} to_pct=${AD.DUCK_TARGET_PCT}`);
+      await rampVolumePct(this.media.video, 100, AD.DUCK_TARGET_PCT, undefined, stale);
+      await this.media.clips.play(cue.audio_uri);
+      console.log(`INTERSTICE.audio.spoke id=${cue.id} words=${cue.words}`);
     } catch (err) {
-      log(`INTERSTICE.cue.audio state=failed err=${(err as Error).message}`);
+      console.log(`INTERSTICE.audio.failed id=${cue.id} err=${(err as Error).message}`);
     } finally {
-      restore();
-      log('INTERSTICE.cue.duck restored');
-      await player.deinitialize().catch(() => {
-        // best effort; a cue that cannot be torn down must not stop the film
-      });
+      // AC5: the main track ALWAYS returns to full, including on failure. A cue
+      // that fails must not leave the film at 25% for the rest of the runtime.
+      //
+      // Unless stop() already did it: then this cue is stale, the player may be
+      // torn down, and ramping again is work against a dead object.
+      if (!stale()) {
+        await rampVolumePct(this.media.video, AD.DUCK_TARGET_PCT, 100, undefined, stale);
+        this.active = false;
+      }
     }
-  })();
+  }
 
-  return {done};
-}
-
-async function appendWhole(source: MediaSource, uri: string): Promise<void> {
-  const buffer = source.addSourceBuffer(CUE_MIME);
-  const response = await fetch(uri);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  log(`INTERSTICE.cue.audio bytes=${bytes.byteLength}`);
-
-  buffer.addEventListener('updateend', () => {
-    if (source.readyState !== 'open') return;
-    source.endOfStream();
-  });
-
-  buffer.appendBuffer(bytes);
+  async stop(): Promise<void> {
+    this.generation++; // anything in flight is now stale and must not restore
+    this.media.clips.stop();
+    await rampVolumePct(this.media.video, AD.DUCK_TARGET_PCT, 100);
+    this.active = false;
+  }
 }

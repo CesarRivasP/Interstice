@@ -1,6 +1,7 @@
 import React from 'react';
 import {Image} from 'react-native';
 import {PlayerScreen} from './screens/PlayerScreen';
+import {createVegaAdapter} from './platform/vega';
 import {log} from './diagnostics';
 
 // Required rather than referenced by string so that metro bundles it into the
@@ -22,8 +23,16 @@ const resolvedCue = Image.resolveAssetSource(CUE);
 log(`INTERSTICE.asset.resolved uri=${resolved?.uri ?? 'NONE'}`);
 log(`INTERSTICE.asset.cue uri=${resolvedCue?.uri ?? 'NONE'}`);
 
+// The one place the platform is chosen. Everything below src/ that is not
+// src/platform/ reaches the device only through this object.
+const media = createVegaAdapter();
+
 export const App = () => (
-  <PlayerScreen uri={resolved?.uri ?? ''} cueUri={resolvedCue?.uri ?? ''} />
+  <PlayerScreen
+    media={media}
+    uri={resolved?.uri ?? ''}
+    cueUri={resolvedCue?.uri ?? ''}
+  />
 );
 
 export default App;

@@ -112,7 +112,7 @@ export AWS_REGION=us-east-1
 export BEDROCK_MODEL_ID=amazon.nova-pro-v1:0
 export POLLY_VOICE_ID=Joanna
 export DEMO_ASSET_PATH=/path/to/tears-of-steel.mp4
-export DEMO_SUBTITLES_PATH=assets/tears-of-steel.en.srt
+export DEMO_SUBTITLES_PATH=media/tears-of-steel.en.srt
 npm run pipeline
 ```
 

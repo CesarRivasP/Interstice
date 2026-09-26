@@ -379,7 +379,7 @@ export function wordCeiling(gapMs: number): number {
 
 ## Phase 3 — `pipeline/gaps.ts` + `pipeline/manifest.ts` (`C7`) — dialogue gaps, clipped to content, split into cues
 
-**Files:** `pipeline/gaps.ts`, `pipeline/manifest.ts`, `assets/<asset_id>.manifest.json`
+**Files:** `pipeline/gaps.ts`, `pipeline/manifest.ts`, `media/<asset_id>.manifest.json`
 **Anchor:** both modules exist on disk as of R22; read them rather than retyping them, and change only what a later round names.
 **Maps to:** `_facts.yml changes[C7]`, `contracts.asset_manifest`, `limits.ad.min_gap_ms`, `limits.ad.max_cue_ms`, `limits.ad.min_useful_words`, `worst_case.content_windows`, `AC4`, `AC19`
 
@@ -400,14 +400,14 @@ Three further things the naive version gets wrong: the span **before the first**
 
 `contracts.asset_manifest` is a file beside the asset. It exists because of `R21-F5`: `worst_case.content_windows` is a **measurement recorded in the registry**, and the registry is a specification, not a program input. Given nowhere to read the windows from, an implementer inlines *Tears of Steel*'s credits boundary into `gaps.ts`, where the next asset silently inherits it.
 
-`assets/tears-of-steel.manifest.json`, measured in R20:
+`media/tears-of-steel.manifest.json`, measured in R20:
 
 ```json
 {
   "version": "1",
   "asset_id": "tears-of-steel",
-  "media_uri": "assets/tears-of-steel.mp4",
-  "subtitles_uri": "assets/tears-of-steel.en.srt",
+  "media_uri": "media/tears-of-steel.mp4",
+  "subtitles_uri": "media/tears-of-steel.en.srt",
   "duration_ms": 734167,
   "content_windows": [
     { "start_ms": 0, "end_ms": 588000, "label": "film" },

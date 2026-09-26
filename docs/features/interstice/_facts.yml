@@ -649,6 +649,25 @@ limits:
            from there that reports a resource ABSENT has reported nothing. This cost
            a wrong conclusion about the media stack in this very round.'
 
+    build_packages_assets_dir: 'MEASURED 2026-09-25 (R28-F4). `react-native
+           build-vega` copies the ENTIRE project-root `assets/` directory into the
+           package, verbatim, whether or not any code references it. The demo film
+           and its 720p source lived there for the offline pipeline, so the package
+           was 497 MB — a 372 MB .mov and a 117 MB .mp4 riding to the device for no
+           reason. Nothing in the build output says so and the app ran normally.
+           Source media now lives in `media/`, which the build ignores, and the
+           package is 2.68 MB. RULE: `assets/` at the project root is DEVICE SPACE.
+           Anything the host-side pipeline needs goes somewhere else.'
+
+    waiting_fires_at_start: 'MEASURED 2026-09-25 (R28-F3). MSE emits `waiting`
+           during NORMAL startup — 2 ms after play() resolved, on a clip that then
+           played to the end. A screen that treats stalling as terminal therefore
+           announces "Buffering" over a film that is playing perfectly well, to a
+           viewer who cannot see that it is. `stalled` must be a state playback can
+           LEAVE, which means the platform seam has to expose the `playing` event as
+           well as `waiting`/`stalled`. Found by running the refactor on the device;
+           no fake emits a spurious `waiting`, so no unit test could have produced it.'
+
     concurrent_streams: 'MEASURED 2026-09-25, and it is what makes the product
            possible. A VideoPlayer fed by one MediaSource and an AudioPlayer built
            with (CONTENT_TYPE_SPEECH, USAGE_ACCESSIBILITY) fed by another played
@@ -743,7 +762,7 @@ changes:
   # --- app, on device ---
   - { id: C1, file: src/App.tsx, kind: planned, where: repo,
       change: 'Vega OS / React Native app shell and navigation' }
-  - { id: C2, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo,
+  - { id: C2, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo, built: '2026-09-25 (R28) — rewired behind MediaAdapter; names no platform API. The limits.mse_buffer window is NOT built: see AC23',
       change: 'video playback screen; every state (loading, playing, error, empty)
                names its focus host. RE-SCOPED R20/R21: this screen now OWNS BYTE
                DELIVERY, because limits.vega_media.url_mode_broken means the player
@@ -766,7 +785,7 @@ changes:
       change: 'maps playback position to description cues; resyncs after a seek and
                coalesces key-repeat so a held direction does not fire one cue per
                key event' }
-  - { id: C4, file: src/ad/DescriptionAudio.ts, kind: planned, where: repo,
+  - { id: C4, file: src/ad/DescriptionAudio.ts, kind: planned, where: repo, built: '2026-09-25 (R28) — behind MediaAdapter, with the cancellable JS fade in src/ad/duck.ts',
       change: 'plays a description clip while ducking the main track to
                limits.ad.duck_target_pct and restoring it; stops on background.
                RE-SCOPED R21-F4: a clip cannot be played by assigning its URI —
@@ -1367,7 +1386,7 @@ worst_case:
   case: demo-asset
   basis: measured
   evidence: { how: shell, date: 2026-09-25,
-              cmd: 'npx tsx against assets/tears-of-steel.en.srt through pipeline/gaps.ts (C7, unmocked)',
+              cmd: 'npx tsx against media/tears-of-steel.en.srt through pipeline/gaps.ts (C7, unmocked)',
               value: '76 subtitle cues parsed; 67 speech spans after merging 9 overlaps;
                       38 raw gaps >= 1500 ms, 39 after clipToContent; 136.2s dialogue
                       (18.6% of runtime); 451.8s describable after clipping (61.5% of
@@ -1402,7 +1421,7 @@ worst_case:
   content_windows:
     basis: measured
     evidence: { how: shell, date: 2026-09-25,
-                cmd: 'ffmpeg -i assets/tears-of-steel.mp4 -vf blackdetect=d=0.4:pic_th=0.98:pix_th=0.10 -an -f null -',
+                cmd: 'ffmpeg -i media/tears-of-steel.mp4 -vf blackdetect=d=0.4:pic_th=0.98:pix_th=0.10 -an -f null -',
                 value: 'black at 0-8.92, 64.46-69.92, 588.0-589.0, 707.17-709.5, 730.33-734.13' }
     windows: [ { start_ms: 0, end_ms: 588000, label: film },
                { start_ms: 709500, end_ms: 730333, label: post-credits } ]
@@ -1495,7 +1514,7 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, n: 1, exit_code: 0,
-              value: 'jest: Tests 48 passed, 48 total · vitest: Test Files 5 passed (5), Tests 44 passed (44)',
+              value: 'jest: Tests 59 passed, 59 total · vitest: Test Files 6 passed (6), Tests 46 passed (46)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the
@@ -1520,7 +1539,10 @@ tests_baseline:
                      exactly those fields. Mutation-checked the same day: adding a
                      field to contracts.description_cue turns it red. It is the first
                      check in this set that binds the registry to the CODE rather
-                     than to the prose — audit.py check 3 only ever compared prose. `npm run lint`
+                     than to the prose — audit.py check 3 only ever compared prose. R28 added seam.test.ts,
+                     which walks src/ and fails if any file outside src/platform/ names a
+                     platform package — the structural assertion of 02c Phase 7, which
+                     until then lived only in a document and would have decayed silently. `npm run lint`
                      (eslint + tsc --noEmit) also exits 0 on the same tree, with two
                      informational warnings.' }
 

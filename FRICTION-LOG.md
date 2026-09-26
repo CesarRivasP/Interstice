@@ -97,6 +97,15 @@ Amazon feedback is not diluted by things Amazon cannot act on.
 - **time_lost:** 35 min, most of it guessing the key name before finding it in the WebView accessibility guide — a **0.22** document, while the project targets 0.24, and the key appears in no 0.24 page I could reach.
 - **what would have helped:** two things. The permission error should say *what* would be permitted to set it, since "no permission" from the only shell a developer has reads as "you are holding it wrong" rather than "this is not available here". And an accessibility feature that cannot be enabled on the emulator deserves one line saying so on the emulator's own page — this is the one class of feature where testing on real hardware is least optional and the emulator is most likely to be all somebody has.
 
+### 2026-09-25 — the build packages the whole project-root `assets/` directory, silently
+
+- **tool:** `react-native build-vega`, Vega SDK 0.24.12112
+- **expected:** the package holds what the app requires — the metro bundle and the assets reachable from it.
+- **happened:** it also copies **everything under the project-root `assets/` directory**, verbatim, whether or not any code references it. A host-side pipeline that kept its source film there shipped a **372 MB `.mov` and a 117 MB `.mp4` to the device**: `interstice_aarch64.vpkg` was **497 MB**. Nothing in the build output says which files were added or how large the result is, and `install-app` reports plain `success`.
+- **workaround:** move source media to a directory that is not `assets/` — here, `media/` — and keep `assets/` for things that genuinely belong on the device. Package dropped to **2.68 MB**, 185× smaller.
+- **time_lost:** 25 min, and only because the size was noticed by eye while checking something else. The app worked the whole time.
+- **what would have helped:** one line of build output stating the package size and the top few contributors. A 185× regression that changes nothing observable about the running app is exactly the kind that reaches an appstore submission — and for a hackathon judged by people who clone and build, a half-gigabyte artifact is the first impression.
+
 ---
 
 ## Toolchain

@@ -1,197 +1,96 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
-import {
-  KeplerVideoSurfaceView,
-  MediaSource,
-  VideoPlayer,
-} from '@amazon-devices/react-native-w3cmedia';
-import {playCue} from '../ad/DescriptionAudio';
+import type {MediaAdapter} from '../platform/MediaAdapter';
+import {DescriptionAudio} from '../ad/DescriptionAudio';
+import type {DescriptionCue} from '../../pipeline/types';
 import {log} from '../diagnostics';
 
 /**
- * First increment of changes[C2]. Its job is to prove the Vega Virtual Device
- * decodes and renders the demo asset — the half of defects[D3] that "installs
- * and runs" did not cover.
+ * `changes[C2]`. Since R28 this file names NO platform API: everything it needs
+ * arrives through `MediaAdapter`, and the decoded picture renders into the
+ * surface the adapter supplies. That is what makes `changes[C12]` a package
+ * rather than a Vega app with a package-shaped README.
  *
- * Vega media is W3C MSE/EME (_facts.yml limits.vega_media). VideoPlayer does not
- * render by itself: the app mounts a KeplerVideoSurfaceView, receives the surface
- * handle in onSurfaceViewCreated, and passes it to the player. Decoded pixels go
- * to that native surface and never reach JavaScript, which is why defects[D1] is
- * false and changes[C11] will not ship.
- *
- * PLAYBACK GOES THROUGH MSE, NOT `src`. See limits.vega_media.url_mode_broken:
- * on this SDK, assigning a URL to `src` fails with MEDIA_ERR_SRC_NOT_SUPPORTED
- * before a single byte is requested — for a remote URL, a packaged file and an
- * AudioPlayer alike. Handing the same bytes to the same player through a
- * MediaSource plays them. So this screen fetches the asset itself and appends it.
+ * What the adapter hides, and why each was worth hiding:
+ *   - byte delivery, because `limits.vega_media.url_mode_broken` means the
+ *     player fetches nothing itself;
+ *   - the surface race, because `initialize()` and the surface handover have no
+ *     guaranteed order and the loser presents as an unsupported file;
+ *   - the absence of a volume ramp, which `src/ad/duck.ts` supplies once.
  */
 
 export interface PlayerScreenProps {
-  /** URI of the asset to play. JavaScript fetches it; the player never sees it. */
+  media: MediaAdapter;
+  /** URI of the asset to play. The adapter decides how the bytes are obtained. */
   uri: string;
   /**
    * One description cue, fired once shortly after playback starts.
    *
-   * TEMPORARY, and it is the runtime test for defects[D6] and defects[D2] —
-   * changes[C3] replaces this with a scheduler driven by the gap timeline. It
-   * lives here rather than in a separate probe app because the question is
-   * whether a cue plays WHILE the film is playing, which needs both players
-   * alive in one process.
+   * TEMPORARY — it is the runtime probe that resolved `defects[D6]` and
+   * `defects[D2]`, and `changes[C3]` replaces it with a scheduler driven by the
+   * gap timeline. It stays until a real track exists to schedule, which is
+   * blocked on `defects[D4]`.
    */
   cueUri?: string;
 }
 
-type Status = 'initialising' | 'playing' | 'error';
+type Status = 'loading' | 'playing' | 'stalled' | 'error';
 
-/**
- * The demo asset's codecs, measured with ffprobe: H.264 Constrained Baseline
- * L3.0 (avc1.42C01E) and AAC-LC (mp4a.40.2). MSE requires the exact codec
- * parameters — a bare 'video/mp4' is rejected at addSourceBuffer.
- */
-const MIME = 'video/mp4; codecs="avc1.42C01E,mp4a.40.2"';
-
-export function PlayerScreen({uri, cueUri}: PlayerScreenProps) {
-  const cueFired = useRef(false);
-  const player = useRef<VideoPlayer | null>(null);
-  const surface = useRef<string | null>(null);
-  const [status, setStatus] = useState<Status>('initialising');
+export function PlayerScreen({media, uri, cueUri}: PlayerScreenProps) {
+  const [status, setStatus] = useState<Status>('loading');
   const [detail, setDetail] = useState<string>('');
-
-  // Two asynchronous readiness signals, and playback needs BOTH.
-  //
-  // The player initialises asynchronously and the platform hands over the video
-  // surface asynchronously, in no guaranteed order. Measured on the Virtual
-  // Device: the surface arrived 26 ms BEFORE initialize() resolved. A surface
-  // callback that calls play() directly therefore plays a player that has no
-  // media attached yet, and gets MEDIA_ERR_SRC_NOT_SUPPORTED (code 4) — which
-  // reads exactly like an unsupported file and is not one.
-  const ready = useRef({player: false, surface: false});
-
-  const startIfReady = useCallback(() => {
-    const p = player.current;
-    if (!p || !ready.current.player || !ready.current.surface) return;
-    log('INTERSTICE.player.ready buffered=appended');
-    p.play()
-      .then(() => log('INTERSTICE.player.play resolved'))
-      .catch((err: Error) =>
-        log(`INTERSTICE.player.play rejected err=${err.message}`),
-      );
-  }, []);
+  const audio = useRef<DescriptionAudio | null>(null);
+  const cueFired = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    const p = new VideoPlayer();
-    player.current = p;
+    let cueTimer: ReturnType<typeof setTimeout> | null = null;
+    audio.current = new DescriptionAudio(media);
+
+    // AC22 / R21-F3: running dry raises no error, so it needs its own listener
+    // and its own state. Without this the screen stays in `playing` forever
+    // while the picture sits still and says nothing.
+    const offStalled = media.video.onStalled(() => {
+      log('INTERSTICE.player.stalled');
+      void audio.current?.stop(); // never leave the film ducked under a stall
+      setStatus('stalled');
+    });
+
+    // MSE emits `waiting` at the start of normal playback, so `stalled` must be
+    // a state playback can LEAVE. Measured on the device: it fired 2 ms after
+    // play() resolved, on a film that then played fine. Treating it as terminal
+    // leaves "Buffering" spoken over a working film.
+    const offPlaying = media.video.onPlaying(() => {
+      setStatus(current => {
+        if (current !== 'stalled' && current !== 'loading') return current;
+        log(`INTERSTICE.player.resumed from=${current}`);
+        return 'playing';
+      });
+    });
+
+    const offError = media.video.onError(err => {
+      log(`INTERSTICE.player.error msg=${err.message}`);
+      setStatus('error');
+      setDetail(err.message);
+    });
 
     (async () => {
       try {
-        await p.initialize();
+        await media.video.open(uri);
         if (cancelled) return;
+        await media.video.play();
+        if (cancelled) return;
+        setStatus('playing');
 
-        p.addEventListener('error', () => {
-          const code = p.error?.code ?? -1;
-          // The native TurboModule carries the real reason in `message`; the
-          // numeric code alone is almost always MEDIA_ERR_SRC_NOT_SUPPORTED and
-          // says nothing about which of a dozen causes fired.
-          const msg = (p.error as {message?: string} | null)?.message ?? 'none';
-          log(`INTERSTICE.player.error code=${code} msg=${msg}`);
-          setStatus('error');
-          setDetail(`media error ${code}`);
-        });
-        p.addEventListener('loadedmetadata', () => {
-          log(
-            `INTERSTICE.player.loaded duration_s=${p.duration.toFixed(1)}` +
-              ` w=${p.videoWidth} h=${p.videoHeight}`,
-          );
-        });
-        p.addEventListener('canplay', () => log('INTERSTICE.player.canplay'));
-        p.addEventListener('resize', () =>
-          log(`INTERSTICE.player.resize w=${p.videoWidth} h=${p.videoHeight}`),
-        );
-        p.addEventListener('playing', () => {
-          log(`INTERSTICE.player.playing w=${p.videoWidth} h=${p.videoHeight}`);
-          setStatus('playing');
-
-          // D6/D2 probe: one cue, two seconds in, over a film that is playing.
-          if (cueUri && !cueFired.current) {
-            cueFired.current = true;
-            setTimeout(() => {
-              log('INTERSTICE.cue.fire');
-              playCue(cueUri, p);
-            }, 2000);
-          }
-          // w=0/h=0 at loadedmetadata is the signature of audio-only playback,
-          // and this app cannot tell the difference by looking. Sampling the
-          // clock and the frame size a few seconds in distinguishes a decoding
-          // video track from a soundtrack over a black surface.
-          setTimeout(() => {
-            // videoWidth only updates on a 'resize' event (VideoPlayer.js:225),
-            // so w=0 proves nothing on its own. Decoded FRAME COUNT does: a
-            // soundtrack over a black surface cannot produce one.
-            const q = p.getVideoPlaybackQuality();
-            log(
-              `INTERSTICE.player.progress t=${p.currentTime.toFixed(2)}` +
-                ` w=${p.videoWidth} h=${p.videoHeight} paused=${p.paused}` +
-                ` frames=${q.totalVideoFrames} dropped=${q.droppedVideoFrames}`,
-            );
-          }, 4000);
-        });
-
-        const supported = MediaSource.isTypeSupported(MIME);
-        log(
-          `INTERSTICE.player.init ok=true mse_supported=${supported} uri=${uri}`,
-        );
-        if (!supported) {
-          setStatus('error');
-          setDetail('this device cannot decode the demo asset');
-          return;
+        if (cueUri && !cueFired.current) {
+          cueFired.current = true;
+          cueTimer = setTimeout(() => {
+            log('INTERSTICE.cue.fire');
+            void audio.current?.speak(probeCue(cueUri));
+          }, 2000);
         }
-
-        const mediaSource = new MediaSource();
-
-        const onSourceOpen = async () => {
-          try {
-            const buffer = mediaSource.addSourceBuffer(MIME);
-
-            // One append. The demo clip is 2.6 MB; a full feature would be
-            // appended in chunks against SourceBuffer.updating, which is
-            // changes[C2]'s problem and not this increment's.
-            const response = await fetch(uri);
-            const bytes = new Uint8Array(await response.arrayBuffer());
-            log(`INTERSTICE.player.fetched bytes=${bytes.byteLength}`);
-
-            buffer.addEventListener('updateend', () => {
-              if (mediaSource.readyState !== 'open') return;
-              mediaSource.endOfStream();
-              log(
-                'INTERSTICE.player.appended readyState=' +
-                  mediaSource.readyState,
-              );
-              ready.current.player = true;
-              startIfReady();
-            });
-
-            buffer.appendBuffer(bytes);
-          } catch (err) {
-            log(
-              `INTERSTICE.player.append failed err=${(err as Error).message}`,
-            );
-            setStatus('error');
-            setDetail((err as Error).message);
-          }
-        };
-
-        mediaSource.addEventListener('sourceopen', () => {
-          onSourceOpen().catch(() => {
-            // onSourceOpen handles its own failures; this guard only keeps an
-            // unexpected one from becoming an unhandled rejection.
-          });
-        });
-
-        // srcObject, NOT src. The `src` path is the broken one.
-        p.srcObject = mediaSource;
       } catch (err) {
-        log(`INTERSTICE.player.init ok=false err=${(err as Error).message}`);
+        log(`INTERSTICE.player.open failed err=${(err as Error).message}`);
         setStatus('error');
         setDetail((err as Error).message);
       }
@@ -199,58 +98,80 @@ export function PlayerScreen({uri, cueUri}: PlayerScreenProps) {
 
     return () => {
       cancelled = true;
-      ready.current = {player: false, surface: false};
-      p.deinitialize().catch(() => {
-        // best-effort during unmount; must not throw into React's cleanup path
-      });
+      // A scheduled cue must not outlive the screen that scheduled it: leaving
+      // this pending fires a cue at an adapter that is being destroyed, and the
+      // window for it is the two seconds a viewer is most likely to change
+      // their mind in.
+      if (cueTimer) clearTimeout(cueTimer);
+      offStalled();
+      offPlaying();
+      offError();
+      void audio.current?.stop();
+      void media.video.destroy();
     };
-  }, [uri, cueUri, startIfReady]);
+  }, [media, uri, cueUri]);
 
-  const onSurfaceViewCreated = useCallback(
-    (handle: string) => {
-      log(`INTERSTICE.player.surface created handle=${handle}`);
-      surface.current = handle;
-      player.current?.setSurfaceHandle(handle);
-      ready.current.surface = true;
-      startIfReady();
-    },
-    [startIfReady],
-  );
-
-  const onSurfaceViewDestroyed = useCallback((handle: string) => {
-    log(`INTERSTICE.player.surface destroyed handle=${handle}`);
-    player.current?.clearSurfaceHandle(handle);
-    surface.current = null;
-    ready.current.surface = false;
-  }, []);
+  const Surface = media.VideoSurface;
+  const overlay = overlayFor(status, detail);
 
   return (
     <View style={styles.root}>
-      <KeplerVideoSurfaceView
-        style={StyleSheet.absoluteFill}
-        scalingmode="fit"
-        onSurfaceViewCreated={onSurfaceViewCreated}
-        onSurfaceViewDestroyed={onSurfaceViewDestroyed}
-      />
-      {status !== 'playing' && (
+      <Surface style={StyleSheet.absoluteFill} />
+      {overlay && (
         <View
           style={styles.overlay}
           accessible
-          accessibilityRole={status === 'error' ? 'alert' : 'progressbar'}
-          accessibilityLabel={
-            status === 'error'
-              ? `This title could not be played. ${detail}`
-              : 'Loading title'
-          }>
-          <Text style={styles.text}>
-            {status === 'error'
-              ? `Could not play this title — ${detail}`
-              : 'Loading…'}
-          </Text>
+          accessibilityRole={overlay.role}
+          accessibilityLabel={overlay.spoken}>
+          <Text style={styles.text}>{overlay.shown}</Text>
         </View>
       )}
     </View>
   );
+}
+
+/**
+ * AC2 + AC8 + AC24: every state that is not `playing` is BOTH shown and spoken.
+ * A frozen picture says nothing to this app's users, and a stall raises no error
+ * for anything else to report.
+ */
+function overlayFor(
+  status: Status,
+  detail: string,
+): {role: 'alert' | 'progressbar'; shown: string; spoken: string} | null {
+  switch (status) {
+    case 'playing':
+      return null;
+    case 'loading':
+      return {role: 'progressbar', shown: 'Loading…', spoken: 'Loading title'};
+    case 'stalled':
+      return {
+        role: 'alert',
+        shown: 'Buffering…',
+        spoken:
+          'The video paused while it loads more. Press back to return to the list.',
+      };
+    case 'error':
+      return {
+        role: 'alert',
+        shown: `Could not play this title — ${detail}`,
+        spoken: `This title could not be played. ${detail}`,
+      };
+  }
+}
+
+/** the probe cue, shaped as a real one so it exercises the real path */
+function probeCue(audio_uri: string): DescriptionCue {
+  return {
+    id: 'probe',
+    start_ms: 0,
+    end_ms: 0,
+    words: 0,
+    text: '',
+    audio_uri,
+    source_frames_ms: [],
+    status: 'ok',
+  };
 }
 
 const styles = StyleSheet.create({

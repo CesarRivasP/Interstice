@@ -4,8 +4,8 @@ import { ManifestError, parseManifest } from '../manifest.js';
 const base = {
   version: '1',
   asset_id: 'tears-of-steel',
-  media_uri: 'assets/tears-of-steel.mp4',
-  subtitles_uri: 'assets/tears-of-steel.en.srt',
+  media_uri: 'media/tears-of-steel.mp4',
+  subtitles_uri: 'media/tears-of-steel.en.srt',
   duration_ms: 734_167,
   content_windows: [
     { start_ms: 0, end_ms: 588_000, label: 'film' },
