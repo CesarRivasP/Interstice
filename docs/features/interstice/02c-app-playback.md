@@ -423,7 +423,7 @@ export function coalesce(fn: (value: number) => void, quietMs = 250) {
 
 **Contracts implemented:** `changes[C3]`, `contracts.description_cue.status`, `AC4`, `AC6`
 
-**Phase 9 verification:** `⟨commands.tests⟩ src/ad/__tests__/CueScheduler.test.ts` → a line containing `⟨commands.tests_expect⟩`. `02e` §B.1 carries the late-cue drop, the seek backlog, and the coalescing count, each with `Fails if:`.
+**Phase 9 verification:** `⟨commands.tests⟩` → a line containing `⟨commands.tests_expect⟩`. `02e` §B.1 carries the late-cue drop, the seek backlog, and the coalescing count, each with `Fails if:`.
 
 ---
 

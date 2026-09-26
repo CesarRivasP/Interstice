@@ -245,7 +245,7 @@ export function ADControls({ state, onToggle, onVerbosity, focusRef }: ADControl
 
 **Contracts implemented:** `changes[C5]`, `decisions.verbosity_levels`, `AC3`, `AC8`, `AC17`, `AC15` (the surface; the pass itself is Phase 16.3)
 
-**Phase 11 verification:** `⟨commands.tests⟩ src/ad/__tests__/ADControls.test.ts` → a line containing `⟨commands.tests_expect⟩`. `02e` §B.1 asserts each announcement by the exported `stateMessage`, and the selector's `accessibilityState` per level.
+**Phase 11 verification:** `⟨commands.tests⟩` → a line containing `⟨commands.tests_expect⟩`. `02e` §B.1 asserts each announcement by the exported `stateMessage`, and the selector's `accessibilityState` per level.
 
 ---
 

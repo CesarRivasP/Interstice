@@ -162,7 +162,9 @@ Every bullet names its target file and its assertion. A bullet with a **`Fails i
 - the file name is `demo.concise.track.json` / `demo.standard.track.json` / `demo.detailed.track.json`, and each file's `verbosity` field equals the level in its own name.
   **Fails if:** `verbosity` is hardcoded rather than taken from `args`. All three files then claim to be the same level and `C6` loads the wrong one with no way to tell.
 
-**`src/ad/__tests__/TrackLoader.test.ts`** — `02c` Phase 8
+> **Test files live in `test/`, and that is jest's rule here rather than a preference.** `jest.config.json` sets `testRegex: "/test/.*\\.(test|spec)\\.(ts|tsx|js)$"`, so a suite under `src/**/__tests__/` is **never discovered** — it does not fail, it simply does not run, which is the worse of the two outcomes. The paths below were written as `src/ad/__tests__/*.test.ts` until R26 built the first two and found they executed nothing. The pipeline half is the other convention — `pipeline/__tests__/*.test.ts`, discovered by vitest — and the two runners are separate on purpose (`_facts.yml tests_baseline`).
+
+**`test/TrackLoader.spec.ts`** — `02c` Phase 8
 - `validateTrack` rejects, one case each: a missing key, `verbosity: 'verbose'`, `source_frames_ms: 42` (not an array), `status: 'pending'`
 - a **missing** `detailed` file falls back to `standard` and reports `loaded_verbosity: 'standard'`
 - a **malformed** `detailed` file returns `{ ok: false, reason: 'malformed' }` and does **not** fall back.
@@ -170,7 +172,7 @@ Every bullet names its target file and its assertion. A bullet with a **`Fails i
 - `ClipCache` holds at most `MAX_CLIPS_IN_MEMORY` (8): put 12, assert `size === 8` and that the first four were evicted in insertion order.
   **Fails if:** the eviction loop is removed. The cache is then unbounded, which on a 32-bit Fire TV Stick heap (`limits.clip_cache`) ends as an OOM in the middle of the demo.
 
-**`src/ad/__tests__/CueScheduler.test.ts`** — `02c` Phase 9
+**`test/CueScheduler.spec.ts`** — `02c` Phase 9
 - a cue fires exactly once when position enters its window
 - position jumping past a cue's `end_ms` **drops** it — `onFire` is never called for it.
   **Fails if:** the `while` advance is removed. Every skipped cue then fires late, on top of dialogue — `AC4`.
@@ -178,14 +180,14 @@ Every bullet names its target file and its assertion. A bullet with a **`Fails i
 - `coalesce` given 12 rapid values within `quietMs` calls the wrapped function **once**, with the **last** value.
   **Fails if:** the `clearTimeout` is removed. A held D-pad direction then produces 12 resyncs — `AC6`.
 
-**`src/ad/__tests__/DescriptionAudio.test.ts`** — `02c` Phase 10 (uses `fakeAdapter`)
+**`test/DescriptionAudio.spec.ts`** — `02c` Phase 10 (uses `fakeAdapter`)
 - `speak` records `setVolumePct(25, 200)` then `play(uri)` then `setVolumePct(100, 200)`, in that order
 - `clips.play` rejecting still ends with `setVolumePct(100, 200)`.
   **Fails if:** the restore moves out of `finally`. One failed clip then leaves the film at 25% volume for the rest of the runtime — the worst failure this component can produce, and invisible in a happy-path test.
 - `background()` during a cue calls `stop()` and restores the volume
 - `speak` called again while one is active is a no-op — the first cue is never cut off mid-sentence
 
-**`src/ad/__tests__/ADControls.test.ts`** — `02c` Phase 11
+**`test/ADControls.spec.ts`** — `02c` Phase 11
 - `state.kind: 'missing'` renders the `alert` role and announces exactly `stateMessage(state)` — asserted through the exported function, not a copy of the string
 - `state.kind: 'malformed'` announces its own distinct sentence
 - toggling calls `onToggle(!enabled)` and nothing else — no player method is touched (`AC3`).
@@ -193,7 +195,7 @@ Every bullet names its target file and its assertion. A bullet with a **`Fails i
 - each of the three verbosity controls exposes `accessibilityState.selected` correctly and is `disabled` when description is off
 - the announcement fires **once** per state change, not on every re-render
 
-**`src/screens/__tests__/PlayerScreen.test.ts`** — `02d` Phase 12
+**`test/PlayerScreen.spec.tsx`** — `02d` Phase 12
 - the loading state renders a focusable element (`AC2`)
 - a failed load still reaches the `playing` screen with the film running and `ad.kind` set — description absent, playback not (`AC8`)
 - changing verbosity re-runs the loader and reloads the scheduler **without** touching the video (`AC17`)

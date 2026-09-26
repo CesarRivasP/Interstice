@@ -689,3 +689,34 @@ That also exercises the ceiling from both sides in one run — a window that nee
 **Validation:** `npm test` exit 0 — jest 8, vitest **42** across 4 files · `npm run lint` exit 0 · `tsc --noEmit` clean · `audit.py` → clean, every mechanized check passed · real-asset run as quoted.
 **Still open:** `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC23` on hardware.
 **Next mode:** `C6` TrackLoader and `C3` CueScheduler — both pure logic against `contracts.description_track`, both testable with no AWS and no device, and both needed before anything can be heard in order.
+
+---
+
+## R26 · 2026-09-25 · claude-opus-5 (Claude Code) · built C6 and C3, and bound the registry to the code
+**Read:** `_facts.yml` (v17) · `_log.md` (through R25 end) · `02c` Phases 8 and 9
+**Log read through:** R25
+**Did:** built `C6` (TrackLoader + ClipCache) and `C3` (CueScheduler + coalesce), 30 tests between them, plus one new kind of check.
+
+### The R25 lesson applied: a check that binds the registry to the CODE
+R25 showed a fake can encode the same wrong assumption as its subject. `C6`'s validator is exactly that risk in a worse place: it decides what counts as a valid track, and a fixture written beside it would agree with it by construction.
+
+So `pipeline/__tests__/contract-parity.test.ts` reads `contracts.description_cue` and `contracts.description_track` **out of `_facts.yml` on every run** and asserts the validator's key lists equal them. Mutation-checked the same day: adding `mutation_probe` to `contracts.description_cue` turns it red, reverting turns it green.
+
+**This is the first check in the set that binds the registry to the code.** `audit.py` check 3 compares `contracts.*` against the **prose**, so until now a field could be added to the registry and to all seven documents and still be missing from the validator — and the first symptom would be an undefined read inside the player, three phases away from the cause.
+
+### R26-F1 `FUNCTIONAL`: the spec's test paths pointed somewhere jest never looks
+`02c` Phases 8–11 and `02d` Phase 12 all named their suites `src/ad/__tests__/*.test.ts`. `jest.config.json` sets `testRegex: "/test/.*\.(test|spec)\.(ts|tsx|js)$"`. A suite at that path is **never discovered** — it does not fail, it does not run, and a green `npm test` says nothing about it. Found by building the first two and noticing the totals had not moved.
+
+Corrected across `02c`, `02c2`, `02e`, with a note in `02e` §B.1 stating the rule and why it bites: silence is the worse of the two failure modes. The phase-verification lines also stopped quoting a specific file after `⟨commands.tests⟩` — the runner discovers its own files, and a path in the doc is a second place for one to drift.
+
+### What the tests actually pin
+`C6` — a `failed` cue must be **accepted** (the pipeline writes them on purpose, so a validator that refuses them turns one throttled description into none at all); a **missing** level falls back to `standard` while a **malformed** one does not (they are different answers and conflating them hides a producer bug); and `ClipCache` does not double-count a re-put uri, which would let it evict live entries while holding duplicates against a 32-bit heap.
+
+`C3` — a cue whose window has closed is **dropped, never played late** (`AC4`: a late cue plays over the dialogue the window was measured to avoid); a forward seek fires **no backlog**, and a seek back into a window **re-arms** it; `end_ms` is exclusive; and `coalesce` acts once on the settled value rather than once per key event (`AC6`).
+
+**Also:** `.eslintrc` gained `ignoreRestSiblings` for the test override. The `const { field: _dropped, ...without } = obj` idiom is how a test drops one contract field, and renaming variables to satisfy a linter would have been the wrong repair.
+
+**Edits:** `src/ad/TrackLoader.ts`, `src/ad/CueScheduler.ts` new · `test/TrackLoader.spec.ts` (13), `test/CueScheduler.spec.ts` (17), `pipeline/__tests__/contract-parity.test.ts` (2) new · `02c`, `02c2`, `02e` test paths corrected · `.eslintrc` · `_facts.yml` (`changes[C3].built`, `[C6].built`, `tests_baseline` re-measured) · `_profile.yml`.
+**Validation:** `npm test` exit 0 — jest **34**, vitest **44** across 5 files · `npm run lint` exit 0 · `audit.py` → clean, every mechanized check passed · parity test mutation-checked.
+**Still open:** `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC23` on hardware.
+**Next mode:** `C5` ADControls, then wiring `C2`/`C1` against the `MediaAdapter` seam — the last pieces that do not need Bedrock.

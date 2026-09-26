@@ -739,7 +739,7 @@ changes:
                (c) the in-flight fetch is aborted on unmount with an AbortController
                (R21-F6), and the loading state — which is now long enough to matter —
                carries a focusable host like every other state.' }
-  - { id: C3, file: src/ad/CueScheduler.ts, kind: planned, where: repo,
+  - { id: C3, file: src/ad/CueScheduler.ts, kind: planned, where: repo, built: '2026-09-25 (R26) — 17 tests; see 02c Phase 9',
       change: 'maps playback position to description cues; resyncs after a seek and
                coalesces key-repeat so a held direction does not fire one cue per
                key event' }
@@ -757,7 +757,7 @@ changes:
                levels per decisions.verbosity_levels (concise/standard/detailed),
                and the visible+spoken state for every failure branch of the loader;
                selector is D-pad reachable and VoiceView-announced' }
-  - { id: C6, file: src/ad/TrackLoader.ts, kind: planned, where: repo,
+  - { id: C6, file: src/ad/TrackLoader.ts, kind: planned, where: repo, built: '2026-09-25 (R26) — 13 tests plus a registry-to-code contract parity check; see 02c Phase 8',
       change: 'loads and validates the description track against contracts.description_track;
                bounded clip cache per limits.clip_cache. RE-SCOPED R21-F4: the cache
                holds fetched BYTES ready to append, not URIs to hand to a player,
@@ -1472,7 +1472,7 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, n: 1, exit_code: 0,
-              value: 'jest: Tests 8 passed, 8 total · vitest: Test Files 4 passed (4), Tests 42 passed (42)',
+              value: 'jest: Tests 34 passed, 34 total · vitest: Test Files 5 passed (5), Tests 44 passed (44)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the
@@ -1491,7 +1491,13 @@ tests_baseline:
                      relies on to extract frames once instead of three times. R25 added
                      the frames suite, whose mock keeps ffmpeg''s stdout and stderr
                      SEPARATE — the previous shape could not have failed the way the
-                     real binary does, and did not (R25-F1). `npm run lint`
+                     real binary does, and did not (R25-F1). R26 added the C6 and C3
+                     suites plus contract-parity.test.ts, which reads contracts.*
+                     OUT OF THIS FILE on every run and asserts the validator checks
+                     exactly those fields. Mutation-checked the same day: adding a
+                     field to contracts.description_cue turns it red. It is the first
+                     check in this set that binds the registry to the CODE rather
+                     than to the prose — audit.py check 3 only ever compared prose. `npm run lint`
                      (eslint + tsc --noEmit) also exits 0 on the same tree, with two
                      informational warnings.' }
 
