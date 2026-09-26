@@ -924,6 +924,19 @@ changes:
                error, and rejects a MISSING content_windows key while accepting an
                empty one — absent is an author who forgot, [] is an author who
                declared the whole asset describable.' }
+  - { id: C27, file: pipeline/prepare.ts, kind: planned, where: repo,
+      built: '2026-09-26 (R37)',
+      change: 'turns an AUTHORED manifest into one the app can play. The authored half
+               is what a human measured — the asset, its subtitles, its duration and
+               its content_windows, which need an eye on the frames either side of
+               every cut and cannot be derived. This adds what a machine can: the
+               segments, and the GENERATED module of static requires the app imports.
+               That module exists because metro resolves require at BUILD time, so the
+               app cannot read a manifest and require what it names — a path computed
+               at runtime bundles nothing and fails on the device as a fetch for a
+               file that is not in the package. It also warns when the segments do not
+               reach the manifest''s declared duration, which would otherwise strand
+               the player short of the end in a `waiting` that never resolves.' }
   - { id: C26, file: pipeline/segment.ts, kind: planned, where: repo,
       built: '2026-09-26 (R35)',
       change: 'cuts the asset into fragmented-MP4 segments plus an init segment, for
@@ -976,6 +989,11 @@ changes:
                response is rejected if it does not match the expected shape (gap
                sweep S2)' }
   - { id: C10, file: pipeline/synthesize.ts, kind: planned, where: repo,
+      built: '2026-09-26 (R37) — buildTrack and synthesizeCue written and unit-tested
+              with Polly and ffmpeg injected. The END-TO-END run waits on defects[D4]:
+              a track needs cue TEXT, that comes from changes[C9], and AC7 forbids
+              hand-writing any. The container half IS measured — limits.polly.container_chain
+              ran real Polly bytes through ffmpeg to the device in R23.',
       change: 'Polly synthesis per cue plus emission of the track file matching
                (note R13: cue count now varies by verbosity level, because
                limits.ad.min_useful_words drops more windows at concise than at
@@ -1708,7 +1726,7 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, n: 1, exit_code: 0,
-              value: 'jest: Tests 63 passed, 63 total · vitest: Test Files 8 passed (8), Tests 58 passed (58)',
+              value: 'jest: Tests 63 passed, 63 total · vitest: Test Files 10 passed (10), Tests 70 passed (70)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the

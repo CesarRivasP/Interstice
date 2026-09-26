@@ -19,11 +19,22 @@ import { describe, expect, it } from 'vitest';
 
 const FACTS = 'docs/features/interstice/_facts.yml';
 
+/**
+ * `src/assets/` holds assets, and one GENERATED module that indexes them
+ * (`pipeline/prepare.ts` writes it, because metro resolves `require` at build
+ * time and the app cannot require a path it reads from a manifest). Generated
+ * files are output, not scope — registering them would mean the registry
+ * changing every time the asset is re-cut.
+ */
+const NOT_SOURCE = [join('src', 'assets'), '__tests__'];
+
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
     const path = join(dir, entry);
     if (statSync(path).isDirectory()) {
-      return entry === '__tests__' ? [] : sourceFiles(path);
+      return NOT_SOURCE.some((skip) => path.endsWith(skip) || entry === skip)
+        ? []
+        : sourceFiles(path);
     }
     return /\.tsx?$/.test(entry) && !entry.endsWith('.d.ts') ? [path] : [];
   });

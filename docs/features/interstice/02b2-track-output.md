@@ -244,7 +244,9 @@ This phase used to carry a conditional fourth output: a full-length pre-mixed au
 
 `decisions.d2_fallback` stays in the registry rather than being deleted, because concurrency has **not** been retested on physical hardware. If it fails there, this is the phase that changes, and the filtergraph it would need (`amix` plus `volume` over the same cue list) is the same work it always was.
 
-> **The asset is cut here too, by `changes[C26]` (`pipeline/segment.ts`).** `limits.vega_media.no_range_requests`: a `Range` request on a packaged path returns status `200` and the whole file, so the app cannot read part of one. The track's asset therefore ships as fragmented-MP4 segments plus an init segment, written into `contracts.asset_manifest.segments`, and `changes[C20]` appends them a window at a time.
+> **The asset is prepared here too, by `changes[C27]` (`pipeline/prepare.ts`) over `changes[C26]` (`pipeline/segment.ts`).** `limits.vega_media.no_range_requests`: a `Range` request on a packaged path returns status `200` and the whole file, so the app cannot read part of one. The track's asset therefore ships as fragmented-MP4 segments plus an init segment, written into `contracts.asset_manifest.segments`, and `changes[C20]` appends them a window at a time.
+>
+> `C27` also emits the **static `require()`s** the app imports. Metro resolves `require` at build time, so the app cannot read a manifest and require what it names — a path computed at runtime bundles nothing, and the failure arrives on the device as a fetch for a file that is not in the package. Generating that module is what keeps the requires static, which metro needs, and the timings derived, which correctness needs.
 
 **Contracts implemented:** `changes[C10]`, `changes[C26]`, `contracts.description_track` (every field), `contracts.description_cue` (every field), `decisions.verbosity_levels` (lookup rule + per-level regeneration), `endpoints.polly_synthesize`, `limits.polly`, `limits.vega_media.mse_path`, `env_vars` (`POLLY_VOICE_ID`, `DEMO_ASSET_MANIFEST`), `worst_case`
 

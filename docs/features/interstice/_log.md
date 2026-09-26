@@ -1042,3 +1042,35 @@ Four, and none blocks any remaining code: the **Bedrock use-case form** (blocks 
 **Validation:** `npm test` exit 0 — jest **63**, vitest **58** across 8 files · `npm run lint` exit 0 · `npm run build` exit 0 · `audit.py` clean · scope check mutation-checked.
 **Still open:** unchanged — the form, `AC20`, and the three hardware criteria.
 **Next mode:** `C10` emitting segments and a manifest, so `src/App.tsx` stops hand-listing them.
+
+---
+
+## R37 · 2026-09-26 · claude-opus-5 (Claude Code) · C10, and the app stops hand-listing its own asset
+**Read:** `_facts.yml` (v17) · `_log.md` (through R36 end) · `02b2` Phase 6
+**Log read through:** R36
+**About to do:** `pipeline/synthesize.ts` (`changes[C10]`) — Polly, the fragmented-AAC container, and the three per-verbosity track files. Plus the half that can actually RUN today: emitting `contracts.asset_manifest` with its `segments`, and making `src/App.tsx` read it instead of hand-listing four segments in source.
+**What is blocked and what is not, stated up front:** `C10`'s synthesis needs cue TEXT, which comes from `C9`, which `defects[D4]` blocks — and `AC7` forbids hand-writing any. So `buildTrack` is written and unit-tested against mocked Polly and ffmpeg, and its end-to-end run waits. The manifest and segment half depends on neither and runs today.
+### Built
+`pipeline/synthesize.ts` (`C10`) and `pipeline/prepare.ts` (`C27`), 12 tests between them.
+
+### The app stopped hand-listing its own asset
+`src/App.tsx` carried four `require()` calls with four pairs of timestamps typed into source — which drifts the moment anybody re-cuts the asset with a different segment length, and nothing would say so.
+
+It cannot simply read them from the manifest either: **metro resolves `require` at BUILD time**, so a path computed at runtime bundles nothing, and the failure arrives on the device as a fetch for a file that is not in the package. So `prepare.ts` **generates** the module: static requires, which metro needs, with derived timings, which correctness needs. Verified on the device — init plus four segments, same as before, now with nothing hand-typed.
+
+`prepareAsset` keeps the two halves of a manifest separate on purpose. The **authored** half is what a human measured: the asset, its subtitles, its duration and its `content_windows`, which need an eye on the frames either side of every cut and cannot be derived. The **derived** half is what a machine can produce. Mixing them is how a measurement becomes a guess.
+
+It also warns when the segments do not reach the manifest's declared duration. That would otherwise strand the player short of the end in a `waiting` that never resolves — no error, no cause, and the viewer told nothing.
+
+### The scope check earned its keep on day two
+`scope.test.ts`, added last round, immediately failed on `pipeline/prepare.ts` and on the generated `src/assets/seg/segments.ts`. The first needed registering (`C27`); the second is **output, not scope** — registering generated files would mean the registry changing every time the asset is re-cut — so `src/assets/` is excluded with the reason written next to the exclusion. Then `audit.py` caught that `C27` was registered but cited nowhere. Two checks, two different halves of the same mistake, neither of which I would have caught by reading.
+
+### What `C10` can and cannot do today
+`buildTrack` and `synthesizeCue` are written and unit-tested with Polly and ffmpeg **injected**. The end-to-end run waits on `defects[D4]`: a track needs cue TEXT, that comes from `C9`, and `AC7` forbids hand-writing any. The container half is not waiting on anything — `limits.polly.container_chain` already ran real Polly bytes through ffmpeg to the device in R23.
+
+Two tests carry the joins that would fail silently: descriptions are matched to windows by **window key, never by index** — indices renumber per verbosity level because `limits.ad.min_useful_words` drops more windows at concise, so an index join pairs a cue with a different cue's sentence at every level but `detailed`, and the counts still match — and a `failed` cue is **written, not dropped**, because the app can skip a failed cue and cannot skip one that is not there.
+
+**Edits:** `pipeline/synthesize.ts`, `pipeline/prepare.ts`, `pipeline/__tests__/synthesize.test.ts` (7), `pipeline/__tests__/prepare.test.ts` (5) new · `media/clip.manifest.json` new (the 20 s excerpt is a different asset and gets its own) · `src/App.tsx` imports the generated module · `scope.test.ts` excludes `src/assets/` · `_facts.yml` (`changes[C27]`, `changes[C10].built`, `tests_baseline`) · `02b2` Phase 6 citation.
+**Validation:** `npm test` exit 0 — jest 63, vitest **70** across 10 files · `npm run lint` exit 0 · `npm run build` exit 0 · `audit.py` clean · device run with the generated module.
+**Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
+**Next mode:** `02e`'s test plan is now well behind the suite — twelve components are built and §B.1 still describes tests for four of them.
