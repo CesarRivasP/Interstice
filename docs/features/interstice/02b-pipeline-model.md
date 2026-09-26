@@ -42,7 +42,7 @@ It does not have to, because of a property `02e` §B.1 pins with a test: **cue w
 `pipeline/frames.ts` (new file, full contents):
 
 ```ts
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { AD } from './budget.js';
@@ -73,16 +73,23 @@ export function assetDurationMs(assetPath: string): number {
 /**
  * Shot boundaries inside [startMs, endMs), via ffmpeg scene detection.
  * Returns their timestamps in ms. One ffmpeg pass per cue, on a short segment.
+ *
+ * READS STDERR, NOT STDOUT. `showinfo` writes its `pts_time:` lines to stderr
+ * along with the rest of ffmpeg's diagnostics; stdout carries the discarded
+ * null-muxer output. See the note below — this was wrong in the first draft and
+ * the unit tests could not have caught it.
  */
 export function detectCuts(assetPath: string, startMs: number, endMs: number): number[] {
-  const out = execFileSync('ffmpeg', [
+  const result = spawnSync('ffmpeg', [
     '-hide_banner',
     '-ss', String(startMs / 1000),
     '-t', String((endMs - startMs) / 1000),
     '-i', assetPath,
     '-vf', "select='gt(scene,0.4)',showinfo",
     '-f', 'null', '-',
-  ], { stdio: ['ignore', 'ignore', 'pipe'] }).toString();
+  ], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  if (result.error) throw result.error;
+  const out = result.stderr ?? '';
 
   const cuts: number[] = [];
   for (const m of out.matchAll(/pts_time:([0-9.]+)/g)) {
@@ -150,6 +157,8 @@ export function framesForTrack(
 }
 ```
 
+> **R25-F1, and it is the reason this phase's `[MANUAL]` step is not a formality.** The first draft of `detectCuts` read `execFileSync`'s **return value**, which is stdout, with `stdio: ['ignore', 'ignore', 'pipe']`. ffmpeg writes `showinfo` to **stderr**, so every real call returned `null` and threw on `.toString()`. **Every unit test passed**, because a mock that hands back one buffer cannot distinguish the two streams — the test was asserting against the shape of the mock, not the shape of ffmpeg. The fix is `spawnSync` and `result.stderr`; the test mock now keeps the streams separate so it can fail the same way the real binary does.
+
 > **`+ 80` on a cut timestamp** puts the frame just inside the new shot rather than on the boundary, where ffmpeg can hand back the last frame of the outgoing shot or a blend. It is a frame-grab offset, not a limit — it has no registry entry because it appears in exactly one place.
 
 > **A window with no cut gets one frame, and that is correct.** `frames_per_gap_max` is a ceiling, not a target. Padding to three by sampling a static 12-second shot three times spends two Bedrock image slots on identical pixels.
@@ -157,6 +166,8 @@ export function framesForTrack(
 **Contracts implemented:** `changes[C8]`, `limits.ad.frames_per_gap_max`, `contracts.description_cue.source_frames_ms` (produced here, written in Phase 6)
 
 **Phase 4 verification:** `⟨commands.tests⟩` → a line containing `⟨commands.tests_expect⟩` (ffmpeg mocked, per `02e` §B.0). Then once, `[MANUAL]`, against the real asset: run `framesForCue` on the longest window and **open the JPEGs**. A test proves the bound holds and the reuse keys line up; only an eye proves the frames are of the film and not of black.
+
+**Done 2026-09-25 (R25).** The longest content window (`119000-131000`) yielded two frames — `119955` from a detected cut and `125000` at the midpoint — and they are **two different shots of the same scene**, which is what the cut detection exists to produce. A window from the post-credits scene (`709500-719917`) yielded one frame, correctly, because it contains no cut. All three are film, none is black, and none is credits. The `[MANUAL]` step also found `R25-F1` above, which no test could have.
 
 ---
 

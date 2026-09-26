@@ -29,7 +29,7 @@ commands:
   # literal full-pass line at the current test count. Re-measure it whenever
   # the count changes; `_facts.yml tests_baseline` is what tracks the count.
   tests:        "npm test"
-  tests_expect: "30 passed (30)"
+  tests_expect: "42 passed (42)"
   lint:         "npm run lint"
   # Filled 2026-09-22 (R11) from `vega --help` / `vega device <cmd> --help` on
   # Vega CLI 1.3.4, SDK 0.24.12112, with the Virtual Device booted. Not guessed.

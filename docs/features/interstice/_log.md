@@ -658,4 +658,34 @@ INTERSTICE.cue.audio state=ended t=2.02
 
 **Edits:** `_facts.yml` (`limits.hackathon.aws_credits_granted` corrected and split from redemption; `aws_credits_valid_through`; `aws_credits_usd` confirmed against the grant rather than the rules page).
 **Validation:** `audit.py` → clean.
+**Redeemed the same day** (`aws_credits_redeemed`), which closes the credit front entirely: the entitlement is a balance, the code is burned and worthless to anyone else, and there is no expiry to track. `worst_case.est_cost_usd` stays `null` — the credit pays for calls and `D4` means the calls that would price it have never run.
 **Still open:** unchanged from R23 — `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC23` on hardware.
+
+---
+
+## R25 · 2026-09-25 · claude-opus-5 (Claude Code) · built C8 — and the real run found what 12 green tests could not
+**Read:** `_facts.yml` (v17) · `_log.md` (through R24 end) · `02b` Phase 4
+**Log read through:** R24
+**Did:** built `pipeline/frames.ts` (`changes[C8]`) against the phase regenerated in R22, with 12 tests, then ran it against the real asset — which is where the interesting part is.
+
+### R25-F1 `FUNCTIONAL`: every unit test passed against code that could never have worked
+`detectCuts` read `execFileSync`'s **return value** — stdout — with `stdio: ['ignore', 'ignore', 'pipe']`. ffmpeg writes `showinfo` to **stderr**. So every real call returned `null` and threw on `.toString()`, while **all twelve tests were green**.
+
+The mock is why. It returned one buffer for any invocation, so a function reading either stream passed identically. **The test was asserting against the shape of the mock rather than the shape of ffmpeg** — and it had been written from the same wrong assumption as the code, which is the failure mode a mock written alongside its subject always risks.
+
+Fixed with `spawnSync` and `result.stderr`. The mock now implements `spawnSync` with `stdout` and `stderr` as **separate fields**, so it can fail the way the real binary does; `execFileSync` in the mock returns an empty stdout, which is what ffmpeg actually puts there.
+
+This is the second time in this set that `[MANUAL]` verification earned its place — the first was R13, running `C7` against real subtitles and discovering a gap is not a cue. The phase's own wording already said it: *"a test proves the bound holds; only an eye proves the frames are of the film."* It understated the case. A test could not prove the function ran at all.
+
+### The real run
+Longest content window `119000-131000` → **two frames**, `119955` (a detected cut) and `125000` (the midpoint), and they are **two different shots of the same scene**, which is exactly what cut detection is for. A post-credits window `709500-719917` → **one frame**, correctly, because it holds no cut. Opened all three: film, not black, not credits.
+
+That also exercises the ceiling from both sides in one run — a window that needs padding does not get it (`limits.ad.frames_per_gap_max` is a ceiling, not a target), and a window with more cuts than the ceiling is truncated.
+
+### Why this phase and not another
+`defects[D4]` blocks `C9` and **only** `C9`. `C8` needs ffmpeg and nothing else — no AWS, no device. Waiting for Bedrock would have idled work that never depended on it, which is the same reasoning that put `C10`'s container chain on the device in R23 while `C9` sat blocked.
+
+**Edits:** `pipeline/frames.ts` new · `pipeline/__tests__/frames.test.ts` new (12) · `02b` Phase 4 code block synced with the fix and carrying `R25-F1` · `_facts.yml` (`changes[C8].built`, `tests_baseline` re-measured) · `_profile.yml` (`tests_expect`).
+**Validation:** `npm test` exit 0 — jest 8, vitest **42** across 4 files · `npm run lint` exit 0 · `tsc --noEmit` clean · `audit.py` → clean, every mechanized check passed · real-asset run as quoted.
+**Still open:** `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC23` on hardware.
+**Next mode:** `C6` TrackLoader and `C3` CueScheduler — both pure logic against `contracts.description_track`, both testable with no AWS and no device, and both needed before anything can be heard in order.

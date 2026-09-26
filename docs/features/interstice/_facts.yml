@@ -375,6 +375,12 @@ limits:
                    to Bedrock models is not allowed for this account), not a funding
                    one. Re-measured across the grant on 2026-09-25 and byte-identical,
                    so this is measured rather than argued.'
+    aws_credits_redeemed: '2026-09-25 — redeemed by the owner against the entrant
+                   account, same day the code was issued. The entitlement is now a
+                   balance. The code is burned and is worthless to anyone else, which
+                   was the point of redeeming it immediately rather than storing it.
+                   worst_case.est_cost_usd stays null: the credit pays for calls, and
+                   defects[D4] means the calls that would price it have never run.'
     aws_credits_valid_through: '2028-08-31 — from the grant itself. 22 months past
                    limits.hackathon.deadline, so the credit carries NO expiry pressure
                    on this project and schedule.* gains no date from it. Recorded
@@ -789,7 +795,7 @@ changes:
                is a spec, and an implementer with nowhere to read them from will
                inline Tears of Steel''s credits boundary where the next asset
                silently inherits it.' }
-  - { id: C8, file: pipeline/frames.ts, kind: planned, where: repo,
+  - { id: C8, file: pipeline/frames.ts, kind: planned, where: repo, built: '2026-09-25 (R25) — unit-tested and run against the real asset; see 02b Phase 4',
       change: 'extracts the frames for each CUE via ffmpeg — the midpoint frame,
                plus per-shot frames (scene detection) when the cue window spans a
                cut, bounded by limits.ad.frames_per_gap_max. RE-SCOPED R13: per cue,
@@ -1466,7 +1472,7 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, n: 1, exit_code: 0,
-              value: 'jest: Tests 8 passed, 8 total · vitest: Test Files 3 passed (3), Tests 30 passed (30)',
+              value: 'jest: Tests 8 passed, 8 total · vitest: Test Files 4 passed (4), Tests 42 passed (42)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the
@@ -1482,7 +1488,10 @@ tests_baseline:
                      would otherwise re-introduce silently. R22 added the manifest
                      suite and the splitIntoCues suite, including the NESTING property
                      (concise subset-of standard subset-of detailed) that changes[C8]
-                     relies on to extract frames once instead of three times. `npm run lint`
+                     relies on to extract frames once instead of three times. R25 added
+                     the frames suite, whose mock keeps ffmpeg''s stdout and stderr
+                     SEPARATE — the previous shape could not have failed the way the
+                     real binary does, and did not (R25-F1). `npm run lint`
                      (eslint + tsc --noEmit) also exits 0 on the same tree, with two
                      informational warnings.' }
 
