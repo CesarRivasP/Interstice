@@ -2,6 +2,7 @@ import type { MediaAdapter } from '../platform/MediaAdapter';
 import { AD } from '../../pipeline/budget';
 import type { DescriptionCue } from '../../pipeline/types';
 import { rampVolumePct } from './duck';
+import {log} from '../diagnostics';
 
 /**
  * `_facts.yml changes[C4]` — duck, speak, restore.
@@ -27,7 +28,7 @@ export class DescriptionAudio {
     // and restore the main level, or the app returns ducked and silent.
     this.media.lifecycle.onBackground(() => {
       if (!this.active) return;
-      console.log('INTERSTICE.audio.background active=true');
+      log('INTERSTICE.audio.background active=true');
       void this.stop();
     });
   }
@@ -39,12 +40,12 @@ export class DescriptionAudio {
     const stale = () => mine !== this.generation;
 
     try {
-      console.log(`INTERSTICE.audio.duck id=${cue.id} to_pct=${AD.DUCK_TARGET_PCT}`);
+      log(`INTERSTICE.audio.duck id=${cue.id} to_pct=${AD.DUCK_TARGET_PCT}`);
       await rampVolumePct(this.media.video, 100, AD.DUCK_TARGET_PCT, undefined, stale);
       await this.media.clips.play(cue.audio_uri);
-      console.log(`INTERSTICE.audio.spoke id=${cue.id} words=${cue.words}`);
+      log(`INTERSTICE.audio.spoke id=${cue.id} words=${cue.words}`);
     } catch (err) {
-      console.log(`INTERSTICE.audio.failed id=${cue.id} err=${(err as Error).message}`);
+      log(`INTERSTICE.audio.failed id=${cue.id} err=${(err as Error).message}`);
     } finally {
       // AC5: the main track ALWAYS returns to full, including on failure. A cue
       // that fails must not leave the film at 25% for the rest of the runtime.
@@ -53,6 +54,9 @@ export class DescriptionAudio {
       // torn down, and ramping again is work against a dead object.
       if (!stale()) {
         await rampVolumePct(this.media.video, AD.DUCK_TARGET_PCT, 100, undefined, stale);
+        // AC5 asserts the main track returns to full. An assertion nobody can
+        // observe on the device is an assertion that closes on trust.
+        log(`INTERSTICE.audio.restored id=${cue.id}`);
         this.active = false;
       }
     }

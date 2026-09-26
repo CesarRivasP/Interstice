@@ -760,7 +760,7 @@ limits:
 changes:
 
   # --- app, on device ---
-  - { id: C1, file: src/App.tsx, kind: planned, where: repo,
+  - { id: C1, file: src/App.tsx, kind: planned, where: repo, built: '2026-09-26 (R29) — title list, player, BACK to the list; verified on the device with inputd-cli',
       change: 'Vega OS / React Native app shell and navigation' }
   - { id: C2, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo, built: '2026-09-25 (R28) — rewired behind MediaAdapter; names no platform API. The limits.mse_buffer window is NOT built: see AC23',
       change: 'video playback screen; every state (loading, playing, error, empty)
@@ -794,7 +794,7 @@ changes:
                with (CONTENT_TYPE_SPEECH, USAGE_ACCESSIBILITY). Clips are small
                enough to append whole, which is why limits.mse_buffer windowing
                applies to C2 and not here.' }
-  - { id: C5, file: src/ad/ADControls.tsx, kind: planned, where: repo, built: '2026-09-25 (R27) — 14 tests, every one asserting what is ANNOUNCED rather than rendered; see 02c2 Phase 11',
+  - { id: C5, file: src/ad/ADControls.tsx, kind: planned, where: repo, built: '2026-09-25 (R27), wired into the screen R29 — 14 tests, every one asserting what is ANNOUNCED rather than rendered; see 02c2 Phase 11',
       change: 'remote-control surface: toggle description on/off, three verbosity
                levels per decisions.verbosity_levels (concise/standard/detailed),
                and the visible+spoken state for every failure branch of the loader;
@@ -1514,7 +1514,7 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, n: 1, exit_code: 0,
-              value: 'jest: Tests 59 passed, 59 total · vitest: Test Files 6 passed (6), Tests 46 passed (46)',
+              value: 'jest: Tests 65 passed, 65 total · vitest: Test Files 6 passed (6), Tests 46 passed (46)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the

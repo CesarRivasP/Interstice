@@ -793,3 +793,39 @@ For a hackathon judged by people who clone and build, a half-gigabyte artifact i
 **Still open:** `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only · `limits.mse_buffer` unimplemented.
 **Four defects this round, and three of them needed the device or the filesystem — none of the three could have come from a unit test.**
 **Next mode:** `C1` App shell and navigation, then `02d` Phase 17 — removing the Phase 0 instrumentation, which is ordered after the last run that reads it rather than after the last code phase.
+
+---
+
+## R29 · 2026-09-26 · claude-opus-5 (Claude Code) · the shell, and the description layer wired before it has anything to load
+**Read:** `_facts.yml` (v17) · `_log.md` (through R28 end) · `02d` Phase 13
+**Log read through:** R28
+**Did:** the shell, and then wired `C6`, `C3` and `C5` into the player — which was the round's real decision.
+
+### Wiring the description layer BEFORE there is a track to load
+`defects[D4]` blocks `C9`, so no track file exists or can exist yet. The tempting move is to leave the loader unwired until one does.
+
+The opposite is better, and the device proved it: wire it now and the app enters the **`missing` state**, which is not a corner case — it is the state this app is genuinely in until `D4` clears, and it is exactly what `AC8` is about. Measured on the device:
+```
+INTERSTICE.controls.announce kind=missing
+INTERSTICE.loader.miss path=/pkg/bundle/.../tears-of-steel.standard.track.json
+INTERSTICE.scheduler.load cues=0
+```
+So `decisions.verbosity_levels`' lookup rule, `C6`'s missing-vs-malformed split and `AC8`'s spoken sentence are all exercised end to end on real hardware, with zero cue text in existence. The film plays; the app says the description is absent and that playback continues. That is the product behaving correctly under its current constraint rather than waiting for one.
+
+### R29-F1: the whole `src/ad/` layer was invisible on the device
+`TrackLoader`, `CueScheduler`, `ADControls` and `DescriptionAudio` all logged with `console.log`, which on this platform reaches nobody (`limits.vega_media.no_js_console`, measured in R18). Four components with careful diagnostics, none of them observable where it matters. Routed through the beacon, and the run above is what that bought.
+
+One line was missing entirely: **`DescriptionAudio` never logged the volume RESTORE.** `AC5` asserts the main track returns to full, and an assertion nobody can observe on the device is an assertion that closes on trust. Now `INTERSTICE.audio.restored`, and the device shows it landing 0.5 s after the cue ends.
+
+### R29-F2: `BackHandler` is real on Vega, and absent from the test environment
+The jest preset's shim has no `BackHandler`, so a screen using it throws under test while working perfectly on the device. The platform ships `BackHandler.kepler.js`, which wires the standard interface to `UserInputManager`; there is also a Vega-specific `useKeplerBackHandler` for `exitApp`.
+
+Filled the gap in `test/setup.ts` rather than mocking the module, so the distinction stays honest: **a hole in the test environment, not a missing platform capability**, and the component keeps importing the portable API. The kepler module exposes its exports as **getters**, so a plain assignment is a silent no-op — `Object.defineProperty` is what actually replaces it, and that cost a cycle to find.
+
+### Verified with the remote, not by reasoning
+`inputd-cli button_press KEY_ENTER` on the title list → `INTERSTICE.app.play id=tears-of-steel` → the player opens, plays, resumes from the startup stall, fires the probe cue, ducks and restores. Then `KEY_BACK` → `INTERSTICE.player.back from=playing`. `AC2`'s claim that BACK has a stated destination is now a thing that happened rather than a thing written down.
+
+**Edits:** `src/App.tsx` rewritten (title list, navigation) · `src/screens/PlayerScreen.tsx` (loader, scheduler, controls, BACK, coalesced seek) · `src/ad/*` routed through the beacon, `DescriptionAudio` +restore log · `test/setup.ts` new · `test/App.spec.tsx` rewritten, `test/PlayerScreen.spec.tsx` +4 · `jest.config.json` (`setupFilesAfterEnv`) · `_facts.yml` (`changes[C1].built`, `[C5]` wired, `tests_baseline`) · `_profile.yml`.
+**Validation:** `npm test` exit 0 — jest **65**, vitest 46 · `npm run lint` exit 0 · `audit.py` clean · package **2.69 MB** · device run quoted above.
+**Still open:** `D4` **decide by 09-30 — four days** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only · `limits.mse_buffer` unimplemented.
+**Next mode:** `D4` is the one with a date on it and it is not a coding task. Everything downstream of `C9` — the tracks, `AC7`, `AC14`, `AC18`, the cost figure — waits on an answer from AWS or the organisers, and the case is now one sentence long.

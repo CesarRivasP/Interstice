@@ -1,4 +1,5 @@
 import type { DescriptionCue } from '../../pipeline/types';
+import {log} from '../diagnostics';
 
 /**
  * `_facts.yml changes[C3]` — playback position becomes "fire this cue now, once".
@@ -28,7 +29,7 @@ export class CueScheduler {
       .sort((a, b) => a.start_ms - b.start_ms);
     this.cursor = 0;
     this.firing = null;
-    console.log(`INTERSTICE.scheduler.load cues=${this.cues.length}`);
+    log(`INTERSTICE.scheduler.load cues=${this.cues.length}`);
   }
 
   setEnabled(on: boolean): void {
@@ -44,7 +45,7 @@ export class CueScheduler {
     while (this.cursor < this.cues.length && this.cues[this.cursor]!.end_ms <= positionMs) {
       const skipped = this.cues[this.cursor]!;
       if (skipped !== this.firing) {
-        console.log(`INTERSTICE.scheduler.skip id=${skipped.id} pos_ms=${positionMs}`);
+        log(`INTERSTICE.scheduler.skip id=${skipped.id} pos_ms=${positionMs}`);
       }
       this.cursor++;
     }
@@ -56,7 +57,7 @@ export class CueScheduler {
     if (positionMs >= next.start_ms && positionMs < next.end_ms && this.firing !== next) {
       this.firing = next;
       this.cursor++;
-      console.log(
+      log(
         `INTERSTICE.scheduler.fire id=${next.id} pos_ms=${positionMs}` +
           ` window=[${next.start_ms},${next.end_ms})`,
       );
@@ -79,7 +80,7 @@ export class CueScheduler {
     }
     this.cursor = lo;
     this.firing = null;
-    console.log(`INTERSTICE.scheduler.resync pos_ms=${positionMs} cursor=${this.cursor}`);
+    log(`INTERSTICE.scheduler.resync pos_ms=${positionMs} cursor=${this.cursor}`);
   }
 }
 
@@ -98,7 +99,7 @@ export function coalesce(fn: (value: number) => void, quietMs = 250) {
     events++;
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
-      console.log(`INTERSTICE.scheduler.coalesced events=${events} settled_ms=${pending}`);
+      log(`INTERSTICE.scheduler.coalesced events=${events} settled_ms=${pending}`);
       events = 0;
       timer = null;
       fn(pending);

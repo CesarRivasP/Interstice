@@ -35,5 +35,8 @@
     "!**/types.ts",
     "!src/**/*.d.ts"
   ],
-  "coverageDirectory": ".tmp/coverage"
+  "coverageDirectory": ".tmp/coverage",
+  "setupFilesAfterEnv": [
+    "<rootDir>/test/setup.ts"
+  ]
 }

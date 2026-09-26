@@ -1,5 +1,6 @@
 import type { DescriptionCue, DescriptionTrack, Verbosity } from '../../pipeline/types';
 import { MAX_CLIPS_IN_MEMORY } from '../../pipeline/budget';
+import {log} from '../diagnostics';
 
 /**
  * `_facts.yml changes[C6]` — load a track file and refuse to believe it.
@@ -102,12 +103,12 @@ export async function loadTrack(
     try {
       raw = await readJson(path);
     } catch {
-      console.log(`INTERSTICE.loader.miss path=${path}`);
+      log(`INTERSTICE.loader.miss path=${path}`);
       continue;
     }
 
     const result = validateTrack(raw);
-    console.log(
+    log(
       `INTERSTICE.loader.load path=${path} ok=${result.ok}` +
         (result.ok ? ` cues=${result.track.cues.length}` : ` reason=${result.reason}`),
     );
@@ -142,7 +143,7 @@ export class ClipCache {
     while (this.order.length > this.max) {
       const evicted = this.order.shift()!;
       this.held.delete(evicted);
-      console.log(`INTERSTICE.cache.evict uri=${evicted} size=${this.held.size}`);
+      log(`INTERSTICE.cache.evict uri=${evicted} size=${this.held.size}`);
     }
   }
 

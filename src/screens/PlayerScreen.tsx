@@ -1,8 +1,11 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {BackHandler, StyleSheet, Text, View} from 'react-native';
 import type {MediaAdapter} from '../platform/MediaAdapter';
+import {ADControls, type ADState} from '../ad/ADControls';
+import {coalesce, CueScheduler} from '../ad/CueScheduler';
 import {DescriptionAudio} from '../ad/DescriptionAudio';
-import type {DescriptionCue} from '../../pipeline/types';
+import {loadTrack} from '../ad/TrackLoader';
+import type {DescriptionCue, Verbosity} from '../../pipeline/types';
 import {log} from '../diagnostics';
 
 /**
@@ -32,20 +35,47 @@ export interface PlayerScreenProps {
    * blocked on `defects[D4]`.
    */
   cueUri?: string;
+  /** where track files sit, per decisions.verbosity_levels' lookup rule */
+  assetDir: string;
+  assetId: string;
+  readJson: (path: string) => Promise<unknown>;
+  /** AC2: BACK's stated destination */
+  onExit: () => void;
 }
 
 type Status = 'loading' | 'playing' | 'stalled' | 'error';
 
-export function PlayerScreen({media, uri, cueUri}: PlayerScreenProps) {
+export function PlayerScreen({
+  media,
+  uri,
+  cueUri,
+  assetDir,
+  assetId,
+  readJson,
+  onExit,
+}: PlayerScreenProps) {
   const [status, setStatus] = useState<Status>('loading');
   const [detail, setDetail] = useState<string>('');
+  const [ad, setAd] = useState<ADState>({kind: 'missing', detail: 'not loaded yet'});
+  const [verbosity, setVerbosity] = useState<Verbosity>('standard');
   const audio = useRef<DescriptionAudio | null>(null);
+  const scheduler = useRef<CueScheduler | null>(null);
   const cueFired = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     let cueTimer: ReturnType<typeof setTimeout> | null = null;
     audio.current = new DescriptionAudio(media);
+    scheduler.current = new CueScheduler({
+      onFire: cue => {
+        void audio.current?.speak(cue);
+      },
+    });
+
+    const offPosition = media.video.onPosition(ms => scheduler.current?.tick(ms));
+    // AC6: act on the SETTLED position. A held direction emits a stream of key
+    // events, and one resync per event is a resync storm through every seek.
+    const offSeek = media.video.onSeek(coalesce(ms => scheduler.current?.resync(ms)));
 
     // AC22 / R21-F3: running dry raises no error, so it needs its own listener
     // and its own state. Without this the screen stays in `playing` forever
@@ -103,6 +133,8 @@ export function PlayerScreen({media, uri, cueUri}: PlayerScreenProps) {
       // window for it is the two seconds a viewer is most likely to change
       // their mind in.
       if (cueTimer) clearTimeout(cueTimer);
+      offPosition();
+      offSeek();
       offStalled();
       offPlaying();
       offError();
@@ -111,12 +143,68 @@ export function PlayerScreen({media, uri, cueUri}: PlayerScreenProps) {
     };
   }, [media, uri, cueUri]);
 
+  // AC17: switching level re-runs the loader and nothing else. The video keeps
+  // playing, the position is untouched, and the scheduler is reloaded with the
+  // new track's cues.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const result = await loadTrack(readJson, assetDir, assetId, verbosity);
+      if (cancelled) return;
+
+      if (!result.ok) {
+        // AC8: a stated state, never silence. The film still plays; only the
+        // description is absent, and the sentence says so.
+        setAd({kind: result.reason, detail: result.detail});
+        scheduler.current?.load([]);
+        return;
+      }
+
+      scheduler.current?.load(result.track.cues);
+      setAd({
+        kind: 'ready',
+        enabled: true,
+        verbosity: result.loaded_verbosity,
+        cues: result.track.cues.filter(c => c.status === 'ok').length,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [readJson, assetDir, assetId, verbosity]);
+
+  // AC2: BACK has ONE stated destination, from every state, and it stops the
+  // cue on the way out so nothing speaks over the list.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      log(`INTERSTICE.player.back from=${status}`);
+      void audio.current?.stop();
+      onExit();
+      return true;
+    });
+    return () => sub.remove();
+  }, [status, onExit]);
+
+  const onToggle = useCallback(
+    (enabled: boolean) => {
+      scheduler.current?.setEnabled(enabled); // AC3: the video is untouched
+      if (!enabled) void audio.current?.stop();
+      setAd(s => (s.kind === 'ready' ? {...s, enabled} : s));
+    },
+    [],
+  );
+
   const Surface = media.VideoSurface;
   const overlay = overlayFor(status, detail);
 
   return (
     <View style={styles.root}>
       <Surface style={StyleSheet.absoluteFill} />
+      <View style={styles.controls}>
+        <ADControls state={ad} onToggle={onToggle} onVerbosity={setVerbosity} />
+      </View>
       {overlay && (
         <View
           style={styles.overlay}
@@ -182,4 +270,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {color: '#fff', fontSize: 28},
+  controls: {position: 'absolute', left: 48, bottom: 48, gap: 12},
 });

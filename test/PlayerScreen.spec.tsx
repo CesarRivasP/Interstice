@@ -8,12 +8,29 @@ import {fakeAdapter, type FakeAdapter} from './fakes/adapter';
 const URI = 'file:///pkg/bundle/assets/src/assets/clip.mp4';
 
 let media: FakeAdapter;
+let onExit: jest.Mock;
+/** no track on disk — which is the state the app is genuinely in until D4 clears */
+let readJson: jest.Mock;
+
 beforeEach(() => {
   media = fakeAdapter();
+  onExit = jest.fn();
+  readJson = jest.fn(async () => {
+    throw new Error('ENOENT');
+  });
+});
+
+const base = () => ({
+  media,
+  uri: URI,
+  assetDir: 'assets',
+  assetId: 'tears-of-steel',
+  readJson,
+  onExit,
 });
 
 const renderPlayer = (props: Partial<React.ComponentProps<typeof PlayerScreen>> = {}) =>
-  render(<PlayerScreen media={media} uri={URI} {...props} />);
+  render(<PlayerScreen {...base()} {...props} />);
 
 describe('PlayerScreen — the seam', () => {
   // Fails if: the screen reaches past the adapter. The structural check is
@@ -108,7 +125,7 @@ describe('PlayerScreen — the D6/D2 probe cue', () => {
   };
 
   it('fires exactly one cue, and only once', async () => {
-    const view = render(<PlayerScreen media={media} uri={URI} cueUri="file:///cue.m4a" />);
+    const view = render(<PlayerScreen {...base()} cueUri="file:///cue.m4a" />);
     await act(async () => undefined); // let open() and play() settle
     await drain(2_500);
 
@@ -120,7 +137,7 @@ describe('PlayerScreen — the D6/D2 probe cue', () => {
   // ALWAYS returns to full, and the failure this guards is the one that makes a
   // film unwatchable rather than merely wrong — one bad cue at 25% forever.
   it('returns the main track to full after the cue', async () => {
-    const view = render(<PlayerScreen media={media} uri={URI} cueUri="file:///cue.m4a" />);
+    const view = render(<PlayerScreen {...base()} cueUri="file:///cue.m4a" />);
     await act(async () => undefined);
     await drain(2_500);
 
@@ -131,7 +148,7 @@ describe('PlayerScreen — the D6/D2 probe cue', () => {
 
   it('returns the main track to full even when the cue FAILS', async () => {
     media.clips.failWith = new Error('cue media error 4');
-    const view = render(<PlayerScreen media={media} uri={URI} cueUri="file:///cue.m4a" />);
+    const view = render(<PlayerScreen {...base()} cueUri="file:///cue.m4a" />);
     await act(async () => undefined);
     await drain(2_500);
 
@@ -145,7 +162,7 @@ describe('PlayerScreen — the D6/D2 probe cue', () => {
   // restored it anyway. Jest reports the symptom as "Cannot log after tests are
   // done", which is the same defect wearing a smaller hat.
   it('does not keep working after the screen unmounts mid-cue', async () => {
-    const view = render(<PlayerScreen media={media} uri={URI} cueUri="file:///cue.m4a" />);
+    const view = render(<PlayerScreen {...base()} cueUri="file:///cue.m4a" />);
     await act(async () => undefined);
     await act(async () => {
       jest.advanceTimersByTime(2_000); // the cue fires, mid-fade
@@ -160,7 +177,7 @@ describe('PlayerScreen — the D6/D2 probe cue', () => {
   });
 
   it('fires no cue when none is supplied', async () => {
-    render(<PlayerScreen media={media} uri={URI} />);
+    render(<PlayerScreen {...base()} />);
     await act(async () => undefined);
     await drain(5_000);
     expect(media.clips.played).toEqual([]);
@@ -173,7 +190,7 @@ describe('PlayerScreen — a stall is a state playback can LEAVE', () => {
   // play() resolved — so a screen that latches on it speaks "Buffering" over a
   // film that is playing perfectly well, to a viewer who cannot see that it is.
   it('clears the stalled overlay when playback resumes', async () => {
-    const view = render(<PlayerScreen media={media} uri={URI} />);
+    const view = render(<PlayerScreen {...base()} />);
     await waitFor(() => expect(media.video.isPlaying()).toBe(true));
 
     await act(async () => media.video.emitStalled());
@@ -184,12 +201,71 @@ describe('PlayerScreen — a stall is a state playback can LEAVE', () => {
   });
 
   it('does not resurrect a screen that has errored', async () => {
-    const view = render(<PlayerScreen media={media} uri={URI} />);
+    const view = render(<PlayerScreen {...base()} />);
     await waitFor(() => expect(media.video.isPlaying()).toBe(true));
 
     await act(async () => media.video.emitError(new Error('media error 4')));
     await act(async () => media.video.emitPlaying());
 
     expect(view.getByLabelText(/could not be played/)).toBeTruthy();
+  });
+});
+
+describe('PlayerScreen — the track, and the state when there is none (AC8)', () => {
+  // Fails if: a missing track is silent. This is the state the app is genuinely
+  // in until D4 clears, so it is not a corner case — it is the default. A blind
+  // viewer must be told the film is playing and the description is not, rather
+  // than being left to wonder which half is broken.
+  it('says the description is absent and the film is not', async () => {
+    const view = renderPlayer();
+    await waitFor(() =>
+      expect(view.getByLabelText(/No description track was found/)).toBeTruthy(),
+    );
+    expect(view.getByLabelText(/Playback continues without description/)).toBeTruthy();
+    expect(media.video.isPlaying()).toBe(true);
+  });
+
+  it('announces a malformed track differently from a missing one', async () => {
+    readJson.mockResolvedValue({not: 'a track'});
+    const view = renderPlayer();
+    await waitFor(() => expect(view.getByLabelText(/could not be read/)).toBeTruthy());
+  });
+
+  it('loads a real track and offers the controls', async () => {
+    readJson.mockResolvedValue({
+      version: '1',
+      asset_id: 'tears-of-steel',
+      generated_at: '2026-09-26T00:00:00.000Z',
+      source_subtitles: 'media/tears-of-steel.en.srt',
+      verbosity: 'standard',
+      model_id: 'amazon.nova-lite-v1:0',
+      cues: [
+        {
+          id: 'cue_1000-3000',
+          start_ms: 1_000,
+          end_ms: 3_000,
+          words: 5,
+          text: 'A man steps between the machines.',
+          audio_uri: 'audio/cue_1000-3000.standard.m4a',
+          source_frames_ms: [2_000],
+          status: 'ok',
+        },
+      ],
+    });
+
+    const view = renderPlayer();
+    await waitFor(() =>
+      expect(view.getByLabelText('Audio description')).toBeTruthy(),
+    );
+    expect(view.getByLabelText('standard description').props.accessibilityState).toMatchObject({
+      selected: true,
+    });
+  });
+
+  it('asks for the level the viewer selected, by file name', async () => {
+    const view = renderPlayer();
+    await waitFor(() => expect(readJson).toHaveBeenCalled());
+    expect(readJson.mock.calls[0]?.[0]).toBe('assets/tears-of-steel.standard.track.json');
+    view.unmount();
   });
 });

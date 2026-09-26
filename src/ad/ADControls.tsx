@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
 import type { Verbosity } from '../../pipeline/types';
 import { VERBOSITY_LEVELS } from '../../pipeline/types';
+import {log} from '../diagnostics';
 
 /**
  * `_facts.yml changes[C5]` — the remote surface, and every failure said out loud.
@@ -51,12 +52,12 @@ export function ADControls({ state, onToggle, onVerbosity, focusRef }: ADControl
     if (message === lastSpoken.current) return;
     lastSpoken.current = message;
     AccessibilityInfo.announceForAccessibility(message);
-    console.log(`INTERSTICE.controls.announce kind=${state.kind}`);
+    log(`INTERSTICE.controls.announce kind=${state.kind}`);
   }, [state]);
 
   const toggle = useCallback(() => {
     if (state.kind !== 'ready') return;
-    console.log(`INTERSTICE.controls.toggle to=${!state.enabled}`);
+    log(`INTERSTICE.controls.toggle to=${!state.enabled}`);
     onToggle(!state.enabled); // AC3: the scheduler flips; the video is untouched
   }, [state, onToggle]);
 
@@ -92,7 +93,7 @@ export function ADControls({ state, onToggle, onVerbosity, focusRef }: ADControl
           accessibilityState={{ selected: state.verbosity === level, disabled: !state.enabled }}
           disabled={!state.enabled}
           onPress={() => {
-            console.log(`INTERSTICE.controls.verbosity to=${level}`);
+            log(`INTERSTICE.controls.verbosity to=${level}`);
             onVerbosity(level);
           }}
         >
