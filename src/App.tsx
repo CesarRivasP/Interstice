@@ -1,7 +1,7 @@
 import React from 'react';
-import { Image } from 'react-native';
-import { PlayerScreen } from './screens/PlayerScreen';
-import { log } from './diagnostics';
+import {Image} from 'react-native';
+import {PlayerScreen} from './screens/PlayerScreen';
+import {log} from './diagnostics';
 
 // Required rather than referenced by string so that metro bundles it into the
 // package: `mp4` is in metro's default assetExts, and the build's
@@ -12,9 +12,18 @@ import { log } from './diagnostics';
 // travel inside the package.
 const CLIP = require('./assets/clip.mp4');
 
-const resolved = Image.resolveAssetSource(CLIP);
-log(`INTERSTICE.asset.resolved uri=${resolved?.uri ?? 'NONE'}`);
+// One synthesised description cue, here to answer defects[D6] and defects[D2]
+// on a real device. changes[C10] replaces it with Polly output; the container is
+// already what C10 must emit — fragmented mp4, AAC-LC.
+const CUE = require('./assets/cue.m4a');
 
-export const App = () => <PlayerScreen uri={resolved?.uri ?? ''} />;
+const resolved = Image.resolveAssetSource(CLIP);
+const resolvedCue = Image.resolveAssetSource(CUE);
+log(`INTERSTICE.asset.resolved uri=${resolved?.uri ?? 'NONE'}`);
+log(`INTERSTICE.asset.cue uri=${resolvedCue?.uri ?? 'NONE'}`);
+
+export const App = () => (
+  <PlayerScreen uri={resolved?.uri ?? ''} cueUri={resolvedCue?.uri ?? ''} />
+);
 
 export default App;

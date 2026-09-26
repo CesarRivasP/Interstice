@@ -5,6 +5,7 @@ import {
   MediaSource,
   VideoPlayer,
 } from '@amazon-devices/react-native-w3cmedia';
+import {playCue} from '../ad/DescriptionAudio';
 import {log} from '../diagnostics';
 
 /**
@@ -28,6 +29,16 @@ import {log} from '../diagnostics';
 export interface PlayerScreenProps {
   /** URI of the asset to play. JavaScript fetches it; the player never sees it. */
   uri: string;
+  /**
+   * One description cue, fired once shortly after playback starts.
+   *
+   * TEMPORARY, and it is the runtime test for defects[D6] and defects[D2] —
+   * changes[C3] replaces this with a scheduler driven by the gap timeline. It
+   * lives here rather than in a separate probe app because the question is
+   * whether a cue plays WHILE the film is playing, which needs both players
+   * alive in one process.
+   */
+  cueUri?: string;
 }
 
 type Status = 'initialising' | 'playing' | 'error';
@@ -39,7 +50,8 @@ type Status = 'initialising' | 'playing' | 'error';
  */
 const MIME = 'video/mp4; codecs="avc1.42C01E,mp4a.40.2"';
 
-export function PlayerScreen({uri}: PlayerScreenProps) {
+export function PlayerScreen({uri, cueUri}: PlayerScreenProps) {
+  const cueFired = useRef(false);
   const player = useRef<VideoPlayer | null>(null);
   const surface = useRef<string | null>(null);
   const [status, setStatus] = useState<Status>('initialising');
@@ -99,6 +111,15 @@ export function PlayerScreen({uri}: PlayerScreenProps) {
         p.addEventListener('playing', () => {
           log(`INTERSTICE.player.playing w=${p.videoWidth} h=${p.videoHeight}`);
           setStatus('playing');
+
+          // D6/D2 probe: one cue, two seconds in, over a film that is playing.
+          if (cueUri && !cueFired.current) {
+            cueFired.current = true;
+            setTimeout(() => {
+              log('INTERSTICE.cue.fire');
+              playCue(cueUri, p);
+            }, 2000);
+          }
           // w=0/h=0 at loadedmetadata is the signature of audio-only playback,
           // and this app cannot tell the difference by looking. Sampling the
           // clock and the frame size a few seconds in distinguishes a decoding
@@ -183,7 +204,7 @@ export function PlayerScreen({uri}: PlayerScreenProps) {
         // best-effort during unmount; must not throw into React's cleanup path
       });
     };
-  }, [uri, startIfReady]);
+  }, [uri, cueUri, startIfReady]);
 
   const onSurfaceViewCreated = useCallback(
     (handle: string) => {

@@ -10,6 +10,7 @@
     "node"
   ],
   "moduleNameMapper": {
+    "\\.(mp4|m4a|mp3|aac|wav)$": "<rootDir>/test/mocks/mediaAsset.js",
     "^react-native$": "@amazon-devices/react-native-kepler",
     "^react-native/(.*)$": "@amazon-devices/react-native-kepler/$1",
     "^~/(.*)$": "<rootDir>/src/$1",

@@ -58,6 +58,7 @@ dates:
     - { tag: v13, date: 2026-09-22, note: 'build R14-R16 — C17 manifest written with the real media/audio/input/accessibility service ids and validated; asset duration measured with ffprobe; PlayerScreen first increment against the W3C API' }
     - { tag: v14, date: 2026-09-25, note: 'measure R20 — the asset''s content end bounded by measurement, not by a rule: blackdetect plus a frame-by-frame read found credits AND a post-credits scene, so worst_case.content_windows replaces the scalar content_end the plan assumed; C7 gains clipToContent and every worst_case figure is re-measured against the clipped track' }
     - { tag: v15, date: 2026-09-25, note: 'measure R20 — D5 resolved FALSE and D3 fully resolved: the Virtual Device decodes video (253 frames, 0 dropped). URL mode is broken on this SDK and the app now delivers its own bytes through MediaSource; five platform facts recorded, two of which produce confident false negatives if trusted' }
+    - { tag: v16, date: 2026-09-25, note: 'review R21 — sweep over the scope R20 moved: 7 findings, all confirmed. C2 now owns byte delivery so limits.mse_buffer bounds it, C4/C6/C10 re-scoped because url_mode_broken applies to AudioPlayer too, contracts.asset_manifest gives content_windows a runtime home, AC21/AC22 added. D6 raised and resolved TRUE the same day; D2 resolved TRUE — concurrent streams and ducking both hold on the device' }
 
 # =====================================================================
 # DECISIONS — premises the prose hangs off. `sync` cannot follow these:
@@ -189,7 +190,14 @@ decisions:
             full-length track, and the app toggles description by switching the
             player audio track — a standard player capability that needs no
             concurrent streams. Pausing the asset for each cue is the last
-            resort, not the plan.'
+            resort, not the plan.
+            NOT NEEDED, 2026-09-25: defects[D2] is resolved TRUE on the device —
+            a cue played its full duration while the film kept decoding with zero
+            dropped frames, and the main player ducked to 0.25 and restored. This
+            decision is kept rather than deleted because it is still the answer if
+            concurrency fails on physical hardware, where it has not been retested,
+            and because limits.vega_media.audio_track_switching records that the
+            mechanism it depends on is a real typed API.'
     why: 'pausing the film for several seconds every few minutes breaks the
            premise of watching a film and makes a poor demo; the pre-mix keeps
            playback fluid, reuses the offline pipeline that already exists, and
@@ -593,6 +601,17 @@ limits:
            from there that reports a resource ABSENT has reported nothing. This cost
            a wrong conclusion about the media stack in this very round.'
 
+    concurrent_streams: 'MEASURED 2026-09-25, and it is what makes the product
+           possible. A VideoPlayer fed by one MediaSource and an AudioPlayer built
+           with (CONTENT_TYPE_SPEECH, USAGE_ACCESSIBILITY) fed by another played
+           SIMULTANEOUSLY: the cue ran its full 4.50 s while the video reported
+           paused=false and dropped=0 at a sample taken mid-cue. Ducking the main
+           player with `volume = 0.25` during the cue did not disturb either
+           stream. One caveat stated rather than glossed: there is NO AUDIO CAPTURE
+           PATH off this device, so the audible result is unverified — what is
+           measured is that both pipelines ran and that the volume property was
+           applied, not that a listener heard the film get quieter.'
+
     input_injection: 'MEASURED 2026-09-25. `inputd-cli button_press <KEY_*>` injects
            D-pad and remote keys on the Virtual Device, via
            `vega device run-cmd -c "inputd-cli button_press KEY_ENTER"`, and the key
@@ -604,12 +623,33 @@ limits:
            gwsi-tool-screenshooter needs com.amazon.dev.shell.service, and the host
            cannot screencapture the QEMU window without Screen Recording permission.'
 
+  mse_buffer:
+    basis: decided
+    ahead_s: 30
+    behind_s: 10
+    chunk_bytes: 1048576
+    note: 'RAISED BY R21-F1. With limits.vega_media.url_mode_broken the app owns
+           byte delivery, so the whole media file would otherwise be resident: the
+           first increment reads response.arrayBuffer() in one go, which is fine for
+           a 2.6 MB clip and is an OOM for the REAL demo asset — worst_case is a
+           12.24-minute, 117 MB transcode, on a device limits.clip_cache already
+           records as a 32-bit process with a small heap. SourceBuffer also has its
+           own quota and raises QuotaExceededError independently of the heap. So
+           C2 appends a WINDOW: at most ahead_s of media buffered forward, anything
+           more than behind_s in the past dropped with SourceBuffer.remove(), read
+           in chunk_bytes slices against SourceBuffer.updating. The numbers are
+           decided, not measured — they are a starting point to be measured on the
+           worst device in the matrix, and that measurement is AC21.'
+
   clip_cache:
     basis: decided
     max_clips_in_memory: 8
-    note: 'a Fire TV Stick is a 32-bit process with a small heap. Clips stream from
-           disk; only the next N are resident. Verified on the worst device in the
-           matrix, not on the simulator.'
+    note: 'a Fire TV Stick is a 32-bit process with a small heap. Only the next N
+           clips are resident. CORRECTED R21-F4: this entry used to say clips
+           "stream from disk", which is no longer possible — limits.vega_media.url_mode_broken
+           applies to AudioPlayer exactly as it does to VideoPlayer, so a clip is
+           fetched by the app and appended through a MediaSource like everything
+           else. Verified on the worst device in the matrix, not on the simulator.'
 
   typesafe:
     basis: decided
@@ -634,14 +674,36 @@ changes:
       change: 'Vega OS / React Native app shell and navigation' }
   - { id: C2, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo,
       change: 'video playback screen; every state (loading, playing, error, empty)
-               names its focus host' }
+               names its focus host. RE-SCOPED R20/R21: this screen now OWNS BYTE
+               DELIVERY, because limits.vega_media.url_mode_broken means the player
+               will not fetch anything itself. It creates a MediaSource, attaches it
+               through srcObject, fetches the asset in limits.mse_buffer.chunk_bytes
+               slices against SourceBuffer.updating, keeps a window of
+               limits.mse_buffer.ahead_s/behind_s buffered and drops the rest with
+               SourceBuffer.remove(). Three consequences that are scope, not detail:
+               (a) a SEEK outside the buffered window has no bytes and the app must
+               fetch them (R21-F2), which needs a time-to-byte index over the
+               fragmented mp4 — see contracts.asset_manifest;
+               (b) a STALL is not an error (R21-F3): when bytes run short the player
+               emits waiting/stalled and never error, so this screen listens for
+               them and renders a stated visible AND spoken state, per AC8''s
+               direction applied to media rather than to the track;
+               (c) the in-flight fetch is aborted on unmount with an AbortController
+               (R21-F6), and the loading state — which is now long enough to matter —
+               carries a focusable host like every other state.' }
   - { id: C3, file: src/ad/CueScheduler.ts, kind: planned, where: repo,
       change: 'maps playback position to description cues; resyncs after a seek and
                coalesces key-repeat so a held direction does not fire one cue per
                key event' }
   - { id: C4, file: src/ad/DescriptionAudio.ts, kind: planned, where: repo,
       change: 'plays a description clip while ducking the main track to
-               limits.ad.duck_target_pct and restoring it; stops on background' }
+               limits.ad.duck_target_pct and restoring it; stops on background.
+               RE-SCOPED R21-F4: a clip cannot be played by assigning its URI —
+               limits.vega_media.url_mode_broken covers AudioPlayer too. Each clip
+               is fetched and appended through a MediaSource on an AudioPlayer built
+               with (CONTENT_TYPE_SPEECH, USAGE_ACCESSIBILITY). Clips are small
+               enough to append whole, which is why limits.mse_buffer windowing
+               applies to C2 and not here.' }
   - { id: C5, file: src/ad/ADControls.tsx, kind: planned, where: repo,
       change: 'remote-control surface: toggle description on/off, three verbosity
                levels per decisions.verbosity_levels (concise/standard/detailed),
@@ -649,7 +711,9 @@ changes:
                selector is D-pad reachable and VoiceView-announced' }
   - { id: C6, file: src/ad/TrackLoader.ts, kind: planned, where: repo,
       change: 'loads and validates the description track against contracts.description_track;
-               bounded clip cache per limits.clip_cache' }
+               bounded clip cache per limits.clip_cache. RE-SCOPED R21-F4: the cache
+               holds fetched BYTES ready to append, not URIs to hand to a player,
+               because there is no URI path that plays.' }
   - { id: C11, file: src/ad/LiveCapture.ts, kind: deferred, where: repo,
       change: 'runtime frame capture -> Bedrock -> speech, as an opt-in layer',
       deferred_because: decisions.hybrid_ad_path,
@@ -675,7 +739,14 @@ changes:
                track; the price of that default is describable credits, and it is an
                asset-authoring gap, not a silent one. It remains the data source for
                the gap timeline in the video (AC19), which visualises the gaps AND
-               the split boundaries.' }
+               the split boundaries — and, since R21-F7, labels the stretches that
+               are NOT content, so the credits read as excluded rather than as an
+               unexplained void. R21-F5: the content windows are an INPUT, read from
+               contracts.asset_manifest beside the subtitles. They are not constants
+               in this module and not values copied out of the registry: the registry
+               is a spec, and an implementer with nowhere to read them from will
+               inline Tears of Steel''s credits boundary where the next asset
+               silently inherits it.' }
   - { id: C8, file: pipeline/frames.ts, kind: planned, where: repo,
       change: 'extracts the frames for each CUE via ffmpeg — the midpoint frame,
                plus per-shot frames (scene detection) when the cue window spans a
@@ -702,7 +773,13 @@ changes:
                contracts.description_track — one file per verbosity level, named
                per decisions.verbosity_levels and declaring its own level; each cue
                records every frame it was built from (contracts.description_cue.
-               source_frames_ms, up to limits.ad.frames_per_gap_max)' }
+               source_frames_ms, up to limits.ad.frames_per_gap_max).
+               CONSTRAINED R21-F4: the emitted clip container is not free. Polly''s
+               default MP3 cannot be appended to a SourceBuffer, and every clip must
+               go through one — so C10 emits FRAGMENTED audio/mp4 with AAC-LC
+               (codecs="mp4a.40.2"), the same container discipline
+               limits.vega_media.mse_path records for video. Whether this device
+               accepts an audio-only SourceBuffer at all is defects[D6].' }
   - { id: C15, file: pipeline/normalize_cast.ts, kind: deferred, where: repo,
       deferred_because: decisions.typesafe_judgment_layer,
       reopens_when: 'Phase 1 closes green before 09-30. On reopening it MUST
@@ -804,6 +881,49 @@ related_docs:
 # HYPOTHESES UNDER INVESTIGATION — all three gate delivery, none is measured.
 # =====================================================================
 defects:
+
+  - id: D6
+    role: blocking
+    claim: 'an AudioPlayer on this device accepts an audio-only SourceBuffer, so a
+            description clip can be played at all'
+    basis: measured
+    evidence: { how: device, date: 2026-09-25, n: 1,
+                spread: 'single run',
+                cmd: 'node tools/beacon-server.mjs, app launched on VirtualDevice with src/ad/DescriptionAudio.ts',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2, simulated',
+                              build: 'Release aarch64, SDK 0.24.12112, CLI 1.3.4, w3cmedia ~2.3.2, RN 0.83',
+                              content_asset: 'src/assets/cue.m4a — fragmented mp4, AAC-LC 96 kbps 44.1 kHz stereo, 4.498 s, 56368 bytes, synthesised with macOS say' },
+                value: 'cue.audio mse_supported=true · bytes=56368 · state=canplay ·
+                        state=playing · state=ended t=4.50 — the full duration, no error' }
+    falsified_by: 'MediaSource.isTypeSupported(''audio/mp4; codecs="mp4a.40.2"'')
+                   returning false, or addSourceBuffer throwing NotSupportedError,
+                   or the clip appending and never firing canplay'
+    log_line: 'INTERSTICE.cue.audio mse_supported=<bool> bytes=<n> state=<canplay|error>'
+    status: resolved
+    outcome: true
+    note: 'RAISED BY R21-F4, and it is a genuinely new blocking hypothesis rather
+           than a restatement of D5. limits.vega_media.url_mode_broken removed the
+           only documented way to play a description clip, and MSE is the
+           replacement — but MSE was measured working for VIDEO, with a video
+           surface attached. Audio-only has not been tried on this device by anyone
+           in this set. Amazon states in related_docs[R-VEGA-MSE-THREAD] that
+           audio-only playback needs no surface, which removes one obvious failure
+           mode and confirms nothing about SourceBuffer support.
+           WHY IT IS BLOCKING: every description cue is an audio clip. If this is
+           false the product has no output path at all, and no amount of pipeline
+           work matters. It sits ahead of D2 — ducking a second stream is moot until
+           a second stream plays — and it is cheap: one fragmented AAC file, one
+           AudioPlayer, one append.
+           It also gates the container decision in changes[C10], which is written
+           against the assumption that this holds.
+           RESOLVED TRUE 2026-09-25, the same day it was raised, in the same run
+           that resolved defects[D2]. An AudioPlayer built with
+           (CONTENT_TYPE_SPEECH, USAGE_ACCESSIBILITY) accepted an audio-only
+           SourceBuffer, took 56368 bytes of fragmented AAC-LC, and played the clip
+           to its full 4.50 s. NO VIDEO SURFACE WAS ATTACHED TO IT, which confirms
+           in practice what Amazon stated in related_docs[R-VEGA-MSE-THREAD].
+           The product has an output path. changes[C10]''s container constraint
+           stands as written: fragmented audio/mp4 with mp4a.40.2, not MP3.'
 
   - id: D5
     role: blocking
@@ -1004,12 +1124,21 @@ defects:
     role: contributing
     claim: 'a second audio stream can play on Vega while the video player volume is
             ducked, without the platform stopping one of them'
-    basis: asserted
+    basis: measured
+    evidence: { how: device, date: 2026-09-25, n: 1,
+                spread: 'single run; see limits.vega_media.concurrent_streams for what a second adds',
+                cmd: 'node tools/beacon-server.mjs, app launched on VirtualDevice with src/ad/DescriptionAudio.ts firing one cue 2 s into playback',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2, simulated',
+                              build: 'Release aarch64, SDK 0.24.12112, CLI 1.3.4, w3cmedia ~2.3.2, RN 0.83',
+                              content_asset: 'video src/assets/clip.mp4 (fragmented, H.264 CB L3.0 + AAC-LC) and cue src/assets/cue.m4a (fragmented, AAC-LC, 4.498 s, 56368 bytes)' },
+                value: 'cue.audio state=playing at 13.548 · player.progress t=3.93 paused=false
+                        frames=244 dropped=0 at 15.452, MID-CUE · cue.audio state=ended t=4.50
+                        at 18.077 · cue.duck main_volume=0.25 then restored' }
     falsified_by: 'the platform refusing concurrent playback, or the duck call
                    returning without changing the audible level'
-    log_line: 'INTERSTICE.duck from=<n> to=<n>'
-    status: open
-    outcome: null
+    log_line: 'INTERSTICE.cue.duck main_volume=<n> / INTERSTICE.player.progress frames=<n>'
+    status: resolved
+    outcome: true
     note: 'gates the product itself, not a layer. If ducking is impossible the
             fallback is decisions.d2_fallback: a pre-mixed second audio track
             rendered by the offline pipeline, toggled by audio-track switching.
@@ -1043,8 +1172,25 @@ defects:
             toggled by track switching — is therefore implementable against a real
             interface. D2 failing now costs per-cue granularity and nothing
             architectural.
-            STILL OPEN because concurrency is a runtime property: the device test
-            remains, and it is now a precise one.'
+            RESOLVED TRUE 2026-09-25, on the device, in one run. The cue played to
+            its full 4.50 s while the film kept decoding — `paused=false`,
+            `dropped=0`, the frame counter still advancing at a sample taken
+            BETWEEN the cue starting and ending. The platform stops neither stream.
+            decisions.d2_fallback is not needed, and the per-cue granularity the
+            whole product rests on is real rather than hoped for.
+            WHAT IS MEASURED AND WHAT IS NOT, because the difference matters here:
+            measured is that the media pipeline ACCEPTED and RAN both streams
+            concurrently, that `volume = 0.25` was applied to the main player before
+            the cue was audible and restored after `ended`, and that no frames were
+            dropped. NOT measured is the AUDIBLE LEVEL — there is no audio capture
+            path off the Virtual Device (limits.vega_media.input_injection records
+            that there is no screenshot path either), so "the film got quieter" is
+            a property of the volume setter, not an observation. AC5 therefore
+            remains open and closes on hardware or on the AC14 watch. The falsified_by
+            above names both halves deliberately; this run settles the first.
+            ORDERING NOTE: this was testable at all only because defects[D6] held
+            in the same run — a cue cannot duck anything until a cue can play, and
+            until R20 nothing played at all.'
 
 # =====================================================================
 # ALTERNATIVES CONSIDERED
@@ -1204,6 +1350,24 @@ contracts:
     model_id: string
     cues: 'array<description_cue>'
 
+  asset_manifest:
+    version: string
+    asset_id: string
+    media_uri: string
+    subtitles_uri: string
+    duration_ms: int
+    content_windows: 'array<content_window>'
+    byte_index: 'array<byte_index_entry> | null'
+
+  content_window:
+    start_ms: int
+    end_ms: int
+    label: string
+
+  byte_index_entry:
+    start_ms: int
+    byte_offset: int
+
   description_cue:
     id: string
     start_ms: int
@@ -1264,6 +1428,8 @@ acceptance:
   - { id: AC17, item: 'three verbosity levels (concise/standard/detailed) are selectable from the remote, rescale max_words_per_cue per limits.ad.verbosity_scales, and are demonstrated in the demo', status: written }
   - { id: AC18, item: 'a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch', status: written }
   - { id: AC19, item: 'the submission video visualizes the gap structure (timeline strip with dialogue vs gaps + split-screen before/after with ducking) using data from C7', status: written }
+  - { id: AC21, item: 'the app plays the full-length demo asset without exceeding memory on the worst device in the matrix: limits.mse_buffer holds, SourceBuffer.remove() runs behind the playhead, and no QuotaExceededError is raised across an end-to-end watch', status: written }
+  - { id: AC22, item: 'a stall — bytes running short mid-playback — produces a stated visible and spoken state rather than a frozen picture, and a seek outside the buffered window either resolves or says why it cannot', status: written }
   - { id: AC20, item: 'at least one blind/low-vision viewer validates the track before Phase 5 (20–30 min, with/without comparison, consent on file); anonymized quote retained for SUBMISSION.md/video', status: written }
   # AC21 / AC22 were removed on 2026-09-19 (review R5) together with C15/C16.
   # A criterion whose component is deferred is a criterion nothing can satisfy —

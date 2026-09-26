@@ -506,3 +506,56 @@ A residual risk is stated rather than hidden: an asset with no measured windows 
 **Still open:** `D2` — its runtime test is unblocked for the first time, because something finally plays · `D4` Bedrock, **decide by 09-30** · `AC20`, **drop-dead 10-16** · `review` over the moved scope, then regenerate `02` Phase 3, `02b` Phases 4–6 and `02c` Phases 7/10, all of which were written against `.src` playback and a 1:1 gap-to-cue pipeline.
 
 **Next mode:** `review`, then `implement` over the stale phases. The platform is no longer the unknown; the plan's shape is.
+
+---
+
+## R21 · 2026-09-25 · claude-opus-5 (Claude Code) · review over the moved scope; D6 raised and D2 closed, both TRUE
+**Read:** `_facts.yml` (v15) · `_log.md` (through R20 end)
+**Log read through:** R20
+**Did:** the sweep, then two device measurements the sweep itself demanded. `references/gap-sweep.md` plus the `mobile-tv` layer. Swept scope: `C2`, which now owns byte delivery, and `C7`, which now clips against content windows. **Seven findings, all confirmed, none rejected.**
+
+### The sweep
+
+- **R21-F1 `FUNCTIONAL` — the app buffers the whole asset, and the real one is 117 MB.** `AC1` says the demo asset plays end to end. The first increment does `await response.arrayBuffer()` on the entire file: correct for a 2.6 MB clip, an OOM for a 12.24-minute transcode on a device `limits.clip_cache` already describes as a 32-bit process with a small heap — and `SourceBuffer` carries its own quota that raises `QuotaExceededError` regardless of the heap. Fixed as `limits.mse_buffer` (30 s ahead, 10 s behind, 1 MB chunks, `remove()` behind the playhead) and written into `C2`'s scope. **The three numbers are `basis: decided`, and `AC21` is what makes them measured** — inventing them and calling them measured is the failure this registry exists to prevent.
+- **R21-F2 `FUNCTIONAL` — seeking became this app's problem and `AC6` was written as though it had not.** URL mode let the platform fetch byte ranges on seek. With app-owned delivery a seek outside the window has no bytes, and a fragmented MP4 has no index to find them with. `contracts.asset_manifest.byte_index` gives it one.
+- **R21-F3 `FUNCTIONAL` — a stall is not an error, and nothing rendered it.** When bytes run short the player emits `waiting`/`stalled` and never `error`, so `PlayerScreen` stays in `playing` and a blind viewer gets a frozen picture and silence with no spoken state. `AC8` covers a failed *description track*; this is the *media* stream, one layer down, and had no criterion at all. `AC22` now covers it together with F2.
+- **R21-F4 `FUNCTIONAL`, and it would otherwise have surfaced in Phase 4 — the description clips cannot be played by URL either.** `url_mode_broken` was measured for `AudioPlayer` as much as for `VideoPlayer`. So every cue must also go through a `MediaSource`, which constrains `C10`'s output container: Polly's default MP3 **cannot be appended to a SourceBuffer**, so C10 emits fragmented `audio/mp4` with `mp4a.40.2`. It also made `limits.clip_cache`'s "clips stream from disk" false as written; corrected in place. This finding is the reason `D6` exists.
+- **R21-F5 `FUNCTIONAL` — `worst_case.content_windows` had no runtime home.** `clipToContent` needs windows and the registry is a spec, not a program input; only the test had them, hardcoded. An implementer following the spec literally inlines Tears of Steel's credits boundary into `gaps.ts`, where the next asset silently inherits it. Fixed with `contracts.asset_manifest`.
+- **R21-F6 `FUNCTIONAL` (mobile-tv layer) — the loading state is now long, and it is not focusable.** Buffering is no longer instant, the D-pad has nothing to land on while it runs, and the in-flight `fetch` is never aborted on unmount. `C2` carries an `AbortController` and a focusable loading host.
+- **R21-F7 `POLISH` — `AC19`'s timeline has a hole in it.** C7's output no longer covers 588–707 s, so a strip drawn from C7 alone shows an unexplained void over the credits. It labels non-content windows instead.
+
+**Blind spot stated, per the sweep's own rule:** there is no layer for *"the app owns media byte delivery"* — the kind that F1/F2/F3 all belong to. They were swept on their own terms. That layer is worth writing; it will apply to any Vega media app for as long as `url_mode_broken` holds.
+
+### Then the sweep's own finding was tested, because the device was warm
+
+F4 raised a question nobody in this set had answered: MSE was measured working for **video, with a surface attached**. Audio-only is a different question, and every description cue is audio-only. Raised as **`defects[D6]`** — blocking, because if it were false the product would have no output path at all and no amount of pipeline work would matter.
+
+Written as the first increment of `changes[C4]` rather than as a throwaway probe, because the real question is whether a cue plays *while the film plays*, which needs both players alive in one process.
+
+**Both answers came in one run:**
+```
+13.548  INTERSTICE.cue.audio state=playing                                  <- second stream
+15.452  INTERSTICE.player.progress t=3.93 paused=false frames=244 dropped=0  <- MID-CUE
+18.077  INTERSTICE.cue.audio state=ended t=4.50                              <- full duration
+18.102  INTERSTICE.cue.duck restored
+```
+**`D6` TRUE** — an `AudioPlayer` built `(CONTENT_TYPE_SPEECH, USAGE_ACCESSIBILITY)` took an audio-only `SourceBuffer`, 56368 bytes of fragmented AAC-LC, and played it whole, **with no video surface attached**. `C10`'s container constraint stands as written.
+
+**`D2` TRUE** — the platform stops neither stream. The cue ran its full 4.50 s while the film kept decoding with `dropped=0`, sampled between the cue's start and end, main player ducked to `0.25` and restored. `decisions.d2_fallback` is not needed and is kept only for hardware, where it has not been retested.
+
+**What is NOT measured, stated rather than glossed:** the audible level. There is no audio capture path off the Virtual Device any more than there is a screenshot path. Both pipelines ran and the volume property was applied — a listener hearing the film get quieter is not established, so `AC5` stays open and closes on hardware or during the `AC14` watch. `defects[D2].falsified_by` names both halves deliberately; this run settles one.
+
+**Every open hypothesis in this set is now resolved except `D4`,** which is not ours to resolve — it waits on AWS Support or the organisers.
+
+### Edits
+`_facts.yml` — `limits.mse_buffer` new · `limits.clip_cache` corrected · `limits.vega_media.concurrent_streams` new · `changes[C2]`, `[C4]`, `[C6]`, `[C7]`, `[C10]` re-scoped · `contracts.asset_manifest` / `content_window` / `byte_index_entry` new · `AC21`, `AC22` added (appended, never renumbered) · `defects[D6]` raised and resolved TRUE · `defects[D2]` resolved TRUE · `decisions.d2_fallback` marked not-needed-but-kept · revision v16.
+`01-master-plan.md` — §2 the D2/D6 result, §7 two checklist items flipped, §8 one risk row retired and two added.
+`src/ad/DescriptionAudio.ts` new (C4 first increment) · `src/assets/cue.m4a` new · `src/App.tsx`, `src/screens/PlayerScreen.tsx` wire the cue · `jest.config.json` maps media assets · `test/mocks/mediaAsset.js` new.
+
+**R21-F8, found while running the tests rather than by the sweep:** `require('./assets/cue.m4a')` made jest parse the raw bytes as JavaScript (`SyntaxError: Invalid or unexpected token`). The kepler preset maps the image extensions and not the media ones. `clip.mp4` had never been required from a file jest loads, so this was latent. Mapped through `moduleNameMapper`.
+
+**Validation:** `npm test` exit 0 — jest 8, vitest 13 · `npm run lint` exit 0 (3 informational warnings) · `npm run build` exit 0 · measured on the Virtual Device as quoted above.
+
+**Still open:** `D4` Bedrock, **decide by 09-30** · `AC20`, **drop-dead 10-16** · `AC5` audible ducking, on hardware · `AC21` the `limits.mse_buffer` numbers, on the worst device.
+
+**Next mode:** `implement` over the stale phases — `02` Phase 3, `02b` Phases 4–6, `02c` Phases 7 and 10. All four were written against `.src` playback, a platform that seeks for you, and a 1:1 gap-to-cue pipeline. None of those three is true any more.
