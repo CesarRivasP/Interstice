@@ -106,6 +106,16 @@ Amazon feedback is not diluted by things Amazon cannot act on.
 - **time_lost:** 25 min, and only because the size was noticed by eye while checking something else. The app worked the whole time.
 - **what would have helped:** one line of build output stating the package size and the top few contributors. A 185× regression that changes nothing observable about the running app is exactly the kind that reaches an appstore submission — and for a hackathon judged by people who clone and build, a half-gigabyte artifact is the first impression.
 
+### 2026-09-26 — `Error 002` never mentions the form that would fix it
+
+- **tool:** Amazon Bedrock
+- **expected:** an error that names what is missing, or a console that offers the missing step.
+- **happened:** every inference call on the account returned `ValidationException — Error 002: Access to Bedrock models is not allowed for this account`. Four days and six rounds of elimination: three regions, two APIs, two identities (root and a fresh IAM user), two code paths (CLI and the console playground), before and after an AWS credit grant, before and after its redemption. All identical. `get-foundation-model-availability` reported `regionAvailability`, `entitlementAvailability` and `agreementAvailability` all `AVAILABLE` beside `authorizationStatus: NOT_AUTHORIZED`, and named nothing.
+  The actual cause: **the account had never filled out the Bedrock use-case request form.** One API says so in a single sentence — `aws bedrock get-use-case-for-model-access` → *"You have not filled out the request form. Fill out the form before getting access."*
+- **workaround:** submit the form. The finding was accidental: the Bedrock console, loaded as a narrowly-permissioned IAM user, emitted `AccessDeniedException` for a dozen actions it wanted, and one of them was `bedrock:GetUseCaseForModelAccess` — an API no error message had ever mentioned. A permissions failure is what revealed the existence of the check.
+- **time_lost:** ~4 hours across four days, plus an AWS support case that proposed the wrong cause (the account root) and was disproven by test.
+- **what would have helped:** one sentence. `Error 002` could say *"this account has not submitted the required use-case details"* and link the form, exactly as `GetUseCaseForModelAccess` already does. The information exists inside the service and is withheld from the error that needs it. Two further notes: `authorizationStatus: NOT_AUTHORIZED` beside three `AVAILABLE`s reads as an entitlement problem and is not one; and the retired Model access page mentions a use-case form only for *Anthropic* models, while the requirement here gated *every* model including Amazon's own Nova.
+
 ---
 
 ## Toolchain

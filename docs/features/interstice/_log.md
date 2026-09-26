@@ -902,3 +902,39 @@ It fits every measurement — account scope, all regions, control plane unaffect
 **Validation:** `audit.py` → clean.
 **Still open:** `D4` — **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
 **Also noted, unrelated to D4:** installing the AWS agent toolkit wrote an `aws-mcp` server into `~/.claude.json` **globally**, plus Codex, Cursor, Gemini CLI and OpenCode. The repo's own convention is per-project MCP with local scope, never global. Flagged to the owner; not changed without asking.
+
+---
+
+## R33 · 2026-09-26 · claude-opus-5 (Claude Code) · D4's cause found: a form nobody was told about
+**Read:** `_facts.yml` (v17) · `_log.md` (through R32 end)
+**Log read through:** R32
+**Did:** found the cause of `defects[D4]`.
+
+```
+aws bedrock get-use-case-for-model-access --region us-east-1
+-> ResourceNotFoundException: You have not filled out the request form.
+   Fill out the form before getting access.
+```
+
+**The account had never submitted the Bedrock use-case request form.** That is all `Error 002` ever meant.
+
+### How it was found, which is the part worth keeping
+Not by reasoning. By a **permissions failure**. The owner signed into the Bedrock console as the narrowly-permissioned IAM user created in R32, and the console UI emitted a dozen `AccessDeniedException`s for actions it wanted and could not have. One of them was `bedrock:GetUseCaseForModelAccess` — **an API that no error message in four days had ever mentioned**. The console, failing, disclosed the existence of the check that was failing us.
+
+Two rounds earlier the same IAM user had produced the discriminator that killed support's hypothesis. This is the second time that deliberately under-permissioned user taught us something a correctly-permissioned one would have hidden.
+
+### Why six rounds, and why none of them was wasted
+`Error 002` says *"Access to Bedrock models is not allowed for this account"* and never mentions a form. `get-foundation-model-availability` reports `NOT_AUTHORIZED` beside three `AVAILABLE`s and never mentions a form. The console playground fails and never mentions a form. AWS Support proposed the account root and was wrong.
+
+Every hypothesis eliminated in R10, R23, R30, R31 and R32 was eliminated **correctly**. None of them could have been the answer, because the answer was a prerequisite nobody was told about. The eliminations are what made the remaining space small enough that an accidental clue was recognisable as a clue.
+
+### Not closed
+`defects[D4].status` is `resolved` on its **cause**, not on its effect. The form is submitted by the owner through the console: `put-use-case-for-model-access` takes an opaque blob of at least 1100 bytes, which is the serialised console form. **This set will not guess that schema or invent business details to send to a vendor on the owner's behalf.** `D4` closes when a Nova call returns a completion, which is also `alternatives[A5].falsified_by`.
+
+### What unblocks the moment it clears
+`C9` (`pipeline/describe.ts`), and behind it `AC7`, `AC14`, `AC18`, the three track files, and `worst_case.est_cost_usd` — which has been `null` since R13 because no call had ever been priced. `A5`'s ladder is not needed if the form works, and the **09-30** decide-by stops being a cliff.
+
+**Edits:** `_facts.yml` (`defects[D4]` → `status: resolved`, `outcome` carrying the cause, the finding method and the reason it took six rounds) · `FRICTION-LOG.md` (+1, and it is the strongest entry in the file: the information exists inside the service and is withheld from the error that needs it).
+**Validation:** `audit.py` → clean.
+**Still open:** the form submission itself · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
+**Next mode:** owner submits the form; then re-run the Nova call and, if it returns, `C9` is unblocked and the pipeline can produce a real track for the first time.

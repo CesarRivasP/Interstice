@@ -1133,8 +1133,31 @@ defects:
                         of audio/mpeg on the same session.' }
     falsified_by: 'a successful InvokeModel or Converse on any Nova model from this account'
     log_line: null
-    status: open
-    outcome: null
+    status: resolved
+    outcome: 'CAUSE FOUND 2026-09-26, and it was never a permission, a region, a
+              credential, an identity or a payment. THE ACCOUNT HAD NEVER FILLED OUT
+              THE BEDROCK USE-CASE REQUEST FORM.
+                aws bedrock get-use-case-for-model-access --region us-east-1
+                -> ResourceNotFoundException: You have not filled out the request
+                   form. Fill out the form before getting access.
+              One sentence, and it names the missing thing exactly. That API was found
+              because the Bedrock CONSOLE, loading as a narrowly-permissioned IAM user,
+              emitted an AccessDeniedException for bedrock:GetUseCaseForModelAccess
+              among a dozen others — the console told us an API existed that no error
+              message had ever mentioned.
+              NOT CLOSED UNTIL THE FORM IS SUBMITTED AND ACCESS IS GRANTED. The form is
+              submitted by the owner through the console (put-use-case-for-model-access
+              takes an opaque blob of at least 1100 bytes, which is the serialised
+              console form; guessing its schema, or inventing business details to send
+              to a vendor, is not something this set will do).
+              WHY IT TOOK SIX ROUNDS, recorded because the lesson is the reusable part:
+              Error 002 says "Access to Bedrock models is not allowed for this account"
+              and NEVER mentions a form. get-foundation-model-availability reports
+              authorizationStatus NOT_AUTHORIZED beside three AVAILABLEs and never
+              mentions a form. The console playground fails and never mentions a form.
+              Every eliminated hypothesis below was eliminated correctly; none of them
+              could have been the answer, because the answer was a prerequisite nobody
+              was told about.'
     note: 'RULED OUT by measurement, so no later round re-tests them: not regional (three
            regions, same error) · not the API shape (InvokeModel and Converse, same error)
            · not the retired Model-access console page (it is retired; models auto-enable
