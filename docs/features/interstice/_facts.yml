@@ -739,7 +739,15 @@ limits:
     basis: decided
     ahead_s: 30
     behind_s: 10
-    chunk_bytes: 1048576
+    segment_s: 6
+    segment_note: 'RE-SHAPED R34 by limits.vega_media.no_range_requests. chunk_bytes
+           is GONE: it assumed the app could read a byte range out of the asset, and
+           the platform returns the whole file for any Range request. The window is
+           therefore built from whole SEGMENTS produced at build time
+           (contracts.asset_manifest.segments); 6 s is the usual streaming compromise
+           between segment count and seek granularity. ahead_s and behind_s now mean
+           "keep about 5 segments ahead of the playhead and drop anything more than
+           2 behind".'
     note: 'RAISED BY R21-F1. With limits.vega_media.url_mode_broken the app owns
            byte delivery, so the whole media file would otherwise be resident: the
            first increment reads response.arrayBuffer() in one go, which is fine for
@@ -1572,16 +1580,19 @@ contracts:
     subtitles_uri: string
     duration_ms: int
     content_windows: 'array<content_window>'
-    byte_index: 'array<byte_index_entry> | null'
+    segments: 'array<media_segment> | null'
 
   content_window:
     start_ms: int
     end_ms: int
     label: string
 
-  byte_index_entry:
+  media_segment:
+    index: int
     start_ms: int
-    byte_offset: int
+    end_ms: int
+    uri: string
+    bytes: int
 
   description_cue:
     id: string

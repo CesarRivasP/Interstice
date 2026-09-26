@@ -938,3 +938,30 @@ Every hypothesis eliminated in R10, R23, R30, R31 and R32 was eliminated **corre
 **Validation:** `audit.py` → clean.
 **Still open:** the form submission itself · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
 **Next mode:** owner submits the form; then re-run the Nova call and, if it returns, `C9` is unblocked and the pipeline can produce a real track for the first time.
+
+---
+
+## R34 · 2026-09-26 · claude-opus-5 (Claude Code) · AC23's design settled by a probe, not by a preference
+**Read:** `_facts.yml` (v17) · `_log.md` (through R33 end) · `02d` Phase 12
+**Log read through:** R33
+**About to do:** `limits.mse_buffer` and `AC23` — the windowed append that lets `changes[C2]` play something longer than a 20-second clip.
+**Measuring before designing, because the design forks on it:** a window needs to read PART of the asset, and there are two ways to get one. Byte-range requests over `fetch`, which needs the platform to honour a `Range` header on a packaged `file://` path — unknown, never tested here. Or splitting the asset into segments at build time, which always works and changes `contracts.asset_manifest` and the pipeline instead. Guessing which costs a rewrite; probing costs one build.
+### R34-F1 `FUNCTIONAL`, and it decided the design: byte-range requests are not honoured
+```
+INTERSTICE.range.full    status=200 bytes=2628566
+INTERSTICE.range.partial status=200 bytes=2628566 asked=65536 content_range=none honoured=false
+```
+Asking for the first 64 KB of a 2.6 MB packaged asset returns **status 200, the whole body, no `Content-Range`**.
+
+**The failure mode is the dangerous kind — it looks like success.** A window built on byte ranges would appear to work, would pass every test written against a 20-second clip, and would silently hold the entire file in memory on a feature-length one. That is precisely the out-of-memory `AC23` exists to prevent, arriving through the mechanism meant to prevent it.
+
+**The probe logged the byte LENGTH and not only the status, which is the only reason this was visible.** `status=200` alone reads as a working fetch, and a `Range` header that is ignored produces exactly that. Designing on the status would have been designing on a lie.
+
+**So the window cannot be obtained by reading part of a file.** The asset is cut into whole segments at build time and the app appends whole segments. `limits.mse_buffer.chunk_bytes` is gone and `segment_s: 6` replaces it; `contracts.asset_manifest.byte_index` and `contracts.byte_index_entry` are replaced by `segments` and `contracts.media_segment`.
+
+**Measuring before designing is the whole point of this round.** The two candidate designs differ by a build step and a contract, and choosing wrong costs a rewrite; the probe cost one build. The stub above said so before the answer was known, which is what makes this a measurement rather than a justification.
+
+**Edits:** `_facts.yml` (`limits.vega_media.no_range_requests` new · `limits.mse_buffer` re-shaped to segments · `contracts.asset_manifest.segments` and `contracts.media_segment` replacing the byte-index pair) · `pipeline/manifest.ts` and its suite · `media/tears-of-steel.manifest.json` · `01-master-plan.md` §8 · `02d` Phase 12 · `src/platform/vega/rangeProbe.ts` new, marked TEMPORARY and tied to `02d` Phase 17.
+**Validation:** `npm test` exit 0 · `npm run lint` exit 0 · `audit.py` clean · measured on the device as quoted.
+**Still open:** the `AC23` window itself is NOT built — this round bought the fact it rests on · the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
+**Next mode:** the segmenter (`ffmpeg` fMP4 segments + an init segment, written into the manifest), then the windowed append in `src/platform/vega/`.

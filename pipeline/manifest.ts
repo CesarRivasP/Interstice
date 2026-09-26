@@ -26,17 +26,25 @@ export interface AssetManifest {
    */
   content_windows: ContentWindow[];
   /**
-   * Time-to-byte offsets over a fragmented MP4, for seeking (R21-F2). `null`
-   * where the app buffers the whole asset, which `limits.mse_buffer` allows only
-   * for short clips.
+   * The asset cut into whole segments, which is how `limits.mse_buffer` builds
+   * its window. `null` where the app appends the whole asset, which is allowed
+   * only for short clips.
+   *
+   * SEGMENTS RATHER THAN BYTE RANGES, and that is measured rather than chosen:
+   * `limits.vega_media.no_range_requests` — a Range request against a packaged
+   * path returns status 200 and the WHOLE file. A window built on byte ranges
+   * would look like it worked and would hold the entire asset in memory.
    */
-  byte_index: ByteIndexEntry[] | null;
+  segments: MediaSegment[] | null;
 }
 
-/** `_facts.yml contracts.byte_index_entry` */
-export interface ByteIndexEntry {
+/** `_facts.yml contracts.media_segment` */
+export interface MediaSegment {
+  index: number;
   start_ms: number;
-  byte_offset: number;
+  end_ms: number;
+  uri: string;
+  bytes: number;
 }
 
 export class ManifestError extends Error {}
@@ -96,7 +104,7 @@ export function parseManifest(source: string, origin: string): AssetManifest {
     subtitles_uri: m.subtitles_uri!,
     duration_ms: m.duration_ms,
     content_windows: sorted,
-    byte_index: Array.isArray(m.byte_index) ? m.byte_index : null,
+    segments: Array.isArray(m.segments) ? m.segments : null,
   };
 }
 
@@ -139,7 +147,7 @@ export function logManifest(manifest: AssetManifest, origin: string): void {
     `INTERSTICE.manifest.loaded origin=${origin} asset=${manifest.asset_id}` +
       ` duration_ms=${manifest.duration_ms} windows=${manifest.content_windows.length}` +
       ` content_ms=${manifest.content_windows.length === 0 ? manifest.duration_ms : describable}` +
-      ` byte_index=${manifest.byte_index ? manifest.byte_index.length : 'none'}`,
+      ` segments=${manifest.segments ? manifest.segments.length : 'none'}`,
   );
   if (manifest.content_windows.length === 0) {
     // Not an error — but the one case where a correct-looking run describes the

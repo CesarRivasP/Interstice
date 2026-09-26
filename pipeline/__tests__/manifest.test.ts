@@ -11,7 +11,7 @@ const base = {
     { start_ms: 0, end_ms: 588_000, label: 'film' },
     { start_ms: 709_500, end_ms: 730_333, label: 'post-credits' },
   ],
-  byte_index: null,
+  segments: null,
 };
 
 const parse = (patch: Record<string, unknown> = {}) =>
@@ -22,7 +22,7 @@ describe('parseManifest — contracts.asset_manifest', () => {
     const m = parse();
     expect(m.asset_id).toBe('tears-of-steel');
     expect(m.content_windows).toHaveLength(2);
-    expect(m.byte_index).toBeNull();
+    expect(m.segments).toBeNull();
   });
 
   it('sorts windows by start time so downstream order is not the author s', () => {
