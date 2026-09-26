@@ -644,3 +644,18 @@ INTERSTICE.cue.audio state=ended t=2.02
 **Still open:** `D4` — **decide by 09-30**, and the support case is now cheap to write · `AC20`, **drop-dead 10-16** · `AC5` and `AC23` on hardware.
 
 **Next mode:** ask the owner for the credit amount and expiry — a credit that lapses before 2026-10-23 buys nothing — then build `C8` onward, which is unblocked.
+
+---
+
+## R24 · 2026-09-25 · claude-opus-5 (Claude Code) · credit terms recorded; the code is not
+**Read:** `_facts.yml` (v17) · `_log.md` (through R23 end)
+**Log read through:** R23
+**Did:** recorded the credit's terms and corrected `aws_credits_granted`, which R23 wrote as though the grant and the redemption were the same event. They are not: what was issued is a single-use code that has to be redeemed in the Billing console, and until it is, the balance is zero.
+
+**The redemption code is deliberately absent from this registry, this log and this repository.** It is a single-use secret, the grant email says not to share it, and this repository is PUBLIC. `env_vars` already states the rule this follows — names in the registry, values never — and a credit code is the same class of thing as a key. The owner was told to redeem it immediately rather than leave it unclaimed.
+
+**Terms, which remove a risk rather than add one:** USD 150, valid through **2028-08-31**. That is 22 months past the submission deadline, so there is no expiry pressure on this entry at all and `schedule.*` does not gain a date. Redemption requires a payment method on file — the account is the entrant's existing one, so this is a check rather than a task.
+
+**Edits:** `_facts.yml` (`limits.hackathon.aws_credits_granted` corrected and split from redemption; `aws_credits_valid_through`; `aws_credits_usd` confirmed against the grant rather than the rules page).
+**Validation:** `audit.py` → clean.
+**Still open:** unchanged from R23 — `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC23` on hardware.

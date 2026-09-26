@@ -361,16 +361,25 @@ limits:
     aws_credits_request_deadline: '2026-10-21 12:00 PT'
     aws_credits_form: 'https://forms.gle/5hyhr1u6x3fuV2aW7'
     aws_credits_requested: '2026-09-22 — submitted by the owner. Closes the Phase 0 checklist item.'
-    aws_credits_granted: '2026-09-25 — granted, reported by the owner. The request
-                   deadline (aws_credits_request_deadline) is therefore moot for this
-                   entry. NOT A RESOLUTION OF defects[D4]: credits are billing, and
-                   the measured D4 error is an authorization refusal
-                   (Error 002: Access to Bedrock models is not allowed for this
-                   account), not a funding one. Recorded separately so that a later
-                   round cannot read the grant as the fix. EXPIRY AND AMOUNT NOT YET
-                   RECORDED — ask the owner; a credit that expires before 10-23 buys
-                   nothing, and worst_case.est_cost_usd is still null because no call
-                   has ever been priced.'
+    aws_credits_granted: '2026-09-25 — a redemption CODE was issued to the owner,
+                   reported the same day. Corrected R24: the grant and the redemption
+                   are not the same event. The code has to be entered in the AWS
+                   Billing console and requires a payment method on file; until that
+                   happens the balance is zero and this field records an entitlement,
+                   not money. THE CODE ITSELF IS NOT IN THIS REGISTRY, THIS LOG OR
+                   THIS REPOSITORY — it is a single-use secret, the grant states it
+                   must not be shared, and the repository is public. Same rule as
+                   env_vars: names here, values never.
+                   NOT A RESOLUTION OF defects[D4]: credits are billing, and the
+                   measured D4 error is an authorization refusal (Error 002: Access
+                   to Bedrock models is not allowed for this account), not a funding
+                   one. Re-measured across the grant on 2026-09-25 and byte-identical,
+                   so this is measured rather than argued.'
+    aws_credits_valid_through: '2028-08-31 — from the grant itself. 22 months past
+                   limits.hackathon.deadline, so the credit carries NO expiry pressure
+                   on this project and schedule.* gains no date from it. Recorded
+                   because the absence of a deadline is a fact worth knowing once,
+                   rather than a question worth asking twice.'
     friction_log_bonus_pct: 10
     repo_must_be: 'EITHER public with a detectable open-source license file (visible in the
                    GitHub About section) OR private and shared with testing@devpost.com plus
