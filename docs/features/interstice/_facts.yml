@@ -737,9 +737,24 @@ limits:
 
   mse_buffer:
     basis: decided
+    built: '2026-09-26 (R35) — pipeline/segment.ts cuts the asset, and
+           src/platform/vega/SegmentBuffer.ts holds the window. VERIFIED ON THE
+           DEVICE for the append half: init segment plus 4 media segments, appended
+           in order, buffer.complete, playback. NOT VERIFIED for the EVICT half —
+           a 20-second clip with a 30-second window never evicts anything, so the
+           branch has unit tests and no device run. That is AC23, and AC23 needs a
+           feature-length asset on the worst device in the matrix.'
     ahead_s: 30
     behind_s: 10
     segment_s: 6
+    segment_uneven: 'MEASURED 2026-09-26. ffmpeg cuts on KEYFRAMES, so -hls_time 6
+           does not produce 6-second segments: the demo clip came out 9.94s, 4.17s,
+           5.29s and 0.65s. Two consequences, both load-bearing. Durations are read
+           from the emitted playlist, never derived from the requested length, or a
+           scheduler drifts further from the picture with every segment. And the
+           window is measured in TIME rather than in segment COUNT — "keep five
+           segments" would mean anything between 3 and 50 seconds of media here,
+           which is not a memory bound, and a memory bound is the whole point.'
     segment_note: 'RE-SHAPED R34 by limits.vega_media.no_range_requests. chunk_bytes
            is GONE: it assumed the app could read a byte range out of the asset, and
            the platform returns the whole file for any Range request. The window is
@@ -792,7 +807,7 @@ changes:
   # --- app, on device ---
   - { id: C1, file: src/App.tsx, kind: planned, where: repo, built: '2026-09-26 (R29) — title list, player, BACK to the list; verified on the device with inputd-cli',
       change: 'Vega OS / React Native app shell and navigation' }
-  - { id: C2, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo, built: '2026-09-25 (R28) — rewired behind MediaAdapter; names no platform API. The limits.mse_buffer window is NOT built: see AC23',
+  - { id: C2, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo, built: '2026-09-25 (R28) rewired behind MediaAdapter, names no platform API; 2026-09-26 (R35) the limits.mse_buffer window landed in src/platform/vega/SegmentBuffer.ts — append verified on the device, evict still only unit-tested (AC23)',
       change: 'video playback screen; every state (loading, playing, error, empty)
                names its focus host. RE-SCOPED R20/R21: this screen now OWNS BYTE
                DELIVERY, because limits.vega_media.url_mode_broken means the player
@@ -1617,7 +1632,7 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, n: 1, exit_code: 0,
-              value: 'jest: Tests 65 passed, 65 total · vitest: Test Files 6 passed (6), Tests 46 passed (46)',
+              value: 'jest: Tests 65 passed, 65 total · vitest: Test Files 7 passed (7), Tests 56 passed (56)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the

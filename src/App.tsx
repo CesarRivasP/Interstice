@@ -23,7 +23,51 @@ const CLIP = require('./assets/clip.mp4');
 // already what C10 must emit — fragmented mp4, AAC-LC.
 const CUE = require('./assets/cue.m4a');
 
+/**
+ * The same clip, cut into fragmented-MP4 segments by pipeline/segment.ts.
+ *
+ * Each one is `require`d because metro bundles what is required and nothing
+ * else — and `m4s` had to be added to `assetExts` in metro.config.js, since it
+ * is not a default media extension.
+ *
+ * Hand-listed here only while changes[C10] does not yet emit a manifest; the
+ * moment it does, this becomes contracts.asset_manifest.segments read from the
+ * track beside the asset.
+ */
+const SEGMENTS = [
+  {index: 0, start_ms: 0, end_ms: 9_940, mod: require('./assets/seg/seg0000.m4s')},
+  {index: 1, start_ms: 9_940, end_ms: 14_107, mod: require('./assets/seg/seg0001.m4s')},
+  {index: 2, start_ms: 14_107, end_ms: 19_399, mod: require('./assets/seg/seg0002.m4s')},
+  {index: 3, start_ms: 19_399, end_ms: 20_047, mod: require('./assets/seg/seg0003.m4s')},
+];
+const INIT = require('./assets/seg/init.mp4');
+
 const resolved = Image.resolveAssetSource(CLIP);
+
+/**
+ * The demo clip as a one-segment asset.
+ *
+ * A whole-file asset is a single segment covering the whole timeline, so it
+ * takes the same path through limits.mse_buffer as a segmented one. That is
+ * deliberate: if the short clip took a separate "just append it" path, the
+ * windowing code would only ever run on the asset nobody tests with.
+ *
+ * changes[C10] emits the segmented form, and then this becomes
+ * contracts.asset_manifest.segments read from the track's manifest.
+ */
+const DEMO_ASSET = {
+  initUri: Image.resolveAssetSource(INIT)?.uri ?? '',
+  segments: SEGMENTS.map(s => ({
+    index: s.index,
+    start_ms: s.start_ms,
+    end_ms: s.end_ms,
+    uri: Image.resolveAssetSource(s.mod)?.uri ?? '',
+  })),
+};
+log(
+  `INTERSTICE.asset.segments n=${DEMO_ASSET.segments.length}` +
+    ` init=${DEMO_ASSET.initUri ? 'set' : 'NONE'}`,
+);
 const resolvedCue = Image.resolveAssetSource(CUE);
 log(`INTERSTICE.asset.resolved uri=${resolved?.uri ?? 'NONE'}`);
 log(`INTERSTICE.asset.cue uri=${resolvedCue?.uri ?? 'NONE'}`);
@@ -64,7 +108,7 @@ export const App = () => {
     return (
       <PlayerScreen
         media={media}
-        uri={resolved?.uri ?? ''}
+        asset={DEMO_ASSET}
         cueUri={resolvedCue?.uri ?? ''}
         assetDir="/pkg/bundle/assets/src/assets"
         assetId={playing}

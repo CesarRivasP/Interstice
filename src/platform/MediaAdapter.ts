@@ -16,16 +16,40 @@ import type { StyleProp, ViewStyle } from 'react-native';
 
 export type Unsubscribe = () => void;
 
+/** one piece of an asset, as `contracts.media_segment` describes it */
+export interface AssetSegment {
+  index: number;
+  start_ms: number;
+  end_ms: number;
+  uri: string;
+}
+
+/**
+ * What to play, and how it is cut up.
+ *
+ * ALWAYS A LIST, even for a single file — a whole-file asset is one segment
+ * with no init. One code path for both shapes means the short demo clip and a
+ * feature-length asset exercise the same buffering logic, rather than the
+ * feature-length one taking a path nothing has ever run.
+ */
+export interface AssetSource {
+  /** appended once, before any segment; absent for a whole-file asset */
+  initUri?: string;
+  segments: AssetSegment[];
+}
+
 export interface VideoPlayer {
   /**
    * Point the player at an asset and get it ready to play.
    *
-   * Implementations must NOT assume the platform will fetch the URI. On Vega it
+   * Implementations must NOT assume the platform will fetch anything. On Vega it
    * will not (`limits.vega_media.url_mode_broken`) and the implementation reads
-   * the bytes itself. Kept out of this interface deliberately: a caller that had
-   * to know would leak one platform's defect into every other.
+   * the bytes itself — nor can it read PART of a file
+   * (`limits.vega_media.no_range_requests`), which is why the asset arrives
+   * already cut into segments. Both are kept out of this interface deliberately:
+   * a caller that had to know would leak one platform's defects into every other.
    */
-  open(uri: string): Promise<void>;
+  open(source: AssetSource): Promise<void>;
   play(): Promise<void>;
   pause(): void;
 

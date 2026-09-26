@@ -10,12 +10,14 @@ import {
 } from '@amazon-devices/react-native-w3cmedia';
 import type {
   AppLifecycle,
+  AssetSource,
   ClipPlayer,
   MediaAdapter,
   Unsubscribe,
   VideoPlayer,
   VideoSurfaceProps,
 } from '../MediaAdapter';
+import {SegmentBuffer, type AppendTarget} from './SegmentBuffer';
 import { log } from '../../diagnostics';
 
 /**
@@ -45,6 +47,7 @@ const CLIP_MIME = 'audio/mp4; codecs="mp4a.40.2"';
 
 type Listener = () => void;
 
+/** whole-file append, for description CLIPS — they are seconds long, not films */
 function fetchAndAppend(source: MediaSource, mime: string, uri: string): Promise<number> {
   return new Promise<number>((resolve, reject) => {
     source.addEventListener('sourceopen', () => {
@@ -52,13 +55,6 @@ function fetchAndAppend(source: MediaSource, mime: string, uri: string): Promise
         try {
           const buffer = source.addSourceBuffer(mime);
 
-          // WHOLE-FILE APPEND, and it is bounded by the demo clip rather than by
-          // design. limits.mse_buffer specifies a window — ahead_s/behind_s in
-          // chunk_bytes slices, with SourceBuffer.remove() behind the playhead —
-          // and AC23 is the criterion that measures it on the worst device. That
-          // work needs contracts.asset_manifest.byte_index to serve a seek and
-          // is deliberately NOT in this seam. Anything feature-length will run
-          // this process out of heap.
           const response = await fetch(uri);
           const bytes = new Uint8Array(await response.arrayBuffer());
 
@@ -85,6 +81,7 @@ class VegaVideo implements VideoPlayer {
   private listeners = new Map<string, Set<Listener>>();
   private initialised: Promise<void> | null = null;
   private lastError: Error | null = null;
+  private segments: SegmentBuffer | null = null;
 
   private async initialize(): Promise<void> {
     if (!this.initialised) {
@@ -137,17 +134,37 @@ class VegaVideo implements VideoPlayer {
     go?.();
   }
 
-  async open(uri: string): Promise<void> {
+  async open(asset: AssetSource): Promise<void> {
     await this.initialize();
 
     const source = new MediaSource();
-    const appended = fetchAndAppend(source, VIDEO_MIME, uri);
+
+    const opened = new Promise<void>((resolve, reject) => {
+      source.addEventListener('sourceopen', () => {
+        (async () => {
+          const buffer = source.addSourceBuffer(VIDEO_MIME);
+          this.segments = new SegmentBuffer(source, buffer as unknown as AppendTarget, asset);
+          await this.segments.start();
+          resolve();
+        })().catch(reject);
+      });
+    });
 
     // srcObject, NOT src — see limits.vega_media.url_mode_broken.
     this.player.srcObject = source;
 
-    const bytes = await appended;
-    log(`INTERSTICE.player.opened bytes=${bytes} uri=${uri}`);
+    await opened;
+    log(
+      `INTERSTICE.player.opened segments=${asset.segments.length}` +
+        ` init=${asset.initUri ? 'yes' : 'none'}`,
+    );
+
+    // Keep the window fed as the playhead moves. limits.mse_buffer is what
+    // stops a feature-length asset becoming a feature-length ArrayBuffer.
+    this.on('timeupdate', () => {
+      void this.segments?.ensure(this.positionMs());
+    });
+
     this.ready.player = true;
     this.release();
   }
@@ -219,6 +236,8 @@ class VegaVideo implements VideoPlayer {
   }
 
   async destroy(): Promise<void> {
+    this.segments?.dispose();
+    this.segments = null;
     this.listeners.clear();
     this.ready = { player: false, surface: false };
     this.pendingPlay = null;

@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {BackHandler, StyleSheet, Text, View} from 'react-native';
-import type {MediaAdapter} from '../platform/MediaAdapter';
+import type {AssetSource, MediaAdapter} from '../platform/MediaAdapter';
 import {ADControls, type ADState} from '../ad/ADControls';
 import {coalesce, CueScheduler} from '../ad/CueScheduler';
 import {DescriptionAudio} from '../ad/DescriptionAudio';
@@ -24,8 +24,8 @@ import {log} from '../diagnostics';
 
 export interface PlayerScreenProps {
   media: MediaAdapter;
-  /** URI of the asset to play. The adapter decides how the bytes are obtained. */
-  uri: string;
+  /** what to play. The adapter decides how the bytes are obtained. */
+  asset: AssetSource;
   /**
    * One description cue, fired once shortly after playback starts.
    *
@@ -47,7 +47,7 @@ type Status = 'loading' | 'playing' | 'stalled' | 'error';
 
 export function PlayerScreen({
   media,
-  uri,
+  asset,
   cueUri,
   assetDir,
   assetId,
@@ -106,7 +106,7 @@ export function PlayerScreen({
 
     (async () => {
       try {
-        await media.video.open(uri);
+        await media.video.open(asset);
         if (cancelled) return;
         await media.video.play();
         if (cancelled) return;
@@ -141,7 +141,7 @@ export function PlayerScreen({
       void audio.current?.stop();
       void media.video.destroy();
     };
-  }, [media, uri, cueUri]);
+  }, [media, asset, cueUri]);
 
   // AC17: switching level re-runs the loader and nothing else. The video keeps
   // playing, the position is untouched, and the scheduler is reloaded with the

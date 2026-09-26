@@ -2,6 +2,7 @@ import * as React from 'react';
 import {View} from 'react-native';
 import type {
   AppLifecycle,
+  AssetSource,
   ClipPlayer,
   MediaAdapter,
   Unsubscribe,
@@ -19,7 +20,7 @@ import type {
  * changes, which the compiler catches.
  */
 export class FakeVideo implements VideoPlayer {
-  opened: string[] = [];
+  opened: AssetSource[] = [];
   volumes: number[] = [];
   playing = false;
   destroyed = 0;
@@ -29,9 +30,9 @@ export class FakeVideo implements VideoPlayer {
 
   private cbs: Record<string, Array<(...a: never[]) => void>> = {};
 
-  async open(uri: string): Promise<void> {
+  async open(source: AssetSource): Promise<void> {
     if (this.openError) throw this.openError;
-    this.opened.push(uri);
+    this.opened.push(source);
   }
   async play(): Promise<void> {
     this.playing = true;

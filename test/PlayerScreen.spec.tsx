@@ -20,9 +20,13 @@ beforeEach(() => {
   });
 });
 
+const ASSET = {
+  segments: [{index: 0, start_ms: 0, end_ms: Number.MAX_SAFE_INTEGER, uri: URI}],
+};
+
 const base = () => ({
   media,
-  uri: URI,
+  asset: ASSET,
   assetDir: 'assets',
   assetId: 'tears-of-steel',
   readJson,
@@ -44,7 +48,7 @@ describe('PlayerScreen — the seam', () => {
 
   it('asks the adapter to open the asset and start it', async () => {
     renderPlayer();
-    await waitFor(() => expect(media.video.opened).toEqual([URI]));
+    await waitFor(() => expect(media.video.opened.map(a => a.segments[0]?.uri)).toEqual([URI]));
     await waitFor(() => expect(media.video.isPlaying()).toBe(true));
   });
 

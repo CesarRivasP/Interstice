@@ -965,3 +965,49 @@ Asking for the first 64 KB of a 2.6 MB packaged asset returns **status 200, the 
 **Validation:** `npm test` exit 0 · `npm run lint` exit 0 · `audit.py` clean · measured on the device as quoted.
 **Still open:** the `AC23` window itself is NOT built — this round bought the fact it rests on · the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
 **Next mode:** the segmenter (`ffmpeg` fMP4 segments + an init segment, written into the manifest), then the windowed append in `src/platform/vega/`.
+
+---
+
+## R35 · 2026-09-26 · claude-opus-5 (Claude Code) · the segmenter and the window, with the half that is not proven named
+**Read:** `_facts.yml` (v17) · `_log.md` (through R34 end)
+**Log read through:** R34
+**About to do:** `pipeline/segment.ts` — cut the asset into fMP4 segments plus an init segment, and write them into `contracts.asset_manifest.segments`. Then the windowed append in `src/platform/vega/`: init first, then whole segments, `ahead_s` forward and `SourceBuffer.remove()` behind. `AC23` is what measures the result, and it measures it on the worst device rather than here.
+### Built
+`pipeline/segment.ts` cuts the asset with ffmpeg into fragmented-MP4 segments plus an init segment, and `src/platform/vega/SegmentBuffer.ts` holds the window. `MediaAdapter.open` now takes an `AssetSource` instead of a URI.
+
+**A whole-file asset is one segment covering the whole timeline**, so the short demo clip and a feature-length one take the *same* path. A separate "just append it" branch for short assets would mean the windowing code only ever runs on the asset nobody tests with.
+
+### R35-F1: ffmpeg does not produce the segment length you ask for
+`-hls_time 6` on the demo clip produced segments of **9.94s, 4.17s, 5.29s and 0.65s**, because it cuts on keyframes. Two consequences, both load-bearing:
+
+- **Durations are read from the emitted playlist, never derived from the requested length.** A scheduler built on `index * 6000` would drift further from the picture with every segment, and `AC4` is about cues landing inside real dialogue gaps.
+- **The window is measured in TIME, not in segment COUNT.** "Keep five segments" would mean anything between 3 and 50 seconds of media on this asset. That is not a memory bound, and a memory bound is the entire point of `limits.mse_buffer`. `segmentsForWindow` and `segmentsToEvict` both take milliseconds, and the test that pins it carries the arithmetic in its `Fails if:`.
+
+The test fixture is the **real, uneven** playlist ffmpeg emitted, not a tidy one with 6.0s segments — the R25 lesson applied to a fixture instead of a mock: a fixture nobody's tool produces tests a file that does not exist.
+
+### Two more platform facts, both cheap and both invisible until they bite
+- **`m4s` is not in metro's default `assetExts`.** A required segment resolves as JavaScript and the bundler fails on the first byte. Added in `metro.config.js`.
+- **`SourceBuffer` accepts exactly one operation at a time** — the package's own doc says *"Throw InvalidStateError if 'updating' is true"*, and on this platform that surfaces as a media error indistinguishable from a bad file. Every append and every `remove` is serialised behind one promise chain, and `ensure()` is safe to call on every `timeupdate` because of it.
+
+`SegmentBuffer` types its target **structurally** — the five members it actually uses — rather than naming `SourceBufferImpl`. `addSourceBuffer` is typed as returning the W3C interface, which does not declare `addEventListener`, while the implementation behind it has one and R18 measured that it works. Binding to the concrete class would drag in two dozen internals this file never touches.
+
+### On the device
+```
+INTERSTICE.asset.segments n=4 init=set
+INTERSTICE.buffer.appended init bytes=1343 held=0
+INTERSTICE.buffer.appended seg0 bytes=649534 held=0
+INTERSTICE.buffer.appended seg1 bytes=1037183 held=1
+INTERSTICE.buffer.appended seg2 bytes=856989 held=2
+INTERSTICE.buffer.appended seg3 bytes=83877 held=3
+INTERSTICE.buffer.complete segments=4
+INTERSTICE.player.opened segments=4 init=yes
+```
+The whole chain, from `pipeline/segment.ts` output to a playing picture.
+
+### What is NOT proven, said plainly
+**Eviction.** A 20-second clip with a 30-second window never drops anything, so `evict()` has unit tests and **no device run**. That is exactly `AC23`, and `AC23` was always going to need a feature-length asset on the worst device in the matrix. `limits.mse_buffer.built` records the split rather than letting a green suite imply the whole thing was exercised.
+
+**Edits:** `pipeline/segment.ts`, `pipeline/__tests__/segment.test.ts` (10), `src/platform/vega/SegmentBuffer.ts` new · `MediaAdapter` gains `AssetSource`/`AssetSegment`, `open` takes it · `src/platform/vega/index.tsx`, `src/screens/PlayerScreen.tsx`, `src/App.tsx`, `test/fakes/adapter.tsx`, `test/PlayerScreen.spec.tsx` threaded through · `metro.config.js` (`m4s`), `jest.config.json` (`m4s`), `.gitignore` (generated segments) · `_facts.yml` (`limits.mse_buffer.built` and `.segment_uneven`, `changes[C2].built`, `tests_baseline`).
+**Validation:** `npm test` exit 0 — jest 65, vitest **56** across 7 files · `npm run lint` exit 0 · `audit.py` clean · device run quoted above.
+**Still open:** `AC23`'s evict half, on hardware · the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15` hardware-only.
+**Next mode:** `C10` emitting segments and a manifest, so `src/App.tsx` stops hand-listing them.
