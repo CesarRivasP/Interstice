@@ -720,3 +720,39 @@ Corrected across `02c`, `02c2`, `02e`, with a note in `02e` §B.1 stating the ru
 **Validation:** `npm test` exit 0 — jest **34**, vitest **44** across 5 files · `npm run lint` exit 0 · `audit.py` → clean, every mechanized check passed · parity test mutation-checked.
 **Still open:** `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC23` on hardware.
 **Next mode:** `C5` ADControls, then wiring `C2`/`C1` against the `MediaAdapter` seam — the last pieces that do not need Bedrock.
+
+---
+
+## R27 · 2026-09-25 · claude-opus-5 (Claude Code) · built C5 — and found that what would verify it cannot be switched on
+**Read:** `_facts.yml` (v17) · `_log.md` (through R26 end) · `02c2` Phase 11
+**Log read through:** R26
+**Did:** built `C5` with 14 tests, then went looking for the thing that would verify it — and found it is not there.
+
+### The component
+Every assertion goes through `announceForAccessibility`, not through rendered text, because the rendered half is the half these users do not receive. `stateMessage` is exported so the test asserts the **same string the component speaks**; two copies of that sentence is a test that passes while the app says something else.
+
+Four that carry a `Fails if:`:
+- **both failure sentences must say playback continues.** "No description track was found" alone reads as *this title is broken*, and a blind viewer has no way to check the picture is fine.
+- **an unchanged state must not re-announce.** A re-render that speaks again talks over the film on the one channel these users have. Mutation-checked: removing the guard turns it red.
+- **the level selector announces itself as `disabled` when description is off.** Pressing it otherwise produces no feedback at all — nothing plays, so nothing confirms the press.
+- **the toggle reports the NEW value** and never touches the video (`AC3`).
+
+### R27-F1 `FUNCTIONAL`, and it moves an acceptance criterion: VoiceView cannot be turned on here
+`AC15` says the control surface is *exercised under VoiceView*. It cannot be, on this device, by any route available to a developer:
+
+- the VVD's Settings app has **no Accessibility section** at all;
+- the documented Back+Menu chord does not fire;
+- `vdcm set "com.amazon.devconf/system/accessibility/VoiceViewEnabled" "ENABLED"` returns **`No permission for operation`** — from `vega device run-cmd` *and* from `vega device shell`, which `id` confirms are the same `uid=5000(app_user)` context (`limits.vega_media.run_cmd_is_sandboxed` again).
+
+`vdcm get` on the same key reads `DISABLED` without complaint, so the key is right and **only the write is refused**. The first two routes match what another developer reported independently (`related_docs[R-VEGA-MSE-THREAD]`); the third is measured here.
+
+**`AC15` therefore closes on physical hardware only**, joining `AC5` (audible ducking) and `AC23` (the memory bound). Three hardware-only criteria, all named on **day 7 of 34** instead of in `02d` Phase 16.3 — which is the difference between a purchase decision and a discovery.
+
+**What it does not block:** `C5` ships its whole accessibility surface regardless. Those are React Native APIs and the suite tests what they announce. The gap is verification that VoiceView *consumes* them — a verification gap, not a build one, and it is stated as such rather than left implied by a green suite.
+
+**Note on where the answer lived:** the working `vdcm` key is documented in a **0.22** WebView accessibility guide. This project targets 0.24, and the key appears on no 0.24 page reachable from the docs. 35 minutes, most of it spent guessing key names. Friction entry written.
+
+**Edits:** `src/ad/ADControls.tsx` new · `test/ADControls.spec.tsx` (14) new · `_facts.yml` (`limits.vega_media.voiceview_not_enablable` new, `changes[C5].built`, `acceptance[AC15].closes_on`, `tests_baseline` re-measured) · `01-master-plan.md` (§8 risk row) · `FRICTION-LOG.md` (+1) · `_profile.yml`.
+**Validation:** `npm test` exit 0 — jest **48**, vitest 44 · `npm run lint` exit 0 · `audit.py` → clean · the announce guard mutation-checked.
+**Still open:** `D4` **decide by 09-30** · `AC20` **10-16** · `AC5`, `AC15`, `AC23` all hardware-only.
+**Next mode:** the `MediaAdapter` seam (`02c` Phase 7) — extract what `PlayerScreen` and `DescriptionAudio` already do into `src/platform/vega/`, which is the last structural move before `C2`/`C1` wire the whole thing together.

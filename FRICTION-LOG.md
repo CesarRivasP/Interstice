@@ -88,6 +88,15 @@ Amazon feedback is not diluted by things Amazon cannot act on.
 - **time_lost:** 45 min across two sessions
 - **what would have helped:** `vega device screenshot`. It is the single most useful missing command for a TV platform, where the whole product is what is on the screen.
 
+### 2026-09-25 — VoiceView cannot be enabled on the Virtual Device, and the documented command says so only after you find it
+
+- **tool:** Vega CLI 1.3.4 / Vega Virtual Device, OS 1.2
+- **expected:** one of the three documented routes turns VoiceView on, so an accessibility feature can be tested before touching hardware.
+- **happened:** none of them works. The VVD's Settings app has **no Accessibility section**; the Back+Menu chord does not fire; and the documented `vdcm set "com.amazon.devconf/system/accessibility/VoiceViewEnabled" "ENABLED"` returns `No permission for operation` — from `vega device run-cmd` **and** from `vega device shell`, which turn out to be the same `uid=5000(app_user)` context. `vdcm get` on the same key reads back `DISABLED` happily, so the key is right and only the write is refused.
+- **workaround:** none. The acceptance criterion that needs it moves to physical hardware.
+- **time_lost:** 35 min, most of it guessing the key name before finding it in the WebView accessibility guide — a **0.22** document, while the project targets 0.24, and the key appears in no 0.24 page I could reach.
+- **what would have helped:** two things. The permission error should say *what* would be permitted to set it, since "no permission" from the only shell a developer has reads as "you are holding it wrong" rather than "this is not available here". And an accessibility feature that cannot be enabled on the emulator deserves one line saying so on the emulator's own page — this is the one class of feature where testing on real hardware is least optional and the emulator is most likely to be all somebody has.
+
 ---
 
 ## Toolchain

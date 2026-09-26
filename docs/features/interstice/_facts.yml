@@ -660,6 +660,29 @@ limits:
            measured is that both pipelines ran and that the volume property was
            applied, not that a listener heard the film get quieter.'
 
+    voiceview_not_enablable: 'MEASURED 2026-09-25, and it moves an acceptance
+           criterion onto hardware. VoiceView CANNOT BE TURNED ON on the Vega Virtual
+           Device by any route available to a developer. The config key is real and
+           READABLE — `vdcm get "com.amazon.devconf/system/accessibility/VoiceViewEnabled"`
+           returns DISABLED — and the documented `vdcm set ... "ENABLED"` returns
+           "No permission for operation" from BOTH `vega device run-cmd` AND
+           `vega device shell`, which are the same uid=5000(app_user) context (see
+           run_cmd_is_sandboxed; `id` confirms it). The other two routes Amazon
+           documents fail for another developer on the same platform and are recorded
+           in related_docs[R-VEGA-MSE-THREAD]: the VVD Settings app has no
+           Accessibility section at all, and the Back+Menu chord does not fire.
+           CONSEQUENCE: AC15 — "the control surface is exercised under VoiceView:
+           every control is reachable and announces its state" — CANNOT CLOSE ON THE
+           SIMULATOR. It needs a physical Fire TV, in the same class as AC5 (audible
+           ducking) and AC23 (the memory bound). Named on day 7 of 34 rather than in
+           02d Phase 16.3, which is where it would otherwise have surfaced.
+           WHAT THIS DOES NOT BLOCK: changes[C5] ships its accessibility surface
+           regardless — accessible, accessibilityLabel, accessibilityRole,
+           accessibilityState and announceForAccessibility are React Native APIs and
+           are unit-tested by what they ANNOUNCE. What cannot be verified here is that
+           VoiceView consumes them as expected. That is a verification gap, not a
+           build one.'
+
     input_injection: 'MEASURED 2026-09-25. `inputd-cli button_press <KEY_*>` injects
            D-pad and remote keys on the Virtual Device, via
            `vega device run-cmd -c "inputd-cli button_press KEY_ENTER"`, and the key
@@ -752,7 +775,7 @@ changes:
                with (CONTENT_TYPE_SPEECH, USAGE_ACCESSIBILITY). Clips are small
                enough to append whole, which is why limits.mse_buffer windowing
                applies to C2 and not here.' }
-  - { id: C5, file: src/ad/ADControls.tsx, kind: planned, where: repo,
+  - { id: C5, file: src/ad/ADControls.tsx, kind: planned, where: repo, built: '2026-09-25 (R27) — 14 tests, every one asserting what is ANNOUNCED rather than rendered; see 02c2 Phase 11',
       change: 'remote-control surface: toggle description on/off, three verbosity
                levels per decisions.verbosity_levels (concise/standard/detailed),
                and the visible+spoken state for every failure branch of the loader;
@@ -1472,7 +1495,7 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_S
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, n: 1, exit_code: 0,
-              value: 'jest: Tests 34 passed, 34 total · vitest: Test Files 5 passed (5), Tests 44 passed (44)',
+              value: 'jest: Tests 48 passed, 48 total · vitest: Test Files 5 passed (5), Tests 44 passed (44)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the
@@ -1516,7 +1539,7 @@ acceptance:
   - { id: AC12, item: 'the demo video is under 3 minutes, in English, and shows the app running on the target platform', status: written }
   - { id: AC13, item: 'every Devpost field is submitted before 2026-10-23 12:00 PT, with the primary track and both mini challenges declared', status: written }
   - { id: AC14, item: 'the author watches the demo asset end to end with the description track and rates every cue 1–5 against the picture; track mean and % failed are recorded and the worst cues are regenerated before the demo video is recorded', status: written }
-  - { id: AC15, item: 'the control surface is exercised under VoiceView: every control is reachable and announces its state, and the demo video shows it', status: written }
+  - { id: AC15, item: 'the control surface is exercised under VoiceView: every control is reachable and announces its state, and the demo video shows it', status: written, closes_on: 'physical hardware only — limits.vega_media.voiceview_not_enablable, measured 2026-09-25' }
   - { id: AC16, item: 'the submission package cites at least one sourced figure on audio-description coverage; the figure and its source enter the registry before the prose', status: written }
   - { id: AC17, item: 'three verbosity levels (concise/standard/detailed) are selectable from the remote, rescale max_words_per_cue per limits.ad.verbosity_scales, and are demonstrated in the demo', status: written }
   - { id: AC18, item: 'a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch', status: written }
