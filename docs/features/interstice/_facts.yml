@@ -360,6 +360,28 @@ limits:
     aws_credits_usd: 150
     aws_credits_request_deadline: '2026-10-21 12:00 PT'
     aws_credits_form: 'https://forms.gle/5hyhr1u6x3fuV2aW7'
+    support_routes:
+      basis: measured
+      evidence: { how: shell, date: 2026-09-26,
+                  cmd: 'for u in forum_topics discussions rules details resources; do curl -sS --max-time 40 -o /dev/null -w "%{http_code} $u\n" "https://amazonappdev2026.devpost.com/$u"; done; curl -sS --max-time 60 https://r.jina.ai/https://amazonappdev2026.devpost.com/resources',
+                  value: 'forum_topics 200, rules 200, resources 200, discussions 404, details 404;
+                          /resources links community.amazondeveloper.com and its /c/vega/6 category' }
+      devpost_discussion: 'https://amazonappdev2026.devpost.com/forum_topics — Devpost''s
+                   standard discussion board, and the only route where an ORGANISER
+                   answer is quotable. Rules questions go here.'
+      amazon_community: 'https://community.amazondeveloper.com/c/vega/6 — linked from
+                   the hackathon''s own Resources page, and demonstrably staffed:
+                   related_docs[R-VEGA-MSE-THREAD] got an Amazon reply within hours.
+                   Platform questions go here, not to the organisers.'
+      aws_support: 'https://console.aws.amazon.com/support/home#/case/create — NOT an
+                   email. Account and service-access cases are free on every support
+                   plan, which is what defects[D4] needs.'
+      note: 'NO CONTACT EMAIL IS PUBLISHED for this hackathon. The only address on
+             the site is testing@devpost.com, which limits.hackathon.repo_must_be
+             names for SHARING A PRIVATE REPOSITORY — it is not a support address and
+             using it as one would go to the wrong people. Recorded because the
+             absence is a fact worth knowing once rather than a question worth asking
+             twice, and because the obvious wrong answer is sitting right there.'
     aws_credits_requested: '2026-09-22 — submitted by the owner. Closes the Phase 0 checklist item.'
     aws_credits_granted: '2026-09-25 — a redemption CODE was issued to the owner,
                    reported the same day. Corrected R24: the grant and the redemption
