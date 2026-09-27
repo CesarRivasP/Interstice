@@ -94,6 +94,18 @@ describe('PlayerScreen — every state is spoken, not only shown (AC2, AC8, AC24
     view.unmount();
   });
 
+  // Fails if: stopping with nothing speaking still ramps "back" from the duck
+  // level. The ramp's first step SETS the film to 25%, so every stall — and MSE
+  // emits `waiting` during normal startup — dips the film for no reason. Only
+  // audible on hardware, which is why nothing caught it until the extracted
+  // package's own suite did.
+  it('does not dip the film on a stall when no cue is speaking', async () => {
+    renderPlayer();
+    await waitFor(() => expect(media.video.isPlaying()).toBe(true));
+    await act(async () => media.video.emitStalled());
+    expect(media.video.volumes.filter(v => v < 100)).toEqual([]);
+  });
+
   it('announces a playback error with the reason attached', async () => {
     const view = renderPlayer();
     await waitFor(() => expect(media.video.isPlaying()).toBe(true));

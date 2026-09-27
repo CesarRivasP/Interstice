@@ -65,6 +65,11 @@ export class DescriptionAudio {
   async stop(): Promise<void> {
     this.generation++; // anything in flight is now stale and must not restore
     this.media.clips.stop();
+    // Nothing speaking means the film is already at full. Ramping "back" from
+    // the duck level anyway would first SET it to the duck level: an audible
+    // dip on every toggle-off between cues and on every stall — including the
+    // spurious `waiting` MSE emits at startup (limits.vega_media.waiting_fires_at_start).
+    if (!this.active) return;
     await rampVolumePct(this.media.video, AD.DUCK_TARGET_PCT, 100);
     this.active = false;
   }
