@@ -1110,3 +1110,31 @@ Repointed at the phases that moved in R22's splits (`02b` → `02b2`, `02c` → 
 **Validation:** `npm test` exit 0 · `audit.py` clean.
 **Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
 **Next mode:** `03-stakeholder-requirements.md`, untouched since R8 and describing an ask built on a platform nobody had measured.
+
+---
+
+## R39 · 2026-09-26 · claude-opus-5 (Claude Code) · doc 03, and five claims that no longer matched the system
+**Read:** `_facts.yml` (v17) · `_log.md` (through R38 end) · `03-stakeholder-requirements.md`
+**Log read through:** R38
+**About to do:** regenerate `03`. Untouched since R8, so it describes the system as it was imagined before the platform was measured: `defects[D1]` as an open hypothesis, frames "per gap" rather than per cue, a Bedrock call that this account cannot make, a 200 ms duck ramp the platform does not have, and Polly output in a container the device cannot play. §A.6 is the table that says *how each claim is checked* — it is exactly where a false claim costs credibility with the people scoring it.
+### Five wrong claims, in the document whose job is to state claims that can be checked
+`03` had not been touched since R8, so it described the system as it was **imagined before the platform was measured**. §A.6 is the table headed *how each claim is checked* — which makes it the one place in the set where a false claim costs credibility with the people scoring it.
+
+- **`defects[D1]` was described as an open hypothesis.** It is resolved **false**: no frame accessor, rendering to a native surface, so `changes[C11]` is not merely deferred but **unsatisfiable on this platform**. `AC9` now says so rather than quietly disappearing, since a criterion that vanishes between plan and submission is the thing a careful reader notices.
+- **Frames were "per gap".** Per **cue** — the demo asset's longest gap ran 167 seconds, and three frames for that is three frames for a minute and a half of film. §A.2 now carries the cue split *and* the content windows, because both came from running the code against a real film rather than from designing it.
+- **"The three track files have the same cue count."** They do not: **47 / 55 / 60**. That sentence contradicted `worst_case.cues_by_verbosity` in the registry it was derived from — the **same error** §B.2 of `02e` carried, found yesterday and found again here. Two documents, one wrong belief, written on the same day and corrected a round apart.
+- **The duck was a "200 ms platform ramp".** The platform setter is instantaneous and offers no ramp; the fade is ours, in JavaScript, in one module.
+- **Polly's output was described as finished.** It is repackaged into fragmented MP4 — an MP3 cannot be appended to a `SourceBuffer`, and the device's player fetches nothing itself.
+
+### Added, because a panel would find them anyway
+`defects[D4]` and its cause, stated plainly in §A.4 next to the endpoint that does not answer: five measurements, three account states, two code paths, and a prerequisite no error message ever named. The three criteria that close on **physical hardware only**, each with the measurement that makes it so rather than a cautious hedge. `AC23` and `AC24` in the §A.6 table. And a checklist item the panel can actually run: **no cue lands on the credits, and the post-credits scene IS described** — that asymmetry is the finding, and it is checkable against the emitted track in one pass.
+
+### R39-F1: a registry key superseded by a contract
+`env_vars` still listed `DEMO_ASSET_PATH` and `DEMO_SUBTITLES_PATH`. `contracts.asset_manifest` names the media, the subtitles, the measured `content_windows` and the segments — so two variables pointing at halves of a file that describes both are a second source of truth for the same facts. Replaced by `DEMO_ASSET_MANIFEST`.
+
+The first attempt recorded the reasoning as a new top-level `env_vars_note:` key, and `audit.py` check 19 rejected it: keys not in the template mean either the template is wrong or an edit reparented something. It was right — the reasoning is a comment, not a fact. Moved.
+
+**Edits:** `03-stakeholder-requirements.md` (§A.2, §A.4, §A.5, §A.6, §B.2, §B.7, Annex A, changelog) · `_facts.yml` (`env_vars`, revision v18).
+**Validation:** `npm test` exit 0 · `audit.py` clean.
+**Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
+**Next mode:** with `01`, `02`…`02e` and `03` all regenerated against measurement, the spec set and the repository finally describe the same system. What is left is `C9` behind the form, and the three deliverables that are not code: `C12`, `C13`, `C14`.

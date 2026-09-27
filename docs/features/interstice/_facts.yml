@@ -60,6 +60,7 @@ dates:
     - { tag: v15, date: 2026-09-25, note: 'measure R20 — D5 resolved FALSE and D3 fully resolved: the Virtual Device decodes video (253 frames, 0 dropped). URL mode is broken on this SDK and the app now delivers its own bytes through MediaSource; five platform facts recorded, two of which produce confident false negatives if trusted' }
     - { tag: v16, date: 2026-09-25, note: 'review R21 — sweep over the scope R20 moved: 7 findings, all confirmed. C2 now owns byte delivery so limits.mse_buffer bounds it, C4/C6/C10 re-scoped because url_mode_broken applies to AudioPlayer too, contracts.asset_manifest gives content_windows a runtime home, AC21/AC22 added. D6 raised and resolved TRUE the same day; D2 resolved TRUE — concurrent streams and ducking both hold on the device' }
     - { tag: v17, date: 2026-09-25, note: 'measure R23 — AWS credits granted and D4 re-measured across the grant: byte-identical refusal, plus two new eliminations (the Bedrock CONTROL plane works and lists the full Nova catalogue; funding is not the variable). C10 container chain validated with real Polly bytes' }
+    - { tag: v18, date: 2026-09-26, note: 'implement R37-R39 — C10 and C27 built, the app reads a generated manifest instead of a hand-written list, 02e regenerated against the 133 tests that exist, and 03 regenerated against what was measured: five claims in the judging document still described the system as imagined before the platform was measured' }
 
 # =====================================================================
 # DECISIONS — premises the prose hangs off. `sync` cannot follow these:
@@ -1718,7 +1719,13 @@ endpoints:
   polly_synthesize: 'polly.{AWS_REGION}.amazonaws.com SynthesizeSpeech'
   typesafe_systemone: 'api.typesafe.ai/v1/systemone POST (Authorization: Bearer TYPESAFE_API_KEY)'
 
-env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_PATH, DEMO_SUBTITLES_PATH, TYPESAFE_API_KEY]
+# DEMO_ASSET_PATH and DEMO_SUBTITLES_PATH were replaced by DEMO_ASSET_MANIFEST in
+# R39. contracts.asset_manifest names the media and the subtitles itself, alongside
+# the content_windows and segments that neither old variable could carry — two
+# variables pointing at halves of a file that already describes both is a second
+# source of truth for the same facts. Names only, never values, and no credential
+# reaches the app bundle: the device reads a generated track file and calls nothing.
+env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_MANIFEST, TYPESAFE_API_KEY]
 
 # =====================================================================
 # VERIFICATION ANCHORS

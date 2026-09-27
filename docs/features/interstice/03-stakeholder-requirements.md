@@ -17,6 +17,18 @@
 
 Same tag + date spine as `01-master-plan.md` (`_facts.yml dates.revisions[]`), showing only what changes the external side.
 
+### 2026-09-26 — v18: regenerated against what was measured
+
+`implement` round R39. This document had not been touched since R8 and described the system as it was **imagined before the platform was measured**. Five claims were wrong, and §A.6 is the table that says *how each claim is checked* — precisely where a false claim costs credibility with the people scoring it.
+
+- **`defects[D1]` was described as an open hypothesis.** It is resolved **false**: Vega's `VideoPlayer` has no frame accessor and renders to a native surface, so `changes[C11]` is not merely deferred but unsatisfiable on this platform. `AC9` is listed as undemonstrable for that reason rather than quietly dropped.
+- **Frames were described as "per gap".** They are per **cue**: a gap is not a cue, and the demo asset's longest gap ran 167 seconds. §A.2 now carries both findings — the cue split and the content windows — because both came from running the code against a real film rather than from designing it.
+- **"The three track files have the same cue count."** They do not: **47 / 55 / 60**, measured. That sentence contradicted `worst_case.cues_by_verbosity` in the registry it was derived from.
+- **The duck was described as a 200 ms platform ramp.** The platform's volume setter is instantaneous and exposes no ramp; the fade is ours, written in JavaScript.
+- **Polly's output was described as finished.** It is repackaged into fragmented MP4, because an MP3 cannot be appended to a `SourceBuffer` and the device's player fetches nothing itself.
+
+Added, because they are now known and a panel would find them anyway: `defects[D4]` and its cause, the three criteria that close on **physical hardware only**, and the two new criteria `AC23` and `AC24`.
+
 ### 2026-09-21 — v7: doc 03 written
 
 `implement` round R8. Written alongside the five files of doc 02. §A.4 comes from `contracts.*`, §B.6 from `acceptance[]`, both read out of the registry.
@@ -58,15 +70,18 @@ The submission hands over five things. Each is a deliverable in `_facts.yml chan
 **How it works, in the order it happens:**
 
 1. The subtitle file gives the timing of every line of dialogue. The silences between them are the gaps. Only gaps of at least **1500 ms** (`limits.ad.min_gap_ms`) are usable — anything shorter cannot hold a sentence.
-2. For each gap, up to **3** frames are extracted (`limits.ad.frames_per_gap_max`): the midpoint, plus one per shot when the gap spans a cut, because one frame misdescribes a gap that crosses one.
-3. One pass over the opening frames builds a cast list (`decisions.dramatis_personae`), so the same character is named the same way from the first cue to the last.
-4. Each gap's frames, its surrounding dialogue, the cast list and the previous **10** descriptions (`limits.ad.rolling_context_cues`) go to a vision model on Bedrock, which returns a description **bounded to what fits in that gap** at **160 words per minute** (`limits.ad.speaking_rate_wpm`). The bound is derived from the gap, not requested from the model.
-5. Polly speaks each description. The output is a track file plus its audio clips.
-6. On the television, the app schedules each cue against playback position, ducks the film to **25%** (`limits.ad.duck_target_pct`) over **200 ms**, plays the clip, and restores. The remote toggles description and switches between three verbosity levels.
+2. The gaps are **clipped to the asset's describable content** and then **split into cues**. Both steps came from running the code against a real film rather than from designing it:
+   - *Tears of Steel* has 119 seconds of credits **and a 21-second post-credits scene**. A rule that simply dropped the trailing gap — which this plan originally proposed — would delete that scene, which is content a sighted viewer keeps and a blind viewer loses. So the asset declares measured `content_windows` and gaps are intersected with them.
+   - **A gap is not a cue.** Five gaps run past 30 seconds and carry 68% of all the words; the longest was 167 seconds. One description covering 167 seconds is not a description. A gap longer than `limits.ad.max_cue_ms` (**12 s**) becomes consecutive cue windows, each with its own frames and its own budget, and a window too short to carry `limits.ad.min_useful_words` (**3**) is dropped rather than filled with noise.
+3. For each **cue**, up to **3** frames are extracted (`limits.ad.frames_per_gap_max`): the midpoint, plus one per shot when the window spans a cut, because one frame misdescribes a window that crosses one.
+4. One pass over the opening frames builds a cast list (`decisions.dramatis_personae`), so the same character is named the same way from the first cue to the last.
+5. Each cue's frames, its surrounding dialogue, the cast list and the previous **10** descriptions (`limits.ad.rolling_context_cues`) go to a vision model on Bedrock, which returns a description **bounded to what fits in that window** at **160 words per minute** (`limits.ad.speaking_rate_wpm`). The bound is derived from the window, not requested from the model.
+6. Polly speaks each description, and **ffmpeg repackages it into fragmented MP4 with AAC-LC**. That is not a preference: the device's player fetches nothing itself and an MP3 cannot be appended to a `SourceBuffer`, so an MP3 track would be a track of files nothing in the app can play. The output is a track file per verbosity level plus its audio clips.
+7. On the television, the app schedules each cue against playback position, fades the film to **25%** (`limits.ad.duck_target_pct`) over **200 ms** (`limits.ad.duck_ramp_ms`), plays the clip, and restores. **The fade is written in JavaScript**, because the platform's volume setter is instantaneous and exposes no ramp of its own. The remote toggles description and switches between three verbosity levels.
 
 **What this deliberately does not do**, and why it is not an omission:
 
-- **It does not describe live, from the frame currently on screen.** That layer (`C11`) is `kind: deferred`: whether Vega OS exposes the rendered frame to JavaScript is an unverified hypothesis (`defects[D1]`), and `decisions.hybrid_ad_path` records the choice to make the guaranteed path the one that ships. A demo that runs beats a live path that does not.
+- **It does not describe live, from the frame currently on screen.** That layer (`C11`) is deferred **permanently for this build**, and the reason is now measured rather than assumed: `defects[D1]` is resolved **FALSE**. Vega's `VideoPlayer` has no frame accessor at all — it renders to a native surface handle, so decoded pixels never enter JavaScript-reachable memory. That is a property of the platform's design, not a missing feature, so it will not appear in a later SDK. `decisions.hybrid_ad_path` chose the guaranteed path *before* this was known, and the measurement vindicated the choice without the demo moving.
 - **It does not send anything from the television to a cloud service at runtime.** Every model call happens offline, on the developer's machine, against a film that is already public. The device reads a generated file. If `C11` ever ships, it is off by default and names its destination before the first send (`decisions.privacy_optin`).
 - **It does not use a third-party judgment vendor.** `C15`/`C16` were designed against TypeSafe and then deferred (`decisions.typesafe_judgment_layer`) — a non-Amazon vendor adds an API key and a setup step to a repository the panel has to run, and the problems it addressed already carry mitigations.
 
@@ -117,16 +132,20 @@ Each cue, from `_facts.yml contracts.description_cue`:
 - **`status: failed`** exists so a throttled or rejected cue does not break the track. The cue is emitted with no text and the app skips it; the film still plays. A pipeline that aborts on one bad response is a pipeline that produces nothing on a bad afternoon.
 - **`verbosity`** is what lets the app know which of the three generated tracks it loaded. The files are named `<asset_id>.<verbosity>.track.json` beside the asset, and a level switch resolves by that name, falling back to `standard` (`decisions.verbosity_levels`).
 
-**Endpoints** (`_facts.yml endpoints`), both AWS, both called only from the offline pipeline:
+**Endpoints** (`_facts.yml endpoints`), both AWS, both called only from the offline pipeline — never from the television:
 
 ```http
 bedrock-runtime.{AWS_REGION}.amazonaws.com InvokeModel
 polly.{AWS_REGION}.amazonaws.com SynthesizeSpeech
 ```
 
+> **One of these does not currently answer this account, and the cause is worth a sentence because it is not a coding problem.** Every Bedrock inference call returns `ValidationException — Error 002: Access to Bedrock models is not allowed for this account`, measured five times across three account states and two code paths, from the account root, from a dedicated IAM user, and from the console playground. The control plane works and lists the full Nova catalogue; Polly works on the same credentials. The cause was found on 2026-09-26: `aws bedrock get-use-case-for-model-access` answers *"You have not filled out the request form"* — a prerequisite no error message, no console page and no documentation surfaced. `defects[D4]` carries the eight eliminated hypotheses, and `FRICTION-LOG.md` carries the entry, which is the most useful thing this build has to say about the platform.
+
 A third endpoint is registered and **not called**: `api.typesafe.ai/v1/systemone POST (Authorization: Bearer TYPESAFE_API_KEY)`. It stays in the registry so `C15`/`C16` would reopen against a verified endpoint rather than a remembered one. No code in the submission reaches it.
 
-Configuration is by environment variable — **names only, never values**, and no credential is in the app bundle: `AWS_REGION`, `BEDROCK_MODEL_ID`, `POLLY_VOICE_ID`, `DEMO_ASSET_PATH`, `DEMO_SUBTITLES_PATH`, `TYPESAFE_API_KEY`.
+Configuration is by environment variable — **names only, never values**, and no credential is in the app bundle: `AWS_REGION`, `BEDROCK_MODEL_ID`, `POLLY_VOICE_ID`, `DEMO_ASSET_MANIFEST`, `TYPESAFE_API_KEY`.
+
+The asset is named by **one** variable rather than two, because `contracts.asset_manifest` already names the media, the subtitles, the measured `content_windows` and the segments. Two variables pointing at halves of a file that describes both is a second source of truth for the same facts.
 
 ## A.5 Checklist for the panel
 
@@ -136,10 +155,11 @@ Each item is verifiable by the panel alone, without us.
 - [ ] **The open-source package runs from a clean clone in one command** (`AC10`). `git clone`, `npm install`, `npm run example`. Not from our working copy — from nothing.
 - [ ] **The package's commits land inside the submission window** (`AC10`). `git log` on `react-native-tv-audio-description`. A repository whose history predates the hackathon is not a hackathon entry.
 - [ ] **No cue text is hand-written** (`AC7`). Open any `*.track.json`, pick a cue, seek the film to any timestamp in its `source_frames_ms`, and compare. Then re-run the pipeline and confirm the text changes — a hand-written track does not.
-- [ ] **No description overruns its gap** (`AC4`). For every cue, `words` against `end_ms - start_ms` at 160 wpm. This is the constraint the whole design is built around and it is checkable with one script over the track file.
-- [ ] **The three verbosity levels are genuinely different** (`AC17`). The three track files have the same cue count and different word totals. If two files are identical, the feature is a slider that does nothing.
+- [ ] **No description overruns its window** (`AC4`). For every cue, `words` against `end_ms - start_ms` at 160 wpm. This is the constraint the whole design is built around and it is checkable with one script over the track file.
+- [ ] **No description lands on the credits** (`worst_case.content_windows`). No cue's window falls inside 588.0 s–707.2 s of the demo asset. The post-credits scene at 709.5 s–730.3 s, however, **is** described — and that asymmetry is the point: it is the case that made a simple "drop the trailing gap" rule wrong.
+- [ ] **The three verbosity levels are genuinely different** (`AC17`). The three track files have **different cue counts as well as different word totals** — measured on the demo asset: **47 / 55 / 60** cues and 629 / 916 / 1127 words. The counts differ because `limits.ad.min_useful_words` drops more windows at `concise`, which is also why there is one file per level rather than one file with a shared cue list. If two files are identical, the feature is a slider that does nothing.
 - [ ] **The friction log was written during the build, not after** (`AC11`). Dates spread across phases rather than clustered on one day.
-- [ ] **The demo video is under 3 minutes, in English, on the target platform** (`AC12`) and shows the app under **VoiceView** (`AC15`) — an accessibility product whose own controls are unusable by its users is not the product it claims to be.
+- [ ] **The demo video is under 3 minutes, in English, on the target platform** (`AC12`) and shows the app under **VoiceView** (`AC15`) — an accessibility product whose own controls are unusable by its users is not the product it claims to be. **That segment is recorded on physical hardware**, because VoiceView cannot be switched on inside the Virtual Device by any route a developer has: the config key reads back `DISABLED` and every write returns *No permission for operation* (`limits.vega_media.voiceview_not_enablable`).
 - [ ] **The impact claim carries a source** (`AC16`). The figure on audio-description coverage cites where it came from.
 - [ ] **No unauthorized copyrighted material** (`decisions.demo_asset_licensing`). The demo plays an openly licensed Blender Foundation open movie, chosen for carrying **substantial dialogue** — a near-dialogue-free film would collapse the gap structure into one continuous gap and there would be no mechanism to demonstrate. The license and source are recorded in the README.
 
@@ -154,11 +174,15 @@ Derived from `_facts.yml acceptance[]` — the criteria that need an external re
 | Descriptions never talk over dialogue (`AC4`) | the split-screen before/after in the video, plus `words` against gap length in any track file |
 | Playback is never interrupted by the controls (`AC3`) | the video: the toggle is pressed mid-scene and the film does not pause |
 | The three levels are a feature, not a checkbox (`AC17`) | the video switches all three mid-playback; the three track files differ |
-| The app works for the people it is for (`AC15`) | the VoiceView segment of the video |
+| The app works for the people it is for (`AC15`) | the VoiceView segment of the video, recorded on physical hardware — VoiceView cannot be enabled on the simulator |
+| A stall is not silence (`AC24`) | interrupt the byte delivery: the picture freezes, **no error event fires**, and the app still says what happened, out loud |
+| The memory bound is real, not assumed (`AC23`) | the full asset played end to end on the worst device in the matrix, with `INTERSTICE.buffer.evicted` recurring and no `QuotaExceededError` |
 | It works for a real viewer, not a hypothesis (`AC20`) | the quote from the validation session in §B, in the video and in `SUBMISSION.md` |
 | The failure modes were designed, not discovered (`AC8`) | rename the track file and launch: the app says what happened, out loud, and the film still plays |
 
-**One criterion is deliberately not demonstrated.** `AC9` covers the live-capture layer, which is `kind: deferred` (`C11`) and does not ship. It is listed here rather than quietly dropped, because a criterion that disappears between the plan and the submission is the thing a careful reader notices.
+**One criterion is deliberately not demonstrated.** `AC9` covers the live-capture layer, which is `kind: deferred` (`C11`) and does not ship. It is listed here rather than quietly dropped, because a criterion that disappears between the plan and the submission is the thing a careful reader notices. Since R12 it is also **unsatisfiable**: `defects[D1]` is resolved false, so there is no frame for the layer to capture.
+
+**Three criteria close on physical hardware and nowhere else**, each for a measured reason rather than a cautious one: `AC5` because there is no audio capture path off the Virtual Device, so "the film got quieter" cannot be observed there; `AC15` because VoiceView cannot be enabled there at all; `AC23` because a 20-second demo clip with a 30-second buffer window can never exercise eviction. All three were named on **day 7 of 34**, which is the difference between a purchase decision and a discovery.
 
 ---
 
@@ -173,7 +197,7 @@ Watch about twenty minutes of a short film on a television with this description
 ## B.2 What we provide
 
 - The television, the app and the film, already set up. Nothing to install, nothing to configure.
-- The film is *Tears of Steel* or *Elephants Dream* — an openly licensed short, not something you need to have seen.
+- The film is ***Tears of Steel*** — an openly licensed Blender Foundation short, not something you need to have seen. It was chosen by measurement rather than taste: its subtitle track yields 39 usable gaps and 451.8 seconds of describable silence, which is the room the mechanism needs to be worth judging at all.
 - A session of **20–30 minutes** at a time you choose, remote or in person, whichever suits you.
 - The same scenes played **with** description and **without**, so the comparison is yours to make rather than ours to claim.
 
@@ -224,7 +248,7 @@ For the participant, asked at the end of the session:
 For the panel, and the honest ones:
 
 6. **Would this belong on a real television?** The submission argues the television should do this alone rather than asking the viewer to hold a second device. That premise is worth disputing.
-7. **Is the deferred live-capture layer the right call?** `decisions.hybrid_ad_path` chose the guaranteed path over the impressive one. In a hackathon scored partly on technical ambition, that is a trade, and it was made deliberately.
+7. **Is the deferred live-capture layer the right call?** `decisions.hybrid_ad_path` chose the guaranteed path over the impressive one, and in a hackathon scored partly on technical ambition that is a real trade. It is worth disputing on its merits — but note that the trade turned out not to be one: `defects[D1]` is resolved **false**, so the live path was never available on this platform. The decision was made before that was known, which is the only kind of decision this question can fairly judge.
 
 ## Annex A — reference: the three-level word budget
 
@@ -239,6 +263,6 @@ cue target   = floor(ceiling × scale)                     # limits.ad.verbosity
 
 with the scales `concise` ×**0.6**, `standard` ×**0.85**, `detailed` ×**1.0**.
 
-The `- 300` is the duck ramp (`limits.ad.duck_ramp_ms`, 200 ms) plus 100 ms of margin: the film takes that long to duck and to come back, and the time is not available for speech.
+The `- 300` is the duck ramp (`limits.ad.duck_ramp_ms`, 200 ms) plus 100 ms of margin: the film takes that long to fade down and back, and the time is not available for speech. **That fade is ours** — the platform's volume setter is instantaneous and offers no ramp, so it is stepped in JavaScript, in one module, rather than reimplemented per platform.
 
-**The ceiling does not vary by level, and that is the point.** The gap is a physical bound — a level that asked for *more* words than fit would simply overrun into the next line of dialogue, which is what `AC4` forbids and what the whole design exists to prevent. So the levels are targets *under* one ceiling rather than multipliers of it: `detailed` spends the whole gap, `standard` leaves a little room, `concise` says the minimum that carries the shot. They come out strictly different at every gap size from 1500 ms up — which is the check in §A.5 and the thing `AC17` is scored on.
+**The ceiling does not vary by level, and that is the point.** The gap is a physical bound — a level that asked for *more* words than fit would simply overrun into the next line of dialogue, which is what `AC4` forbids and what the whole design exists to prevent. So the levels are targets *under* one ceiling rather than multipliers of it: `detailed` spends the whole gap, `standard` leaves a little room, `concise` says the minimum that carries the shot. They come out strictly different at every gap size from 1500 ms up — checked over ten real gap sizes rather than one convenient one, because a single spot-check is what hid a collapse of `standard` onto `detailed` **twice**. That is the check in §A.5 and the thing `AC17` is scored on.
