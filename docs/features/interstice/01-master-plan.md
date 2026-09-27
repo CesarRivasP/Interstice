@@ -164,6 +164,23 @@ Six phases against a fixed deadline. Phase 0 is a decision gate, not preparation
 | 4 | 10-16 → 10-19 | design and accessibility pass: focus behaviour in every state, `AC2`, `AC6`, `AC8`; the full-length quality watch with 1–5 scoring per cue (`AC14` + `limits.ad.quality_gate`, `AC18` coherence check) and the VoiceView pass (`AC15`); regenerate worst cues | the five-criteria self-review |
 | 5 | 10-20 → 10-22 | user validation session (`AC20` per `decisions.user_validation`), demo video with gap visualization (`AC19`), friction log close-out per `decisions.friction_log_shape`, product feedback, submission | submitted **one day before** `limits.hackathon.submission_deadline` |
 
+**Effort so far, measured rather than estimated** (`_facts.yml dates.effort`): **6 h 24 min** of span across 6 sessions and 31 commits — 39 rounds over 5 working days inside the 8-day window 09-19 → 09-26.
+
+That figure is a **floor and not an effort total**, and the distinction is recorded rather than smoothed over. Git timestamps say when work *landed*, not how long it took, and here the gap is large: rounds R1–R8 produced the registry, this document, the gap sweep, the review dispositions and the five files of doc 02 — roughly 1500 lines of specification — and all of it landed in **one commit** on 09-22. Eight rounds, zero visible minutes. An hours-invested number would be `basis: asserted` with nothing to falsify it, in a plan whose whole contract is that a claim states how it was established.
+
+**Where the work actually is against this table, as of 09-27.** The phases have reordered, and saying so is the point of keeping a schedule at all:
+
+| phase | planned | actual |
+|---|---|---|
+| 0 | 09-19 → 09-22 | **done**, and it grew: `D5` and `D6` were raised and closed after it, neither of which the plan knew existed |
+| 1 | 09-23 → 09-30 | **blocked, not late.** `C7`, `C8`, `C10` and the segmenter are built and tested; the *track* needs `C9`, which needs Bedrock, which needs a use-case form (`defects[D4]`) |
+| 2 | 10-01 → 10-10 | **complete, two weeks early.** `C1`–`C6` run on the device: playback, scheduler, ducking, controls, loader. Its gate overclaims, though: `AC5` is audible ducking and there is no audio capture path on the Virtual Device, so the ramp is verified as a **value**, not as a sound |
+| 3 | 10-11 → 10-15 | **starting now**, pulled forward because phase 2 finished and phase 1 cannot proceed |
+| 4 | 10-16 → 10-19 | unchanged, and three of its criteria are known to need physical hardware (`AC5`, `AC15`, `AC23`) |
+| 5 | 10-20 → 10-22 | unchanged |
+
+The reordering is not slippage. Phase 1's gate — *"a track file that validates against `contracts.description_track`"* — is the one thing on this table no amount of building can reach today, and the response was to spend the time on phase 2 and 3 rather than to wait. What it does cost is the reopening of `C15`/`C16`, which the phase-1 gate above makes conditional on closing green before 09-30; that condition will not be met, and the deferral stands.
+
 Two obligations run on someone else's clock and both are opened in Phase 0 rather than when they are needed: the AWS credits request (`limits.hackathon.aws_credits_request_deadline`, **2026-10-21 12:00 PT**) and recruiting the `AC20` participant, who must be confirmed by **10-16** or `AC20` is dropped per `decisions.user_validation`.
 
 **The submission buffer is spent, and that is a decision** (`decisions.schedule_risk_accepted`). Scope grew from v1 to v4 without a single date moving. The dates above stand; what gives way if the clock runs out is named now rather than at 02:00 on 10-22 — `AC19` degrades to a static diagram first, then `AC20` is dropped, then `AC14` drops from every cue to a stratified sample. `AC1`..`AC13` and the submission itself never yield.

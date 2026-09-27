@@ -1192,3 +1192,15 @@ The `_log.md` size POLISH says to *"rotate, never summarize: `references/handoff
 **Validation:** `audit.py` → clean, after this entry repaired the version chain.
 **Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
 **Next mode:** `C12`, the open-source package — a prompt for a cold instance is written.
+
+---
+
+## R41 · 2026-09-27 · claude-opus-5 (Claude Code) · the effort figure in the timebox, and what the timebox now gets wrong
+**Read:** `_facts.yml` (1872 lines, blob 5bd82e9) · `_log.md` (through R40 end) · `01-master-plan.md` (316 lines, blob 8c6f68d)
+**Log read through:** R40
+**About to do:** R40 recorded `dates.effort` in the registry but never put it where it was asked for — the timebox in `01` §3.2. Adding it there, and with it the divergence the table has accumulated: phase 2 (the app) is complete two weeks before it opens, phase 1 (the pipeline) is blocked on `defects[D4]`, and phase 3 is about to start early. A schedule that still reads as planned when the work has reordered is the kind of document people stop checking.
+**Findings:** the effort figure belonged in two places and only reached one. Beyond that, reading the phase table against the work showed it has stopped describing the project: phase 2 (`C1`..`C6`, the app) is **done two weeks before it opens**, phase 1 (`C7`..`C10` plus the track) is **blocked and not late** — the code is built and tested, the track needs `C9`, `C9` needs Bedrock, Bedrock needs the use-case form in `defects[D4]` — and phase 3 (`C12`) is being pulled forward because of both. One consequence had gone unnoticed: §3.2 made `C15`/`C16` conditional on phase 1 closing green **before 09-30**, and that condition now cannot be met, so the deferral holds on a reason the document never stated.
+**Edits:** `01-master-plan.md` (333 lines, blob c95e6de — §3.2 now carries `dates.effort` as **6h24m across 6 sessions / 31 commits / 39 rounds / 5 working days**, stated as a floor with the R1–R8 one-commit undercount named, plus a planned-vs-actual row per phase and the `C15`/`C16` consequence).
+**Validation:** `audit.py` → `0 contradictions`. The figure is quoted from `_facts.yml dates.effort`, so check 4 has something to cross-refer to; the prose says *floor*, not *hours invested*, because git timestamps measure landing and not work.
+**Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only · `AC16` sourced impact figure · `AC19` gap visualisation.
+**Next mode:** `C12`, and the decision it waits on — does the hackathon app consume the published package or keep copies.
