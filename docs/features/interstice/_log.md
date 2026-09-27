@@ -1138,3 +1138,57 @@ The first attempt recorded the reasoning as a new top-level `env_vars_note:` key
 **Validation:** `npm test` exit 0 · `audit.py` clean.
 **Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
 **Next mode:** with `01`, `02`…`02e` and `03` all regenerated against measurement, the spec set and the repository finally describe the same system. What is left is `C9` behind the form, and the three deliverables that are not code: `C12`, `C13`, `C14`.
+
+---
+
+## R40 · 2026-09-27 · claude-opus-5 (Claude Code) · the measured effort span, and a convention I let decay
+**Read:** `_facts.yml` (1872 lines, blob 5bd82e9) · `_log.md` (through R39 end) · `docs/features/_profile.yml` (67 lines, blob 1ab556a) — and every document in the set version-checked with `wc -l` and `git hash-object`, because R40-F1 below is about exactly that: `01-master-plan.md` (316 lines, blob 8c6f68d) · `02-implementation-and-e2e.md` (470 lines, blob 99aedfb) · `02b-pipeline-model.md` (449 lines, blob 2d43547) · `02b2-track-output.md` (261 lines, blob 8204ffa) · `02c-app-playback.md` (448 lines, blob 1868b5c) · `02c2-audio-and-controls.md` (256 lines, blob 65d3308) · `02d-screens-and-delivery.md` (411 lines, blob 20f511d) · `02e-tests-and-done.md` (284 lines, blob addf59e) · `03-stakeholder-requirements.md` (268 lines, blob 6ba4403)
+**Log read through:** R39
+**About to do:** record what the build actually cost, measured rather than estimated. Git timestamps say when work LANDED, not how long it took, and in this project that gap is large: rounds R1-R8 produced the whole registry, doc 01 and the five files of doc 02, and landed in ONE commit. Recording the span as a floor with the undercount stated, not as "hours invested".
+### Recorded
+`dates.effort`, `basis: measured`: **6 h 24 min of span across 6 sessions and 31 commits**, 39 rounds over 5 working days inside an 8-day window. The command that produces it is in `evidence.cmd`.
+
+**It is recorded as a floor, and the note says why.** Git timestamps say when work LANDED, not how long it took, and here the gap is enormous: rounds R1–R8 produced the registry, doc 01, the gap sweep, the review dispositions and the five files of doc 02 — roughly 1500 lines of specification written across 09-19 to 09-21 — and **all of it landed in one commit** on 09-22 at 13:45. Eight rounds, zero visible minutes. Work before the first commit of every other session is invisible for the same reason.
+
+So the per-round average this implies — about 10 minutes over the 31 rounds git can see — is meaningless, and is deliberately **not** stored as a field. An hours-invested figure would be `basis: asserted` with no falsifier, in a registry whose entire contract is that a claim states how it was established. The owner knows how long they sat down; this file only knows when code landed.
+
+### R40-F1, found by the audit the moment this round opened its stub
+**I stopped recording `(<n> lines, blob <sha7>)` in log entries around R13.** The early rounds do it — R13's entry names `_facts.yml (1070 lines, blob 2f56b5c)`. Every round since has named files without their version, so **check 16 could not verify which version any of them worked against**, which is the whole reason the convention exists.
+
+The check fired against stale recorded values (`02b` at 551 lines when it is now 449, after the R22 split) and against files named with no version at all. It was right on both counts, and the finding is mine: a convention I followed while it was fresh and let go once the rounds got long.
+
+The version chain is repaired on this round's **Read:** line above, in the inline form the check parses — the table I first wrote was not.
+
+**Worth adding to the skill feedback already written:** the check works and caught a real lapse, but it only fires once a round's stub exists — so a convention can decay for twenty-five rounds before anything says so. A per-round reminder in `references/handoff.md`'s entry template would have cost nothing.
+
+### R40-F2, and this one was hiding behind R40-F1: all six defects carried an undefined status
+Every `defects[].status` said `resolved`. **That word is not in the vocabulary** — it is `open | fixed | dead`, and the check's own remediation says why it matters: *"nothing depending on this entry is revisited while the word is unknown."* Six hypotheses, from the very first round, in a state no consumer of this registry could interpret.
+
+It only surfaced once the check-16 findings above were cleared, which is worth noting on its own: **a noisy check masked a substantive one.**
+
+Mapped onto the real vocabulary by what each claim turned out to be:
+
+| | claim | outcome | status |
+|---|---|---|---|
+| `D1` | the rendered frame can be read from JS | refuted | `dead` |
+| `D5` | the Virtual Device may not decode video | refuted | `dead` |
+| `D2` | a second stream plays while the main track ducks | confirmed | `fixed` |
+| `D3` | the simulator installs, runs and plays the asset | confirmed | `fixed` |
+| `D6` | an `AudioPlayer` takes an audio-only `SourceBuffer` | confirmed | `fixed` |
+| `D4` | Bedrock refuses every call on this account | confirmed, **not repaired** | `open` |
+
+`D4` is the honest one: the cause is found, the fix has not landed, and `open` is what says so. Setting it to anything else would have been the registry agreeing with a feeling rather than a state.
+
+The first pass of this mapping put `D3` on `dead`, and check 14 immediately raised a `CONTRADICTION`: `alternatives[A4]` was discarded *because* `D3` held, so a `dead` premise voids the discard. `dead` means the concern was never real; `D3`'s concern was real and is now settled. Corrected to `fixed`, and the contradiction cleared — the check reasoned about my error better than I did.
+
+### Two more, found in the same sweep
+- **`02` Phase 3 still showed `"byte_index": null`** in its JSON example of `contracts.asset_manifest`. R34 replaced that field with `segments` everywhere else. Check 3 caught it as a key-set diff against the contract.
+- **`_log.md:51` (`R2`) has no `Log read through:` line** and will keep reporting. Left alone deliberately: `references/handoff.md` forbids editing a previous entry, and R2 was written by another agent. The information is in fact there — its `Read:` line says *"through R1 end"* — just not in the field the check parses. That is a skill-feedback item, not a registry repair.
+
+### And the audit points at a section that does not exist
+The `_log.md` size POLISH says to *"rotate, never summarize: `references/handoff.md` §Rotating the log"*. **That section is not in the skill** — neither the heading nor the word "rotat" appears anywhere in it. So the log is 1167 lines, the check knows that is too long, and the remediation it names cannot be followed. Added to the skill feedback written this session, where item 11 had guessed at this and can now state it.
+
+**Edits:** `_facts.yml` (1872 lines, blob 5bd82e9 — `dates.effort` new; all six `defects[].status` mapped onto `open | fixed | dead`) · `02-implementation-and-e2e.md` (470 lines, blob 99aedfb — the stale `byte_index` JSON fence).
+**Validation:** `audit.py` → clean, after this entry repaired the version chain.
+**Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
+**Next mode:** `C12`, the open-source package — a prompt for a cold instance is written.

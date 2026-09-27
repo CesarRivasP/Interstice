@@ -42,6 +42,30 @@ tracking:
 
 dates:
   drafted: 2026-09-19
+  effort:
+    basis: measured
+    evidence: { how: shell, date: 2026-09-27, n: 1,
+                cmd: 'git log --reverse --format=%ad --date=format:''%Y-%m-%d %H:%M'' | python3 - (segment into sessions on gaps > 45 min, sum each session''s first-to-last span)',
+                value: '6 sessions, 31 commits, 6h24m of measured span — 09-22 0:23 + 0:00 + 0:00, 09-25 2:19, 09-26 0:56 + 2:46' }
+    measured_span: '6h24m'
+    rounds: 39
+    working_days: 5
+    calendar_window: '2026-09-19 .. 2026-09-26'
+    note: 'THIS IS A FLOOR, NOT AN EFFORT FIGURE, and the difference is the reason it is
+           recorded this way. Git timestamps say when work LANDED, not how long it took,
+           and here the gap is large: rounds R1-R8 produced the whole registry, doc 01,
+           the gap sweep, the review dispositions and the five files of doc 02 — roughly
+           1500 lines of specification written across 09-19 to 09-21 — and all of it
+           landed in ONE commit on 09-22 13:45. Eight rounds, zero visible minutes.
+           Work before the first commit of every other session is invisible for the same
+           reason. So the per-round average this implies (~10 min over the 31 rounds git
+           can see) is meaningless and is deliberately not recorded as a field.
+           WHY NOT JUST ESTIMATE: an hours-invested number would be basis: asserted with
+           no falsifier, in a registry whose whole contract is that a claim says how it
+           was established. The owner knows how long they sat down; this file only knows
+           when code landed. If an hours figure is ever wanted here it belongs as
+           basis: asserted with the owner named, beside this measurement rather than
+           instead of it.'
   revisions:
     - { tag: v1, date: 2026-09-19, note: 'initial decision draft — track, product, hybrid AD path, scope' }
     - { tag: v2, date: 2026-09-19, note: 'review round R2 — D2 pre-mix fallback, dialogue-bearing asset requirement, multi-frame + rolling context, quality/VoiceView/impact ACs' }
@@ -946,7 +970,7 @@ changes:
                file, so the app cannot read part of one. Durations are read from the
                emitted playlist and never derived from the requested length, because
                ffmpeg cuts on keyframes.' }
-  - { id: C7, file: pipeline/gaps.ts, kind: planned, where: repo,
+  - { id: C7, file: pipeline/gaps.ts, kind: planned, where: repo, built: '2026-09-22 (R13) parse/merge/findGaps; 2026-09-25 (R22) clipToContent and splitIntoCues',
       change: 'parses the asset subtitles (WebVTT or SRT — the timestamp regex
                accepts both separators) and emits every dialogue gap
                >= limits.ad.min_gap_ms, merging overlapping speech first so two
@@ -1032,7 +1056,7 @@ changes:
                delimited-data + shape validation as the second layer
                (decisions.typesafe_judgment_layer, gap sweep S2)' }
 
-  - { id: C17, file: manifest.toml, kind: planned, where: repo,
+  - { id: C17, file: manifest.toml, kind: planned, where: repo, built: '2026-09-22 (R16) — validated and installed on the device',
       change: 'the Vega application manifest. REQUIRED by the platform and absent
                from this spec until R12 — the media stack reads its services from
                the [wants] section, and the amazon-devices-vega-media-player skill
@@ -1129,7 +1153,7 @@ defects:
                    returning false, or addSourceBuffer throwing NotSupportedError,
                    or the clip appending and never firing canplay'
     log_line: 'INTERSTICE.cue.audio mse_supported=<bool> bytes=<n> state=<canplay|error>'
-    status: resolved
+    status: fixed
     outcome: true
     note: 'RAISED BY R21-F4, and it is a genuinely new blocking hypothesis rather
            than a restatement of D5. limits.vega_media.url_mode_broken removed the
@@ -1173,7 +1197,7 @@ defects:
     falsified_by: 'any app playing any video on this Virtual Device — including
                    Amazon''s own vega-video-sample, which is the cheapest test'
     log_line: 'INTERSTICE.player.progress t=<s> frames=<n> dropped=<n>'
-    status: resolved
+    status: dead
     outcome: false
     note: 'RAISED 2026-09-22 after six candidate causes were eliminated by
            measurement rather than argument. Every attempt to play a file ends in
@@ -1251,7 +1275,7 @@ defects:
                         of audio/mpeg on the same session.' }
     falsified_by: 'a successful InvokeModel or Converse on any Nova model from this account'
     log_line: null
-    status: resolved
+    status: open
     outcome: 'CAUSE FOUND 2026-09-26, and it was never a permission, a region, a
               credential, an identity or a payment. THE ACCOUNT HAD NEVER FILLED OUT
               THE BEDROCK USE-CASE REQUEST FORM.
@@ -1375,7 +1399,7 @@ defects:
     falsified_by: 'the simulator failing to install or start, or refusing to decode
                    the demo asset'
     log_line: null
-    status: resolved
+    status: fixed
     outcome: 'BOTH HALVES CONFIRMED. The split below is kept as written because it
               is what made the second half testable instead of assumed.
               PLAYBACK HALF CONFIRMED 2026-09-25: the demo clip decodes and plays on
@@ -1417,7 +1441,7 @@ defects:
     falsified_by: 'the media API surface having no frame accessor, or returning an
                    empty or black buffer on a playing asset'
     log_line: 'INTERSTICE.frame w=<n> h=<n> bytes=<n>'
-    status: resolved
+    status: dead
     outcome: 'FALSE. There is no frame accessor, and the architecture says why:
               VideoPlayer never composites into anything JavaScript can read. It
               renders to a NATIVE SURFACE — the app mounts a KeplerVideoSurfaceView,
@@ -1457,7 +1481,7 @@ defects:
     falsified_by: 'the platform refusing concurrent playback, or the duck call
                    returning without changing the audible level'
     log_line: 'INTERSTICE.cue.duck main_volume=<n> / INTERSTICE.player.progress frames=<n>'
-    status: resolved
+    status: fixed
     outcome: true
     note: 'gates the product itself, not a layer. If ducking is impossible the
             fallback is decisions.d2_fallback: a pre-mixed second audio track

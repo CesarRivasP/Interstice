@@ -413,7 +413,7 @@ Three further things the naive version gets wrong: the span **before the first**
     { "start_ms": 0, "end_ms": 588000, "label": "film" },
     { "start_ms": 709500, "end_ms": 730333, "label": "post-credits" }
   ],
-  "byte_index": null
+  "segments": null
 }
 ```
 
