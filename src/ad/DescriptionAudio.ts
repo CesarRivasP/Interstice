@@ -34,7 +34,12 @@ export class DescriptionAudio {
   }
 
   async speak(cue: DescriptionCue): Promise<void> {
-    if (this.active) return; // a cue already speaking is never interrupted by another
+    if (this.active) {
+      // a cue already speaking is never interrupted by another — but the one
+      // that lost is said out loud in the log, not dropped in silence
+      log(`INTERSTICE.audio.busy id=${cue.id}`);
+      return;
+    }
     this.active = true;
     const mine = this.generation;
     const stale = () => mine !== this.generation;
@@ -43,7 +48,11 @@ export class DescriptionAudio {
       log(`INTERSTICE.audio.duck id=${cue.id} to_pct=${AD.DUCK_TARGET_PCT}`);
       await rampVolumePct(this.media.video, 100, AD.DUCK_TARGET_PCT, undefined, stale);
       await this.media.clips.play(cue.audio_uri);
-      log(`INTERSTICE.audio.spoke id=${cue.id} words=${cue.words}`);
+      log(
+        stale()
+          ? `INTERSTICE.audio.interrupted id=${cue.id}`
+          : `INTERSTICE.audio.spoke id=${cue.id} words=${cue.words}`,
+      );
     } catch (err) {
       log(`INTERSTICE.audio.failed id=${cue.id} err=${(err as Error).message}`);
     } finally {
@@ -70,7 +79,9 @@ export class DescriptionAudio {
     // dip on every toggle-off between cues and on every stall — including the
     // spurious `waiting` MSE emits at startup (limits.vega_media.waiting_fires_at_start).
     if (!this.active) return;
+    log('INTERSTICE.audio.stopped');
     await rampVolumePct(this.media.video, AD.DUCK_TARGET_PCT, 100);
     this.active = false;
+    log('INTERSTICE.audio.restored after=stop');
   }
 }

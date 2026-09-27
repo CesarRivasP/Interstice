@@ -92,7 +92,15 @@ export class SegmentBuffer {
     // `endOfStream` only once the last segment is in, or the player waits
     // forever for media that is not coming.
     const last = this.asset.segments[this.asset.segments.length - 1];
-    if (last && this.appended.has(last.index) && this.source.readyState === 'open') {
+    // and never while the SourceBuffer is mid-operation: that throws
+    // ("exception when updating attribute is true", seen on the device), and
+    // the platform reports it the same way as a bad file
+    if (
+      last &&
+      this.appended.has(last.index) &&
+      this.source.readyState === 'open' &&
+      !this.buffer.updating
+    ) {
       this.source.endOfStream();
       log(`INTERSTICE.buffer.complete segments=${this.appended.size}`);
     }

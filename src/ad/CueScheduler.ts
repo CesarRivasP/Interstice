@@ -1,4 +1,5 @@
 import type { DescriptionCue } from '../../pipeline/types';
+import { AD } from '../../pipeline/budget';
 import {log} from '../diagnostics';
 
 /**
@@ -14,13 +15,30 @@ export interface SchedulerEvents {
   onFire: (cue: DescriptionCue) => void;
 }
 
+export interface SchedulerOptions {
+  /** from firing to the film back at full; default estimateCueMs */
+  estimateMs?: (cue: DescriptionCue) => number;
+}
+
+/** words at limits.ad.speaking_rate_wpm, plus the fade down and the fade up */
+export function estimateCueMs(cue: DescriptionCue): number {
+  return (cue.words / AD.SPEAKING_RATE_WPM) * 60_000 + 2 * AD.DUCK_RAMP_MS;
+}
+
 export class CueScheduler {
   private cues: DescriptionCue[] = [];
   private cursor = 0;
   private firing: DescriptionCue | null = null;
   private enabled = true;
 
-  constructor(private readonly events: SchedulerEvents) {}
+  private readonly estimateMs: (cue: DescriptionCue) => number;
+
+  constructor(
+    private readonly events: SchedulerEvents,
+    options: SchedulerOptions = {},
+  ) {
+    this.estimateMs = options.estimateMs ?? estimateCueMs;
+  }
 
   /** `failed` cues carry no audio; they never enter the schedule. */
   load(cues: DescriptionCue[]): void {
@@ -53,8 +71,23 @@ export class CueScheduler {
     const next = this.cues[this.cursor];
     if (!next) return;
 
-    // AC4: fire only INSIDE the window. Never before it, never after it.
+    // AC4: fire only INSIDE the window, and only if the cue can FINISH there.
+    // A cue reached late — description switched back on, a seek into the
+    // middle of a gap — would otherwise still be speaking when dialogue
+    // resumes. Measured 2026-09-27 on the Virtual Device: switched on 2.5 s
+    // before its window closed, a 2.6 s cue brought the film up into the next
+    // scene.
     if (positionMs >= next.start_ms && positionMs < next.end_ms && this.firing !== next) {
+      const remaining = next.end_ms - positionMs;
+      const needs = Math.round(this.estimateMs(next));
+      if (remaining < needs) {
+        this.cursor++;
+        log(
+          `INTERSTICE.scheduler.skip id=${next.id} pos_ms=${positionMs} reason=late` +
+            ` remaining_ms=${remaining} needs_ms=${needs}`,
+        );
+        return;
+      }
       this.firing = next;
       this.cursor++;
       log(

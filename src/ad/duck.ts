@@ -1,7 +1,7 @@
 import type { VideoPlayer } from '../platform/MediaAdapter';
 import { AD } from '../../pipeline/budget';
 
-/** one step per frame at 60 Hz, near enough for a 200 ms fade */
+/** how often the fade writes; a floor, since timers on the device fire late */
 const STEP_MS = 16;
 
 /**
@@ -11,6 +11,11 @@ const STEP_MS = 16;
  * the ramp is stepped here. Written once, in one place, because a fade
  * duplicated per platform is a fade that differs per platform — which is also
  * why `MediaAdapter.VideoPlayer.setVolumePct` takes no `rampMs`.
+ *
+ * Each step sets the level for the time ELAPSED, not for its step number.
+ * Measured 2026-09-27 on the Virtual Device: a fade counted as 13 steps of
+ * 16 ms took ~510 ms instead of 200, because timers fire late there, and three
+ * of four cues brought the film back up after their window had closed (AC4).
  */
 export async function rampVolumePct(
   video: VideoPlayer,
@@ -24,14 +29,15 @@ export async function rampVolumePct(
    */
   isCancelled: () => boolean = () => false,
 ): Promise<void> {
-  const steps = Math.max(1, Math.round(rampMs / STEP_MS));
-  for (let i = 1; i <= steps; i++) {
+  const start = Date.now();
+  for (;;) {
     if (isCancelled()) return;
-    video.setVolumePct(fromPct + ((toPct - fromPct) * i) / steps);
-    if (i < steps) await new Promise((r) => setTimeout(r, STEP_MS));
+    const t = rampMs > 0 ? Math.min(1, (Date.now() - start) / rampMs) : 1;
+    // t reaches exactly 1, so the fade lands exactly on the target: AC5 is
+    // asserted against the final value, and rounding must never leave the film
+    // at 99% forever.
+    video.setVolumePct(t >= 1 ? toPct : fromPct + (toPct - fromPct) * t);
+    if (t >= 1) return;
+    await new Promise((r) => setTimeout(r, STEP_MS));
   }
-  if (isCancelled()) return;
-  // Land exactly on the target: accumulated rounding must never leave the film
-  // at 99% forever, and AC5 is asserted against the final value.
-  video.setVolumePct(toPct);
 }

@@ -140,7 +140,17 @@ class VegaVideo implements VideoPlayer {
     const source = new MediaSource();
 
     const opened = new Promise<void>((resolve, reject) => {
+      let handled = false;
       source.addEventListener('sourceopen', () => {
+        // ONCE. Per MSE, appendBuffer() or remove() on an 'ended' source
+        // reopens it and fires 'sourceopen' again — and evicting behind the
+        // playhead after the last segment is in does exactly that. Handling it
+        // twice builds a second SourceBuffer and re-appends the whole asset,
+        // which evicts, which reopens: a loop. Measured 2026-09-27 on the
+        // Virtual Device at the end of the 20 s clip, through changes[C12]'s
+        // example/vega, which shares this code.
+        if (handled) return;
+        handled = true;
         (async () => {
           const buffer = source.addSourceBuffer(VIDEO_MIME);
           this.segments = new SegmentBuffer(source, buffer as unknown as AppendTarget, asset);
@@ -190,7 +200,10 @@ class VegaVideo implements VideoPlayer {
   }
 
   positionMs(): number {
-    return Math.round(this.player.currentTime * 1000);
+    // currentTime is NaN until the player has media; a NaN position reached
+    // the scheduler as resync(NaN) on the device
+    const t = this.player.currentTime;
+    return Number.isFinite(t) ? Math.round(t * 1000) : 0;
   }
 
   durationMs(): number {
@@ -249,6 +262,8 @@ class VegaVideo implements VideoPlayer {
 
 class VegaClips implements ClipPlayer {
   private current: AudioPlayer | null = null;
+  /** settles the clip that is playing; set for exactly as long as one is */
+  private interrupt: (() => void) | null = null;
 
   async play(uri: string): Promise<void> {
     const player = new AudioPlayer(
@@ -271,6 +286,13 @@ class VegaClips implements ClipPlayer {
       log(`INTERSTICE.cue.audio bytes=${bytes}`);
 
       await new Promise<void>((resolve, reject) => {
+        // A paused AudioPlayer never emits 'ended', so without this a stopped
+        // clip's promise never settles and its player is never torn down —
+        // one leaked player per interrupted cue, measured on the Virtual Device.
+        this.interrupt = () => {
+          log('INTERSTICE.cue.audio state=stopped');
+          resolve();
+        };
         player.addEventListener('error', () => {
           const code = player.error?.code ?? -1;
           reject(new Error(`cue media error ${code}`));
@@ -283,14 +305,17 @@ class VegaClips implements ClipPlayer {
       });
     } finally {
       this.current = null;
-      await player.deinitialize().catch(() => {
-        // a cue that cannot be torn down must not stop the film
-      });
+      this.interrupt = null;
+      // Not awaited: tearing the clip player down took ~120 ms on the Virtual
+      // Device, every one of them with the film still ducked after the speech
+      // had ended. A cue that cannot be torn down must not stop the film.
+      void player.deinitialize().catch(() => undefined);
     }
   }
 
   stop(): void {
     this.current?.pause();
+    this.interrupt?.();
   }
 }
 

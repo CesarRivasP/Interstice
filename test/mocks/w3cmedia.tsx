@@ -82,9 +82,18 @@ export class SourceBuffer {
     this.listeners.set(type, l);
   }
 
+  removeEventListener(type: string, fn: () => void): void {
+    this.listeners.set(type, (this.listeners.get(type) ?? []).filter((l) => l !== fn));
+  }
+
   appendBuffer(data: Uint8Array): void {
     this.appended.push(data.byteLength);
-    (this.listeners.get('updateend') ?? []).forEach((fn) => fn());
+    [...(this.listeners.get('updateend') ?? [])].forEach((fn) => fn());
+  }
+
+  /** SegmentBuffer evicts behind the playhead with this */
+  remove(_start: number, _end: number): void {
+    [...(this.listeners.get('updateend') ?? [])].forEach((fn) => fn());
   }
 }
 
@@ -105,7 +114,11 @@ export class MediaSource {
     this.listeners.set(type, l);
   }
 
-  addSourceBuffer(_type: string): SourceBuffer {
+  /** every mime type a SourceBuffer was asked for, in order */
+  readonly types: string[] = [];
+
+  addSourceBuffer(type: string): SourceBuffer {
+    this.types.push(type);
     const b = new SourceBuffer();
     this.buffers.push(b);
     return b;
