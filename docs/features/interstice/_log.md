@@ -191,3 +191,38 @@ The `_log.md` size POLISH says to *"rotate, never summarize: `references/handoff
 **Edits:** `_log.md` (rotated: header + R37–R42) · `_log-R1-R36.md` (new, 1040 lines, blob 5c60165). No registry or doc edit.
 **Validation:** `audit.py` (skill v1.12.0) → clean, 0 findings; 23 candidates unchanged. Before rotating: 1 DRIFT (`R2`) + 1 POLISH (size). The first post-rotation run raised 2 DRIFT the procedure had not anticipated — the archive named in `Edits:` without a version, and the `Stage:` line gone with R7 — both fixed in this entry; the skill's §Rotating the log is being amended to say so.
 **Still open:** unchanged from R41.
+
+---
+
+## R43 · 2026-09-27 · claude-opus-5-5 (Claude Code) · verify
+**Read:** `_facts.yml` (1872 lines, blob 5bd82e9) · `_log.md` (193 lines, blob 622f373 — through R42 end)
+**Log read through:** R42
+**About to do:** record two code rounds that landed without an entry — `b7e01e8` (the stop() dip) and `d01b432` (six playback defects), both found through `changes[C12]`'s package and its `example/vega` on the Virtual Device — and bring the registry back in line with what that device run measured: `limits.mse_buffer.built` claims the 20 s clip never evicts, and it does; `limits.vega_media.no_range_requests` is cited and never defined; three new platform facts; `tests_baseline`.
+
+### R43-F1 `FUNCTIONAL`: the film dipped to 25% on every stall and every switch-off
+`DescriptionAudio.stop()` ramped from the duck level back to 100% whether or not a cue was speaking, and a ramp's first step SETS the volume. `PlayerScreen` calls `stop()` on every stall and on toggle-off — and `limits.vega_media.waiting_fires_at_start` puts a stall at the start of every playback. Only audible on hardware, and no test asserted on the volumes `stop()` writes. Found by the extracted package's own suite (`changes[C12]`), where it was fixed first. **Fixed** in `b7e01e8`, with a `PlayerScreen` test that is red without it.
+
+### R43-F2 `FUNCTIONAL`: six defects that only a device could show
+Running `changes[C12]`'s `example/vega` on the Virtual Device — the same adapter, scheduler and fade as this app — produced a log no mock could have. **All fixed** in `d01b432` and ported from the package, each with a test that is red on the code before it:
+- **A loop at the end of the film** — `limits.vega_media.sourceopen_refires`: evicting after `endOfStream()` reopens the source and fires `sourceopen` again; the handler rebuilt the `SourceBuffer` and re-appended the asset, which evicted, which reopened.
+- **Fades of ~510 ms instead of 200** — `limits.vega_media.coarse_timers` — which put three of four cue restores outside their window (`AC4`).
+- **An interrupted cue's player never torn down** — `limits.vega_media.paused_never_ends`.
+- **The restore held ~120 ms for `deinitialize()`.**
+- **`positionMs()` NaN before media**, reaching the scheduler as `resync(NaN)`.
+- **A cue reached late in its window spoke into the next scene** (`AC4`): switched back on 2.5 s before its window closed, a 2.6 s cue. `CueScheduler` now skips it with `reason=late` when the window cannot hold it.
+
+Verified on the Virtual Device after the port, with this app: one eviction and done at the clip's end; probe cue fade 0.29 s, restore 0.23 s, 1 ms from `ended` to `spoke`.
+
+### R43-F3 `CONTRADICTION`: the registry said the demo clip never evicts
+`limits.mse_buffer.built` (R35): *"a 20-second clip with a 30-second window never evicts anything"*. It evicts at 19.94 s, once the playhead is `behind_s` past the end of segment 0 — which is exactly when F2's loop started, and why nobody saw it: the claim said there was nothing to watch. **Corrected** beside the original, per `references/evidence.md`, not over it. `AC23` is unchanged: the memory bound over a feature-length asset still needs hardware.
+
+### R43-F4 `DRIFT`: a limit cited for nine rounds and never defined
+`limits.vega_media.no_range_requests` has been cited by `limits.mse_buffer.segment_note` and `changes[C26]` since R34, and did not exist. Defined now from R34's own beacon line. `audit.py` does not report a dangling `limits.*` reference — worth a check, since this is the second registry-vs-reality gap found by reading rather than by the script (R36 was the first).
+
+### R43-F3, followed through: what the correction touches
+`audit.py` check 36 lists 17 citations of the corrected `limits.mse_buffer`. Read against `correction:`: **two** rested on the false claim and are fixed in place — `02e` Part C `C.9` and `03` §A.6 (the judging document, where a wrong claim is the expensive kind). The other **15** cite it for whole segments, the time-measured window or the stall branch, and are right as they stand.
+
+**Edits:** `_facts.yml` (1915 lines, blob adb5616 — revision v19; `limits.mse_buffer` correction; `limits.vega_media` .no_range_requests, .sourceopen_refires, .coarse_timers, .paused_never_ends; `tests_baseline`) · code in `b7e01e8` and `d01b432` (`src/ad/DescriptionAudio.ts`, `src/ad/CueScheduler.ts`, `src/ad/duck.ts`, `src/platform/vega/index.tsx`, `src/platform/vega/SegmentBuffer.ts`, `test/PlayerScreen.spec.tsx`, `test/CueScheduler.spec.ts`, `test/vegaAdapter.spec.tsx` new, `test/mocks/w3cmedia.tsx`) · `02e-tests-and-done.md` (284 lines, blob 6b8d022 — Part C `C.9`) · `03-stakeholder-requirements.md` (268 lines, blob a17daae — §A.6, the `AC23` sentence) · R42's rotation committed as it stood (`b2e6258`), after `audit.py` ran clean on it.
+**Validation:** `npm test` exit 0 — jest **72**, vitest 70 · `npm run lint` exit 0 · `npm run build:release` exit 0 and a Virtual Device run to the end of the clip · `audit.py` below.
+**Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only · `AC16` · `AC19` · `changes[C12]` not yet published to npm, so the app still carries its own copies of the code the package fixed first.
+**Next mode:** `C12` — publish, then the app consumes the package instead of the copies this round had to patch twice.

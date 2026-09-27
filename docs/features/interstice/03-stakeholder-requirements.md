@@ -182,7 +182,7 @@ Derived from `_facts.yml acceptance[]` — the criteria that need an external re
 
 **One criterion is deliberately not demonstrated.** `AC9` covers the live-capture layer, which is `kind: deferred` (`C11`) and does not ship. It is listed here rather than quietly dropped, because a criterion that disappears between the plan and the submission is the thing a careful reader notices. Since R12 it is also **unsatisfiable**: `defects[D1]` is resolved false, so there is no frame for the layer to capture.
 
-**Three criteria close on physical hardware and nowhere else**, each for a measured reason rather than a cautious one: `AC5` because there is no audio capture path off the Virtual Device, so "the film got quieter" cannot be observed there; `AC15` because VoiceView cannot be enabled there at all; `AC23` because a 20-second demo clip with a 30-second buffer window can never exercise eviction. All three were named on **day 7 of 34**, which is the difference between a purchase decision and a discovery.
+**Three criteria close on physical hardware and nowhere else**, each for a measured reason rather than a cautious one: `AC5` because there is no audio capture path off the Virtual Device, so "the film got quieter" cannot be observed there; `AC15` because VoiceView cannot be enabled there at all; `AC23` because the 20-second demo clip evicts only once, at its very end, and a memory bound is only tested by a film long enough to need one. All three were named on **day 7 of 34**, which is the difference between a purchase decision and a discovery.
 
 ---
 

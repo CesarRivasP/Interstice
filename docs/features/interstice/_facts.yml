@@ -85,6 +85,7 @@ dates:
     - { tag: v16, date: 2026-09-25, note: 'review R21 — sweep over the scope R20 moved: 7 findings, all confirmed. C2 now owns byte delivery so limits.mse_buffer bounds it, C4/C6/C10 re-scoped because url_mode_broken applies to AudioPlayer too, contracts.asset_manifest gives content_windows a runtime home, AC21/AC22 added. D6 raised and resolved TRUE the same day; D2 resolved TRUE — concurrent streams and ducking both hold on the device' }
     - { tag: v17, date: 2026-09-25, note: 'measure R23 — AWS credits granted and D4 re-measured across the grant: byte-identical refusal, plus two new eliminations (the Bedrock CONTROL plane works and lists the full Nova catalogue; funding is not the variable). C10 container chain validated with real Polly bytes' }
     - { tag: v18, date: 2026-09-26, note: 'implement R37-R39 — C10 and C27 built, the app reads a generated manifest instead of a hand-written list, 02e regenerated against the 133 tests that exist, and 03 regenerated against what was measured: five claims in the judging document still described the system as imagined before the platform was measured' }
+    - { tag: v19, date: 2026-09-27, note: 'verify R43 — changes[C12]''s example/vega run on the Virtual Device found six playback defects in code the app shares, all fixed and ported; limits.mse_buffer.built corrected (the 20 s clip DOES evict); limits.vega_media gains no_range_requests (cited since R34, never defined), sourceopen_refires, coarse_timers and paused_never_ends' }
 
 # =====================================================================
 # DECISIONS — premises the prose hangs off. `sync` cannot follow these:
@@ -760,6 +761,41 @@ limits:
            gwsi-tool-screenshooter needs com.amazon.dev.shell.service, and the host
            cannot screencapture the QEMU window without Screen Recording permission.'
 
+    no_range_requests: 'MEASURED 2026-09-26 (R34) on the Virtual Device. A fetch
+           of a packaged file:///pkg/... path with Range: bytes=0-65535 returned
+           status 200 and 2628566 bytes — the WHOLE file — with no Content-Range
+           header (INTERSTICE.range.partial status=200 bytes=2628566 asked=65536
+           content_range=none honoured=false). A buffer window built on byte ranges
+           would appear to work while holding the entire asset. It is why
+           limits.mse_buffer is made of whole segments. Cited since R34 by
+           limits.mse_buffer.segment_note and changes[C26], and never defined until
+           R43 — no check reports a dangling key.'
+
+    sourceopen_refires: 'MEASURED 2026-09-27 (R43) on the Virtual Device, through
+           changes[C12] example/vega. Per the MSE spec, appendBuffer() or remove()
+           on a MediaSource whose readyState is ended moves it back to open and
+           fires sourceopen AGAIN. Evicting behind the playhead after the last
+           segment is in does exactly that, and a sourceopen handler that builds
+           the SourceBuffer ran twice: a second buffer, the whole asset re-appended,
+           evicted, reopened — a loop at the end of the 20 s clip, with endOfStream()
+           throwing "exception when updating attribute is true" as two chains
+           collided. The handler now runs once per open(). Present in the app since
+           R35; unseen because nobody watched a run to its end with the beacon up.'
+
+    coarse_timers: 'MEASURED 2026-09-27 (R43) on the Virtual Device. setTimeout
+           fires late: a fade written as 13 steps of 16 ms took ~510 ms instead of
+           limits.ad.duck_ramp_ms (200). With both fades stretched, three of four
+           cues brought the film back up after their window closed — by up to
+           0.57 s, against AC4. src/ad/duck.ts now sets each step from ELAPSED
+           time; measured after the change at 200-260 ms per fade.'
+
+    paused_never_ends: 'MEASURED 2026-09-27 (R43) on the Virtual Device. A paused
+           AudioPlayer never emits ended. Stopping a cue by pausing its clip left
+           the promise waiting for ended pending forever, so the player was never
+           deinitialised — one leaked player per interrupted cue. clips.stop() now
+           settles the promise itself. Measured alongside: deinitialize() takes
+           ~120 ms, and the restore no longer waits for it.'
+
   mse_buffer:
     basis: decided
     built: '2026-09-26 (R35) — pipeline/segment.ts cuts the asset, and
@@ -769,6 +805,9 @@ limits:
            a 20-second clip with a 30-second window never evicts anything, so the
            branch has unit tests and no device run. That is AC23, and AC23 needs a
            feature-length asset on the worst device in the matrix.'
+    corrected_on: 2026-09-27
+    corrected_by: limits.vega_media.sourceopen_refires
+    correction: 'the 20 s clip DOES evict — once, at 19.94 s, when the playhead passes behind_s beyond the end of segment 0 — and that eviction ran on the Virtual Device on 2026-09-27; what stays unverified is the memory bound over a feature-length asset, which is still AC23.'
     ahead_s: 30
     behind_s: 10
     segment_s: 6
@@ -1756,8 +1795,8 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_MANIFEST, TY
 # =====================================================================
 tests_baseline:
   basis: measured
-  evidence: { how: shell, cmd: 'npm test', date: 2026-09-25, n: 1, exit_code: 0,
-              value: 'jest: Tests 63 passed, 63 total · vitest: Test Files 10 passed (10), Tests 70 passed (70)',
+  evidence: { how: shell, cmd: 'npm test', date: 2026-09-27, n: 1, exit_code: 0,
+              value: 'jest: Tests 72 passed, 72 total · vitest: Test Files 10 passed (10), Tests 70 passed (70)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the
@@ -1792,7 +1831,11 @@ tests_baseline:
                      is how eight components existed unregistered for fifteen rounds.
                      The jest count FELL from 65 to 63 in R36: two tests went with
                      src/components/Tile.tsx and src/data/tiles.tsx, template leftovers
-                     nothing imported, kept alive only by their own suite. `npm run lint`
+                     nothing imported, kept alive only by their own suite. R43 raised jest
+                     from 63 to 72: one test for the stop() dip, three for the
+                     scheduler''s late-start skip, and test/vegaAdapter.spec.tsx for
+                     defects the Virtual Device found through changes[C12] — each red
+                     on the code before its fix. `npm run lint`
                      (eslint + tsc --noEmit) also exits 0 on the same tree, with two
                      informational warnings.' }
 
