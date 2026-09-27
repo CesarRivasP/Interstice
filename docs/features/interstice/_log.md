@@ -1074,3 +1074,39 @@ Two tests carry the joins that would fail silently: descriptions are matched to 
 **Validation:** `npm test` exit 0 — jest 63, vitest **70** across 10 files · `npm run lint` exit 0 · `npm run build` exit 0 · `audit.py` clean · device run with the generated module.
 **Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
 **Next mode:** `02e`'s test plan is now well behind the suite — twelve components are built and §B.1 still describes tests for four of them.
+
+---
+
+## R38 · 2026-09-26 · claude-opus-5 (Claude Code) · the test plan, which its own suite had overtaken
+**Read:** `_facts.yml` (v17) · `_log.md` (through R37 end) · `02e`
+**Log read through:** R37
+
+**R38-F0, and it is about this entry: THE STUB NEVER LANDED.** The command that opens a round's log entry failed with a shell error — `(eval):11: unmatched "` — and I read the next line of output instead of that one, then worked for a full round with no entry on disk. The rule exists because a round that dies halfway leaves a trace instead of silence; a stub that fails *silently* leaves exactly the silence it was meant to prevent, and I did not notice until the closing edit could not find its anchor. Recorded rather than quietly back-filled, because the fix is to check that the stub wrote, not to write it more carefully.
+
+### The preamble was the worst of it
+`02e` §B.0 opened by stating that *"the repository holds no application code"* and *"no test has ever run here"*, and described a fake adapter whose `setVolumePct` took a `rampMs` the interface no longer has. All three were true when written and had been false for fifteen rounds.
+
+**A test plan behind its suite is worse than none.** It reads as the contract, so a builder follows it and writes against a harness that is not there. Regenerated against the repository: two runners and why they are separate, and the four fakes with what each one refuses to pretend.
+
+The rule that section now ends on is the one `R25-F1` cost four hours to learn: **a fake written alongside its subject encodes the subject's assumptions**, so where a fake cannot avoid that, something else has to check it against the world. That is what §B.2's three registry-binding tests and Part C's device runs are for.
+
+### R38-F1 `CONTRADICTION`: the test plan asserted the opposite of a measurement
+§B.2 said the three verbosity levels produce the **same cue count** and differ only in word totals. R22 measured **47 / 55 / 60**. The plan contradicted `worst_case.cues_by_verbosity` in the registry it is supposed to be derived from — and a test written to it would have failed against correct data, which is the worst way for a test to fail.
+
+`limits.ad.min_useful_words` drops more windows at `concise`, and that is the entire reason `changes[C10]` writes one file per level rather than one track with a shared cue list.
+
+### §B.1 now describes the suite that exists
+**133 tests across 15 files**, each entry naming its file and the assertions that carry weight, with a `Fails if:` on every parity or negative assertion. The ones worth having written down: the nesting property `C8` relies on, `part_index`/`part_count` separating a middle window from a film boundary, window-key joins in both `C8` and `C10`, `failed` cues written rather than dropped, the window measured in time rather than in count, and a stall being a state playback can leave.
+
+### Part C, and three criteria that cannot close here
+`C.2` (audible ducking), `C.7` (VoiceView) and the new `C.9` (the memory bound) are marked **hardware only**, each with the measurement that makes it so — no audio capture path off the Virtual Device, `limits.vega_media.voiceview_not_enablable`, and a 20-second clip that can never exercise eviction. Added `C.10` for `AC24`, where the line to watch is `INTERSTICE.player.resumed from=stalled` — instrumentation added in R29 precisely because a state change nobody can observe is a state change nobody can verify.
+
+Also corrected: Part C still offered Fire OS *"if `D3` died"*, and `C.5` still referenced the `hardCeilingWords` clamp that R9 removed.
+
+### The coverage map
+Repointed at the phases that moved in R22's splits (`02b` → `02b2`, `02c` → `02c2`), and given rows for `D5`, `D6`, the content-window bound, `AC23` and `AC24`.
+
+**Edits:** `02e` §B.0, §B.1, §B.2, Part C and the coverage map, all regenerated.
+**Validation:** `npm test` exit 0 · `audit.py` clean.
+**Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only.
+**Next mode:** `03-stakeholder-requirements.md`, untouched since R8 and describing an ask built on a platform nobody had measured.
