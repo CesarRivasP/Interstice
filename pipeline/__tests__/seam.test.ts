@@ -43,7 +43,7 @@ describe('the MediaAdapter seam', () => {
 
   it('keeps the choice of platform in exactly one place', () => {
     const choosers = sourceFiles('src').filter((f) =>
-      readFileSync(f, 'utf8').includes('platform/vega'),
+      readFileSync(f, 'utf8').includes('react-native-tv-audio-description/vega'),
     );
     expect(choosers).toEqual([join('src', 'App.tsx')]);
   });

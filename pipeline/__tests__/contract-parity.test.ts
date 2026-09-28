@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { CUE_KEYS, TRACK_KEYS } from '../../src/ad/TrackLoader';
+// The validator is changes[C12]'s, as the app ships it. Imported by path because
+// the package's entry point loads React Native, which does not run under Node —
+// a gap in its API recorded in R44, not a reason to test a copy instead.
+import { CUE_KEYS, TRACK_KEYS } from '../../node_modules/react-native-tv-audio-description/lib/TrackLoader.js';
 
 /**
  * Registry-to-code parity, mechanized.

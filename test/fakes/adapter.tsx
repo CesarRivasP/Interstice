@@ -8,7 +8,7 @@ import type {
   Unsubscribe,
   VideoPlayer,
   VideoSurfaceProps,
-} from '../../src/platform/MediaAdapter';
+} from 'react-native-tv-audio-description';
 
 /**
  * A fake MediaAdapter for the layers above the seam.

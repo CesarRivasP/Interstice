@@ -1,11 +1,18 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {BackHandler, StyleSheet, Text, View} from 'react-native';
-import type {AssetSource, MediaAdapter} from '../platform/MediaAdapter';
-import {ADControls, type ADState} from '../ad/ADControls';
-import {coalesce, CueScheduler} from '../ad/CueScheduler';
-import {DescriptionAudio} from '../ad/DescriptionAudio';
-import {loadTrack} from '../ad/TrackLoader';
-import type {DescriptionCue, Verbosity} from '../../pipeline/types';
+// changes[C12]: the description layer is the published package, not a copy.
+import {
+  ADControls,
+  coalesce,
+  CueScheduler,
+  DescriptionAudio,
+  loadTrack,
+  type ADState,
+  type AssetSource,
+  type DescriptionCue,
+  type MediaAdapter,
+  type Verbosity,
+} from 'react-native-tv-audio-description';
 import {log} from '../diagnostics';
 
 /**

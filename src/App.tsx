@@ -1,7 +1,8 @@
 import React, {useCallback, useState} from 'react';
 import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import {PlayerScreen} from './screens/PlayerScreen';
-import {createVegaAdapter} from './platform/vega';
+import {setLogger} from 'react-native-tv-audio-description';
+import {createVegaAdapter} from 'react-native-tv-audio-description/vega';
 import {log} from './diagnostics';
 
 // Required rather than referenced by string so that metro bundles it into the
@@ -67,9 +68,14 @@ const resolvedCue = Image.resolveAssetSource(CUE);
 log(`INTERSTICE.asset.resolved uri=${resolved?.uri ?? 'NONE'}`);
 log(`INTERSTICE.asset.cue uri=${resolvedCue?.uri ?? 'NONE'}`);
 
-// The one place the platform is chosen. Everything below src/ that is not
-// src/platform/ reaches the device only through this object — enforced by
-// pipeline/__tests__/seam.test.ts, not by good intentions.
+// The description layer and its Vega adapter are changes[C12], consumed from
+// npm. Its diagnostic lines arrive unprefixed; they join the INTERSTICE.* lines
+// here, over the same beacon (limits.vega_media.no_js_console).
+setLogger(line => log(`INTERSTICE.${line}`));
+
+// The one place the platform is chosen. Everything else in src/ reaches the
+// device only through this object — enforced by pipeline/__tests__/seam.test.ts,
+// not by good intentions.
 const media = createVegaAdapter();
 
 
