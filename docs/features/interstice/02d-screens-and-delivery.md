@@ -315,6 +315,8 @@ export default function App() {
 
 The extraction is a real one, and the `MediaAdapter` seam is what makes it possible at all: the five files above import the interface, never a platform. A consumer supplies their own adapter.
 
+**Built and consumed (R44).** Published as `react-native-tv-audio-description@0.1.0`, tag `v0.1.0`, and the app now installs it from npm like any other consumer: the copies of `changes[C3]`–`[C6]`, the seam `changes[C18]`, the Vega adapter `changes[C19]`, `changes[C20]` and the fade `changes[C21]` are deleted from this repository, with their tests, and `src/App.tsx` hands the package its `INTERSTICE.` logger. What forced the order: R43 had to fix the same six device-found defects twice, once in the package and once in the copies.
+
 **Checklist (each item is `AC10`):**
 - public repository, MIT or Apache-2.0, `LICENSE` file present
 - `README.md` with install, the `MediaAdapter` interface, and a worked example

@@ -86,6 +86,7 @@ dates:
     - { tag: v17, date: 2026-09-25, note: 'measure R23 — AWS credits granted and D4 re-measured across the grant: byte-identical refusal, plus two new eliminations (the Bedrock CONTROL plane works and lists the full Nova catalogue; funding is not the variable). C10 container chain validated with real Polly bytes' }
     - { tag: v18, date: 2026-09-26, note: 'implement R37-R39 — C10 and C27 built, the app reads a generated manifest instead of a hand-written list, 02e regenerated against the 133 tests that exist, and 03 regenerated against what was measured: five claims in the judging document still described the system as imagined before the platform was measured' }
     - { tag: v19, date: 2026-09-27, note: 'verify R43 — changes[C12]''s example/vega run on the Virtual Device found six playback defects in code the app shares, all fixed and ported; limits.mse_buffer.built corrected (the 20 s clip DOES evict); limits.vega_media gains no_range_requests (cited since R34, never defined), sourceopen_refires, coarse_timers and paused_never_ends' }
+    - { tag: v20, date: 2026-09-27, note: 'implement R44 — changes[C12] published (react-native-tv-audio-description@0.1.0, tag v0.1.0) and CONSUMED: the app''s src/ad and src/platform copies are deleted, C3-C6 and C18-C21 now point at the package, AC10 executed' }
 
 # =====================================================================
 # DECISIONS — premises the prose hangs off. `sync` cannot follow these:
@@ -890,11 +891,11 @@ changes:
                (c) the in-flight fetch is aborted on unmount with an AbortController
                (R21-F6), and the loading state — which is now long enough to matter —
                carries a focusable host like every other state.' }
-  - { id: C3, file: src/ad/CueScheduler.ts, kind: planned, where: repo, built: '2026-09-25 (R26) — 17 tests; see 02c Phase 9',
+  - { id: C3, file: 'react-native-tv-audio-description: src/CueScheduler.ts', kind: planned, where: external, built: '2026-09-25 (R26) — 17 tests; see 02c Phase 9',
       change: 'maps playback position to description cues; resyncs after a seek and
                coalesces key-repeat so a held direction does not fire one cue per
-               key event' }
-  - { id: C4, file: src/ad/DescriptionAudio.ts, kind: planned, where: repo, built: '2026-09-25 (R28) — behind MediaAdapter, with the cancellable JS fade in src/ad/duck.ts',
+               key event SINCE R44 this is changes[C12]''s, consumed from npm (react-native-tv-audio-description ^0.1.0); the app''s copy is deleted, and the tests went with the code.' }
+  - { id: C4, file: 'react-native-tv-audio-description: src/DescriptionAudio.ts', kind: planned, where: external, built: '2026-09-25 (R28) — behind MediaAdapter, with the cancellable JS fade in src/ad/duck.ts',
       change: 'plays a description clip while ducking the main track to
                limits.ad.duck_target_pct and restoring it; stops on background.
                RE-SCOPED R21-F4: a clip cannot be played by assigning its URI —
@@ -902,17 +903,17 @@ changes:
                is fetched and appended through a MediaSource on an AudioPlayer built
                with (CONTENT_TYPE_SPEECH, USAGE_ACCESSIBILITY). Clips are small
                enough to append whole, which is why limits.mse_buffer windowing
-               applies to C2 and not here.' }
-  - { id: C5, file: src/ad/ADControls.tsx, kind: planned, where: repo, built: '2026-09-25 (R27), wired into the screen R29 — 14 tests, every one asserting what is ANNOUNCED rather than rendered; see 02c2 Phase 11',
+               applies to C2 and not here. SINCE R44 this is changes[C12]''s, consumed from npm (react-native-tv-audio-description ^0.1.0); the app''s copy is deleted, and the tests went with the code.' }
+  - { id: C5, file: 'react-native-tv-audio-description: src/ADControls.tsx', kind: planned, where: external, built: '2026-09-25 (R27), wired into the screen R29 — 14 tests, every one asserting what is ANNOUNCED rather than rendered; see 02c2 Phase 11',
       change: 'remote-control surface: toggle description on/off, three verbosity
                levels per decisions.verbosity_levels (concise/standard/detailed),
                and the visible+spoken state for every failure branch of the loader;
-               selector is D-pad reachable and VoiceView-announced' }
-  - { id: C6, file: src/ad/TrackLoader.ts, kind: planned, where: repo, built: '2026-09-25 (R26) — 13 tests plus a registry-to-code contract parity check; see 02c Phase 8',
+               selector is D-pad reachable and VoiceView-announced SINCE R44 this is changes[C12]''s, consumed from npm (react-native-tv-audio-description ^0.1.0); the app''s copy is deleted, and the tests went with the code.' }
+  - { id: C6, file: 'react-native-tv-audio-description: src/TrackLoader.ts', kind: planned, where: external, built: '2026-09-25 (R26) — 13 tests plus a registry-to-code contract parity check; see 02c Phase 8',
       change: 'loads and validates the description track against contracts.description_track;
                bounded clip cache per limits.clip_cache. RE-SCOPED R21-F4: the cache
                holds fetched BYTES ready to append, not URIs to hand to a player,
-               because there is no URI path that plays.' }
+               because there is no URI path that plays. SINCE R44 this is changes[C12]''s, consumed from npm (react-native-tv-audio-description ^0.1.0); the app''s copy is deleted, and the tests went with the code.' }
   - { id: C11, file: src/ad/LiveCapture.ts, kind: deferred, where: repo,
       change: 'runtime frame capture -> Bedrock -> speech, as an opt-in layer',
       deferred_because: decisions.hybrid_ad_path,
@@ -920,7 +921,7 @@ changes:
                      current frame reaching JS. Today: unverified, spike is Phase 0' }
 
   # --- the seam, and the code behind it ---
-  - { id: C18, file: src/platform/MediaAdapter.ts, kind: planned, where: repo,
+  - { id: C18, file: 'react-native-tv-audio-description: src/MediaAdapter.ts', kind: planned, where: external,
       built: '2026-09-25 (R28)',
       change: 'the ONLY interface the app uses to reach the platform, and the public
                API of changes[C12]. Enforced mechanically, not by intention:
@@ -928,16 +929,16 @@ changes:
                src/platform/ names a platform package, or if anything but App.tsx
                chooses a platform. Registered in R36 — it existed for eight rounds
                with no changes[] entry, which is the drift this registry exists to
-               prevent.' }
-  - { id: C19, file: src/platform/vega/index.tsx, kind: planned, where: repo,
+               prevent. SINCE R44 this is changes[C12]''s, consumed from npm (react-native-tv-audio-description ^0.1.0); the app''s copy is deleted, and the tests went with the code. pipeline/__tests__/seam.test.ts now fails if anything in src/ names a platform package, and if anything but App.tsx imports the package''s /vega entry.' }
+  - { id: C19, file: 'react-native-tv-audio-description: src/vega/index.tsx', kind: planned, where: external,
       built: '2026-09-25 (R28)',
       change: 'the Vega implementation of C18, EXTRACTED from code that already ran
                on the device rather than written from the interface down. Carries the
                dual readiness tracking for limits.vega_media.surface_races_init, the
                srcObject path for .url_mode_broken, the AudioPlayer built
                (CONTENT_TYPE_SPEECH, USAGE_ACCESSIBILITY) for .concurrent_streams, and
-               the VideoSurface component — mounting the surface IS platform code.' }
-  - { id: C20, file: src/platform/vega/SegmentBuffer.ts, kind: planned, where: repo,
+               the VideoSurface component — mounting the surface IS platform code. SINCE R44 this is changes[C12]''s, consumed from npm (react-native-tv-audio-description ^0.1.0); the app''s copy is deleted, and the tests went with the code.' }
+  - { id: C20, file: 'react-native-tv-audio-description: src/vega/SegmentBuffer.ts', kind: planned, where: external,
       built: '2026-09-26 (R35)',
       change: 'limits.mse_buffer in code: a bounded window of whole segments, measured
                in TIME rather than in segment count because ffmpeg cuts on keyframes
@@ -945,8 +946,8 @@ changes:
                operation, because the package throws InvalidStateError while updating
                and on this platform that surfaces as a media error indistinguishable
                from a bad file. APPEND verified on device; EVICT is unit-tested only
-               and closes with AC23 on hardware.' }
-  - { id: C21, file: src/ad/duck.ts, kind: planned, where: repo,
+               and closes with AC23 on hardware. SINCE R44 this is changes[C12]''s, consumed from npm (react-native-tv-audio-description ^0.1.0); the app''s copy is deleted, and the tests went with the code. EVICT has since run once on the device, at the end of the 20 s clip (R43); the bound over a feature-length asset still closes with AC23.' }
+  - { id: C21, file: 'react-native-tv-audio-description: src/duck.ts', kind: planned, where: external,
       built: '2026-09-25 (R28)',
       change: 'the volume fade, written ONCE. limits.vega_media.no_volume_ramp: the
                platform setter is instantaneous and exposes no ramp, so
@@ -954,7 +955,7 @@ changes:
                each platform because a fade duplicated per platform is a fade that
                differs per platform — which is also why MediaAdapter.setVolumePct
                takes no rampMs. Cancellable: a fade superseded by stop() must halt,
-               not finish travelling to a target nobody wants (R28-F1).' }
+               not finish travelling to a target nobody wants (R28-F1). SINCE R44 this is changes[C12]''s, consumed from npm (react-native-tv-audio-description ^0.1.0); the app''s copy is deleted, and the tests went with the code.' }
   - { id: C22, file: src/diagnostics.ts, kind: planned, where: repo,
       built: '2026-09-22 (R18)',
       change: 'TEMPORARY DIAGNOSTIC TRANSPORT. limits.vega_media.no_js_console —
@@ -1110,6 +1111,7 @@ changes:
 
   # --- deliverables that are not code ---
   - { id: C12, file: 'github.com/CesarRivasP/react-native-tv-audio-description', kind: planned, where: external,
+      built: '2026-09-27 (R44) — react-native-tv-audio-description@0.1.0 on npm, tag v0.1.0, published gitHead 86d9ad6 = the tag''s commit; MIT; 85 tests; npm run example verified from a clean clone; example/vega run on the Virtual Device from the npm build. The app consumes it (R44).',
       change: 'the Open Source mini-challenge entry: the TV-side description layer
                extracted as a standalone public repo with a runnable example,
                license and README. Commits must land inside the submission window' }
@@ -1796,7 +1798,7 @@ env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_MANIFEST, TY
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-09-27, n: 1, exit_code: 0,
-              value: 'jest: Tests 72 passed, 72 total · vitest: Test Files 10 passed (10), Tests 70 passed (70)',
+              value: 'jest: Tests 24 passed, 24 total · vitest: Test Files 10 passed (10), Tests 70 passed (70)',
               note: 'spec 02 Phase 1 + the first test of Phase 2, plus the app
                      suite added in R16. `npm test` runs BOTH runners and fails if
                      either does: jest for the Vega app (test/), vitest for the
@@ -1835,7 +1837,12 @@ tests_baseline:
                      from 63 to 72: one test for the stop() dip, three for the
                      scheduler''s late-start skip, and test/vegaAdapter.spec.tsx for
                      defects the Virtual Device found through changes[C12] — each red
-                     on the code before its fix. `npm run lint`
+                     on the code before its fix. R44 took jest from 72 to 24 ON PURPOSE:
+                     the description layer is now changes[C12]''s package, consumed from
+                     npm, and 48 tests went with the code to its repository, where they
+                     run as part of 85. What stays here tests what stays here —
+                     PlayerScreen and App against that package. contract-parity.test.ts
+                     now checks the package''s validator as shipped. `npm run lint`
                      (eslint + tsc --noEmit) also exits 0 on the same tree, with two
                      informational warnings.' }
 
@@ -1849,7 +1856,12 @@ acceptance:
   - { id: AC7, item: 'the description track is produced end to end by the pipeline from asset plus subtitles — no cue text is hand-written', status: written }
   - { id: AC8, item: 'a failed or missing track produces a stated visible and spoken state, not silence', status: written }
   - { id: AC9, item: 'the live capture layer, if it ships, is off by default and names where the frame goes before the first send', status: written }
-  - { id: AC10, item: 'react-native-tv-audio-description is public, licensed, documented, and has a runnable example, with commits inside the submission window', status: written }
+  - { id: AC10, item: 'react-native-tv-audio-description is public, licensed, documented, and has a runnable example, with commits inside the submission window', status: executed,
+      verified_on: 2026-09-27,
+      evidence: { how: shell, date: 2026-09-27, n: 1,
+                  cmd: 'git clone https://github.com/CesarRivasP/react-native-tv-audio-description.git <empty dir> && npm install && npm run example && npm test; npm view react-native-tv-audio-description version license gitHead',
+                  value: 'public repo, MIT; install exit 0, example exit 0 ("all invariants held"), 85 tests passed; npm 0.1.0, license MIT, gitHead 86d9ad6 = tag v0.1.0',
+                  note: 'COMMITS: every one dated 2026-09-27, after this project began (09-19) and before limits.hackathon.submission_deadline. The period''s START is elided ("...") in limits.hackathon''s own evidence, so "inside the window" rests on the project having started inside it, not on a measured start date. Cross-links both ways: the package README and CHANGELOG link to this repo, and this repo''s README links to the package (R44).' } }
   - { id: AC11, item: 'FRICTION-LOG.md holds dated entries written during the build, not reconstructed at the end', status: written }
   - { id: AC12, item: 'the demo video is under 3 minutes, in English, and shows the app running on the target platform', status: written }
   - { id: AC13, item: 'every Devpost field is submitted before 2026-10-23 12:00 PT, with the primary track and both mini challenges declared', status: written }

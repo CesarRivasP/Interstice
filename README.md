@@ -13,6 +13,12 @@ television itself, with no second device.
 
 > Built for the **Build, Ship, Shape: Amazon Developer Hackathon** — **Fire TV** track, on
 > **Vega OS**, with both mini challenges: **AWS Builder** and **Open Source**.
+>
+> **Open Source entry:** the TV-side description layer — cue scheduling, ducking, the
+> remote controls and a Vega OS media adapter — is published as
+> [`react-native-tv-audio-description`](https://github.com/CesarRivasP/react-native-tv-audio-description)
+> ([npm](https://www.npmjs.com/package/react-native-tv-audio-description)), and this app
+> consumes it from npm like any other would.
 
 ---
 
@@ -71,8 +77,11 @@ honestly rather than implied:
 - ✅ Vega SDK 0.24.12112, app builds and **runs on the Vega Virtual Device**
 - ✅ Gap detection (`pipeline/gaps.ts`) measured against the real demo asset
 - ✅ Word-budget model with three genuinely distinct verbosity levels, under test
-- ⏳ Frame extraction, description and synthesis — in progress
-- ⏳ On-device cue scheduling, ducking and remote controls — in progress
+- ✅ Cue scheduling, ducking and remote controls on the Virtual Device — through the
+  published [`react-native-tv-audio-description`](https://www.npmjs.com/package/react-native-tv-audio-description)
+- ✅ Frame extraction and speech synthesis built and tested
+- ⏳ Description of the frames — blocked on Bedrock access for this AWS account (a
+  use-case form), so no generated track has run end to end yet
 - ❌ **Live frame capture is not possible on Vega and will not ship.** `VideoPlayer` renders
   to a native surface; decoded pixels never reach JavaScript. The prepared-track path was
   made the base path precisely because this was unverified, and it turned out false.

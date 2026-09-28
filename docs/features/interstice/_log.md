@@ -226,3 +226,28 @@ Verified on the Virtual Device after the port, with this app: one eviction and d
 **Validation:** `npm test` exit 0 — jest **72**, vitest 70 · `npm run lint` exit 0 · `npm run build:release` exit 0 and a Virtual Device run to the end of the clip · `audit.py` below.
 **Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only · `AC16` · `AC19` · `changes[C12]` not yet published to npm, so the app still carries its own copies of the code the package fixed first.
 **Next mode:** `C12` — publish, then the app consumes the package instead of the copies this round had to patch twice.
+
+---
+
+## R44 · 2026-09-27 · claude-opus-5-5 (Claude Code) · implement
+**Read:** `_facts.yml` (1915 lines, blob adb5616) · `_log.md` (228 lines, blob 2d6da98 — through R43 end)
+**Log read through:** R43
+**About to do:** `changes[C12]` is published — `react-native-tv-audio-description@0.1.0` on npm, tag `v0.1.0`, `gitHead` matching. Make the app CONSUME it instead of carrying copies of the code it was extracted from: `src/ad/*`, `src/platform/MediaAdapter.ts` and `src/platform/vega/*` go; the app imports the package and hands it its `INTERSTICE.` logger. The decision taken at the start of C12 (2026-09-27) was consume, not copy — R43 had to patch the same six defects twice, which is the cost of copies stated as a measurement. Then mark `C12.built` and advance `AC10`.
+
+### Built: the app consumes its own package
+`react-native-tv-audio-description@0.1.0` is on npm with tag `v0.1.0`; the published `gitHead` (`86d9ad6`) is the tag's commit, so what the registry cites is what anyone installs. Before publishing, the package gained versioning: a Keep a Changelog `CHANGELOG.md`, and a `prepublishOnly` that refuses unless the version has a dated section, the tree is clean and HEAD carries `v<version>`.
+
+The app now installs it from npm (`^0.1.0`) and deletes its copies: `src/ad/*` (`changes[C3]`–`[C6]`, `[C21]`) and `src/platform/*` (`[C18]`–`[C20]`), with the four suites that tested them — those tests live in the package and run there. `PlayerScreen`, `App` and `test/fakes/adapter.tsx` import the package; `App` hands it ``setLogger(line => log(`INTERSTICE.${line}`))``, so every `INTERSTICE.*` line the manual E2E reads still arrives, from the package, over the same beacon. `seam.test.ts` now guards the import of the package's `/vega` entry.
+
+**Verified on the Virtual Device** with the npm build: title chosen, 4 segments appended, the spurious startup stall left (`resumed from=stalled`), the probe cue ducked and restored, one eviction at the clip's end and done — the same trace as before, with the package's lines under the app's prefix.
+
+### R44-F1 `FUNCTIONAL`: the package cannot be loaded under Node
+Its entry point exports `ADControls`, which loads React Native, which does not run under Node — so a track PRODUCER (this repo's own pipeline) cannot import the validator or the word budget from it. `contract-parity.test.ts` imports `lib/TrackLoader.js` by path, which checks the validator as shipped and says why in a comment; the package's own Node example imports its source modules directly for the same reason. **Deferred** to the package's next minor: a React-Native-free entry (`/core`) for producers.
+
+### R44-F2: jest 72 → 24, on purpose
+48 tests left with the code they test. A falling count reads as lost coverage unless it says where the tests went; `tests_baseline` says it.
+
+**Edits:** `_facts.yml` (1927 lines, blob 422b42b — revision v20; `changes[C3]`–`[C6]`, `[C18]`–`[C21]` now `where: external` at the package; `changes[C12].built`; `acceptance[AC10]` `written → executed` with evidence; `tests_baseline`) · `02d-screens-and-delivery.md` (413 lines, blob 2109ed6 — Phase 14, built and consumed) · `package.json`, `package-lock.json` (the dependency) · `src/App.tsx`, `src/screens/PlayerScreen.tsx`, `test/fakes/adapter.tsx`, `pipeline/__tests__/seam.test.ts`, `pipeline/__tests__/contract-parity.test.ts` · deleted `src/ad/`, `src/platform/`, `test/{CueScheduler,TrackLoader}.spec.ts`, `test/{ADControls,vegaAdapter}.spec.tsx` · `README.md` (links the package; its Status no longer calls done work in progress).
+**Validation:** `npm test` exit 0 — jest **24**, vitest 70 · `npm run lint` exit 0 (11 warnings, down from 18, none new) · `npm run build:release` exit 0 and the Virtual Device run above · `audit.py` below.
+**Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only · `AC16` · `AC19` · R44-F1, the package's Node entry.
+**Next mode:** `C13`/`C14` — the friction log and the submission, now that the three deliverables that are code exist; the R43 device findings are friction-log material.
