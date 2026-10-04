@@ -169,6 +169,9 @@ export function integrity(events: TraceEvent[]): string | null {
   for (const [boot, seqs] of byBoot) {
     seqs.sort((a, b) => a - b);
     for (let i = 0; i < seqs.length; i++) {
+      // a number seen twice is as disqualifying as one never seen: the app
+      // emits each exactly once, so the second copy came from somewhere else
+      if (seqs[i] === seqs[i - 1]) return `launch ${boot}: seq ${seqs[i]} arrived twice`;
       if (seqs[i] !== i) return `launch ${boot}: expected seq ${i}, got ${seqs[i]}`;
     }
   }

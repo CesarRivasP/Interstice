@@ -168,7 +168,8 @@ decisions:
     what: 'Exactly four verdicts: pass | fail | blocked | skipped. `blocked` requires
            `blocked_by:` naming a registry id or a missing capability, and is rendered as
            prominently as a failure. `skipped` is only ever set by the person running the
-           suite, with a filter. A run whose trace has a gap in its sequence numbers is
+           suite, with a filter. A run whose trace has a gap in its sequence numbers, a
+           sequence number twice, or more than one launch inside one scenario is
            `fail` with reason `trace_incomplete`, whatever its assertions said.'
     why: 'a scenario that could not run and one that ran green look identical in a list
           of ticks unless the vocabulary separates them. Three criteria of the app close
@@ -821,9 +822,9 @@ env_vars: [INTERSTICE_E2E, BEACON_PORT, E2E_CAPTURE]
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-10-04, n: 1, exit_code: 0,
-              value: 'jest: Tests 24 passed, 24 total · vitest: Test Files 15 passed (15), Tests 120 passed (120)',
+              value: 'jest: Tests 24 passed, 24 total · vitest: Test Files 15 passed (15), Tests 122 passed (122)',
               note: 'before this set: jest 24, vitest 10 files and 70 tests. This set adds
-                     five files and 50 tests under e2e/__tests__ — trace, collector,
+                     five files and 52 tests under e2e/__tests__ — trace, collector,
                      scenarios, selftest, report. `_profile.yml` commands.tests_expect was
                      re-measured the same day and now reads "24 passed, 24 total", the
                      jest line; exit 0 remains the authoritative signal.

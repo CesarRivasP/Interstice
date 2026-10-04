@@ -149,7 +149,11 @@ async function runScenario(s: Scenario, collector: Collector, dir: string): Prom
   base.spoken = spokenFrom(events);
   base.duration_ms = at();
 
-  const broken = integrity(events);
+  // One scenario, one launch. A second launch id starting inside a scenario is
+  // either the app restarting on its own or a line that did not come from it;
+  // neither is a trace a verdict may rest on.
+  const broken =
+    mine.size > 1 ? `${mine.size} launches started during the scenario, expected 1` : integrity(events);
   const failed = base.assertions.find((a) => !a.ok);
   if (broken) return { result: { ...base, verdict: 'fail', reason: `trace_incomplete — ${broken}` }, events };
   if (failed) return { result: { ...base, verdict: 'fail', reason: `assertion failed: ${failed.expect}` }, events };

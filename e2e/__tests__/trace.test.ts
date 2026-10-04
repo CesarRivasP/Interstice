@@ -108,6 +108,14 @@ describe('integrity', () => {
     expect(integrity([all[1]!, all[2]!])).toContain('expected seq 0');
   });
 
+  // Fails if: a repeated number passes. A line injected into a real launch has
+  // to reuse or skip a number, and a skip is already caught.
+  it('rejects a sequence number that arrived twice', () => {
+    const real = [ev('INTERSTICE.a', 1), ev('INTERSTICE.b', 2)];
+    const forged = { ...real[1]!, line: 'INTERSTICE.player.opened', name: 'player.opened' };
+    expect(integrity([...real, forged])).toContain('arrived twice');
+  });
+
   // Fails if: seqs are pooled across launches. One launch's gap is then filled
   // by the other's number.
   it('counts per launch', () => {

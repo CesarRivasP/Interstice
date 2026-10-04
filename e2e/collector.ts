@@ -62,12 +62,26 @@ export function createCollector(opts: { port: number; fixtureRoot: string }): Pr
    * Binding to loopback is not enough. A page open in a browser on this
    * machine can also reach 127.0.0.1, and with it could inject trace lines —
    * forging the evidence a verdict is computed from — or read the fixtures.
-   * So: no CORS header is ever sent, a request carrying an Origin (which a
-   * browser adds and the app's fetch does not) is refused, and the Host must
-   * be this server's own, which closes DNS rebinding.
+   * So: no CORS header is ever sent, the Host must be this server's own (which
+   * closes DNS rebinding), and anything a browser sent is refused.
+   *
+   * "A browser sent it" is NOT "it carries an Origin": an <img>, a no-cors
+   * fetch or a navigation issues a GET with no Origin at all, and the beacon
+   * is a GET with a side effect. What a browser cannot omit or forge is
+   * Sec-Fetch-Site — a forbidden header name, sent on every request to
+   * loopback. Origin and Referer are refused as well, for browsers too old to
+   * send it. The app's fetch sends none of the three.
+   *
+   * This keeps a web page out. It does not authenticate the device: the
+   * Release package cannot carry a per-run secret, and another process of this
+   * user could always write here. What limits a forged line that does get in
+   * is in the runner and in `integrity` — one launch per scenario, and no
+   * sequence number twice.
    */
   const allowed = (req: IncomingMessage): boolean => {
-    if (req.headers.origin !== undefined) return false;
+    const h = req.headers;
+    if (h.origin !== undefined || h.referer !== undefined) return false;
+    if (Object.keys(h).some((name) => name.startsWith('sec-fetch-'))) return false;
     const host = req.headers.host ?? '';
     return host === `localhost:${opts.port}` || host === `127.0.0.1:${opts.port}`;
   };

@@ -23,7 +23,12 @@ createServer((req, res) => {
   // app's fetch sends no Origin and addresses this host by name; refuse the rest,
   // and never let a malformed request end the process.
   const host = req.headers.host ?? '';
-  if (req.headers.origin !== undefined || (host !== `localhost:${PORT}` && host !== `127.0.0.1:${PORT}`)) {
+  const fromBrowser =
+    req.headers.origin !== undefined ||
+    req.headers.referer !== undefined ||
+    // an <img> or a no-cors fetch sends no Origin; Sec-Fetch-* it cannot omit
+    Object.keys(req.headers).some(name => name.startsWith('sec-fetch-'));
+  if (fromBrowser || (host !== `localhost:${PORT}` && host !== `127.0.0.1:${PORT}`)) {
     res.writeHead(403);
     res.end();
     return;

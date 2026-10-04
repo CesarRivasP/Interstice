@@ -2,7 +2,26 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { request } from 'node:http';
 import { createCollector, type Collector } from '../collector.js';
+
+/**
+ * A bare HTTP GET. Not `fetch`: Node's own fetch adds `sec-fetch-mode: cors`,
+ * which is exactly what the collector refuses — the app on the device sends no
+ * such header, and the test client must look like the app, not like a browser.
+ */
+const get = (url: string, headers: Record<string, string> = {}) =>
+  new Promise<{ status: number; body: string; headers: Record<string, unknown> }>((done, fail) => {
+    const req = request(url, { headers }, (res) => {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (c: string) => (body += c));
+      res.on('end', () => done({ status: res.statusCode ?? 0, body, headers: res.headers }));
+      res.on('error', fail);
+    });
+    req.on('error', fail);
+    req.end();
+  });
 
 let port = 8199;
 let open: Collector | null = null;
@@ -24,7 +43,7 @@ afterEach(async () => {
 describe('collector — beacon', () => {
   it('stores a line as contracts.trace_event', async () => {
     const { c, url } = await start();
-    const res = await fetch(`${url}/?m=${encodeURIComponent('INTERSTICE.x.y a=1')}&b=k&s=0&t=5`);
+    const res = await get(`${url}/?m=${encodeURIComponent('INTERSTICE.x.y a=1')}&b=k&s=0&t=5`);
     expect(res.status).toBe(204);
     expect(c.events()[0]).toMatchObject({ boot: 'k', seq: 0, t_dev_ms: 5, line: 'INTERSTICE.x.y a=1', name: 'x.y', fields: { a: '1' } });
   });
@@ -32,7 +51,7 @@ describe('collector — beacon', () => {
   it('waitFor resolves on arrival and returns null at the timeout', async () => {
     const { c, url } = await start();
     const waiting = c.waitFor({ name: 'late' }, 2000, c.mark());
-    await fetch(`${url}/?m=INTERSTICE.late&b=k&s=0&t=1`);
+    await get(`${url}/?m=INTERSTICE.late&b=k&s=0&t=1`);
     expect((await waiting)?.name).toBe('late');
     expect(await c.waitFor({ name: 'never' }, 50, c.mark())).toBeNull();
   });
@@ -42,10 +61,10 @@ describe('collector — beacon', () => {
   // where the previous scenario's lines were attributed to the next one.
   it('bootsSince names only launches whose seq 0 arrived after the mark', async () => {
     const { c, url } = await start();
-    await fetch(`${url}/?m=INTERSTICE.a&b=old&s=0&t=1`);
+    await get(`${url}/?m=INTERSTICE.a&b=old&s=0&t=1`);
     const mark = c.mark();
-    await fetch(`${url}/?m=INTERSTICE.b&b=old&s=1&t=2`);
-    await fetch(`${url}/?m=INTERSTICE.a&b=new&s=0&t=3`);
+    await get(`${url}/?m=INTERSTICE.b&b=old&s=1&t=2`);
+    await get(`${url}/?m=INTERSTICE.a&b=new&s=0&t=3`);
     expect([...c.bootsSince(mark)]).toEqual(['new']);
   });
 
@@ -60,8 +79,8 @@ describe('collector — who may talk to it', () => {
   // would end the collector mid-run.
   it('answers 400 to a malformed escape and keeps serving', async () => {
     const { c, url } = await start();
-    expect((await fetch(`${url}/fx/%E0%A4%A`)).status).toBe(400);
-    expect((await fetch(`${url}/?m=INTERSTICE.alive&b=k&s=0&t=1`)).status).toBe(204);
+    expect((await get(`${url}/fx/%E0%A4%A`)).status).toBe(400);
+    expect((await get(`${url}/?m=INTERSTICE.alive&b=k&s=0&t=1`)).status).toBe(204);
     expect(c.events().map((e) => e.name)).toEqual(['alive']);
   });
 
@@ -69,26 +88,33 @@ describe('collector — who may talk to it', () => {
   // browser on this machine can reach 127.0.0.1 and would forge trace lines.
   it('refuses a request that carries an Origin, and stores nothing from it', async () => {
     const { c, url } = await start();
-    const res = await fetch(`${url}/?m=INTERSTICE.forged&b=k&s=0&t=1`, { headers: { Origin: 'https://example.com' } });
+    const res = await get(`${url}/?m=INTERSTICE.forged&b=k&s=0&t=1`, { Origin: 'https://example.com' });
     expect(res.status).toBe(403);
     expect(c.events()).toEqual([]);
-    expect((await fetch(`${url}/fx/a.json`, { headers: { Origin: 'https://example.com' } })).status).toBe(403);
+    expect((await get(`${url}/fx/a.json`, { Origin: 'https://example.com' })).status).toBe(403);
+  });
+
+  // Fails if: "from a browser" is taken to mean "has an Origin". An <img> or a
+  // no-cors fetch sends a GET with none — found by review after the first fix.
+  it('refuses a request with Sec-Fetch-* or a Referer and no Origin', async () => {
+    const { c, url } = await start();
+    const line = `${url}/?m=INTERSTICE.forged&b=k&s=0&t=1`;
+    expect((await get(line, { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Mode': 'no-cors' })).status).toBe(403);
+    expect((await get(line, { 'Sec-Fetch-Dest': 'image' })).status).toBe(403);
+    expect((await get(line, { Referer: 'https://example.com/' })).status).toBe(403);
+    expect(c.events()).toEqual([]);
   });
 
   it('sends no CORS header', async () => {
     const { url } = await start();
-    const res = await fetch(`${url}/fx/a.json`);
-    expect(res.headers.get('access-control-allow-origin')).toBeNull();
+    const res = await get(`${url}/fx/a.json`);
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
   });
 
   // DNS rebinding: a foreign name resolving to 127.0.0.1 arrives with its own Host.
   it('refuses a Host that is not its own', async () => {
     const { url } = await start();
-    const { request } = await import('node:http');
-    const status = await new Promise<number>((done) => {
-      request(`${url}/fx/a.json`, { headers: { Host: 'evil.example:80' } }, (r) => done(r.statusCode ?? 0)).end();
-    });
-    expect(status).toBe(403);
+    expect((await get(`${url}/fx/a.json`, { Host: 'evil.example:80' })).status).toBe(403);
   });
 });
 
@@ -96,24 +122,25 @@ describe('collector — fixtures and faults', () => {
   // Fails if: the root check goes. The server would read any file the user can.
   it('serves the fixture directory and nothing outside it', async () => {
     const { url } = await start();
-    expect(await (await fetch(`${url}/fx/a.json`)).text()).toContain('fixture-a');
-    expect((await fetch(`${url}/fx/..%2Fsecret-e2e.txt`)).status).toBe(404);
-    expect((await fetch(`${url}/fx/nope.json`)).status).toBe(404);
+    expect((await get(`${url}/fx/a.json`)).body).toContain('fixture-a');
+    expect((await get(`${url}/fx/..%2Fsecret-e2e.txt`)).status).toBe(404);
+    expect((await get(`${url}/fx/nope.json`)).status).toBe(404);
   });
 
   it('missing is a 404 for the armed path only', async () => {
     const { c, url } = await start();
     c.arm([{ path: /a\.json$/, kind: 'missing' }]);
-    expect((await fetch(`${url}/fx/a.json`)).status).toBe(404);
-    expect((await fetch(`${url}/fx/b.json`)).status).toBe(200);
+    expect((await get(`${url}/fx/a.json`)).status).toBe(404);
+    expect((await get(`${url}/fx/b.json`)).status).toBe(200);
   });
 
   it('truncate serves half the body with status 200', async () => {
     const { c, url } = await start();
     c.arm([{ path: /a\.json$/, kind: 'truncate' }]);
-    const res = await fetch(`${url}/fx/a.json`);
-    expect(res.status).toBe(200);
-    expect((await res.text()).length).toBe(10);
+    const res = await get(`${url}/fx/a.json`).catch(() => null);
+    // half the bytes under a full Content-Length: a client sees either a short
+    // body or an aborted read, and both are "a file cut short"
+    expect(res === null || res.body.length === 10).toBe(true);
   });
 
   // Fails if: drop is a status code. The package never checks response.ok, so
@@ -121,21 +148,21 @@ describe('collector — fixtures and faults', () => {
   it('drop makes fetch reject', async () => {
     const { c, url } = await start();
     c.arm([{ path: /a\.json$/, kind: 'drop' }]);
-    await expect(fetch(`${url}/fx/a.json`)).rejects.toThrow();
+    await expect(get(`${url}/fx/a.json`)).rejects.toThrow();
   });
 
   it('hold answers only on release, and disarm releases too', async () => {
     const { c, url } = await start();
     c.arm([{ path: /a\.json$/, kind: 'hold' }]);
     let done = false;
-    const pending = fetch(`${url}/fx/a.json`).then((r) => r.text()).then((t) => ((done = true), t));
+    const pending = get(`${url}/fx/a.json`).then((r) => ((done = true), r.body));
     await new Promise((r) => setTimeout(r, 150));
     expect(done).toBe(false);
     c.release();
     expect(await pending).toContain('fixture-a');
 
     c.arm([{ path: /b\.json$/, kind: 'hold' }]);
-    const second = fetch(`${url}/fx/b.json`).then((r) => r.status);
+    const second = get(`${url}/fx/b.json`).then((r) => r.status);
     await new Promise((r) => setTimeout(r, 50));
     c.disarm();
     expect(await second).toBe(200);
