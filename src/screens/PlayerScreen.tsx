@@ -79,7 +79,16 @@ export function PlayerScreen({
       },
     });
 
-    const offPosition = media.video.onPosition(ms => scheduler.current?.tick(ms));
+    // At most one line per second. A stall stops positions arriving, so the
+    // line stops too — which is exactly what makes "still playing" assertable.
+    let lastProgress = -Infinity;
+    const offPosition = media.video.onPosition(ms => {
+      scheduler.current?.tick(ms);
+      if (ms - lastProgress >= 1000 || ms < lastProgress) {
+        lastProgress = ms;
+        log(`INTERSTICE.player.progress pos_ms=${Math.round(ms)}`);
+      }
+    });
     // AC6: act on the SETTLED position. A held direction emits a stream of key
     // events, and one resync per event is a resync storm through every seek.
     const offSeek = media.video.onSeek(coalesce(ms => scheduler.current?.resync(ms)));
@@ -193,6 +202,26 @@ export function PlayerScreen({
     });
     return () => sub.remove();
   }, [status, onExit]);
+
+  // What the viewer is told, as it is told. The overlay's spoken sentence is an
+  // accessibilityLabel and reaches no log on its own.
+  useEffect(() => {
+    const shown = overlayFor(status, detail);
+    log(
+      shown
+        ? `INTERSTICE.overlay.shown status=${status} spoken=${shown.spoken}`
+        : 'INTERSTICE.overlay.cleared',
+    );
+  }, [status, detail]);
+
+  // The package logs the KIND it announced; the sentence depends on the rest.
+  useEffect(() => {
+    log(
+      ad.kind === 'ready'
+        ? `INTERSTICE.ad.state kind=ready enabled=${ad.enabled} verbosity=${ad.verbosity} cues=${ad.cues}`
+        : `INTERSTICE.ad.state kind=${ad.kind}`,
+    );
+  }, [ad]);
 
   const onToggle = useCallback(
     (enabled: boolean) => {

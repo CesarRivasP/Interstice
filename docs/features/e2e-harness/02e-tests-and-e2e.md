@@ -16,6 +16,10 @@
 
 ## Changelog
 
+### 2026-10-04 — v4: build R6 — the harness is built and both suites ran on the Virtual Device: ten scenarios pass, one is blocked, and two fail on defects in the app (D8, D9); the report is generated into docs/e2e; fixture audio falls back to the host voice when Polly is unreachable
+
+Built. The code blocks in the implementation halves are the files as they stand after the first device runs, not as first written.
+
 ### 2026-10-04 — v2: review R2 dispositions and owner confirmation — a launch id on the wire, fixtures addressed by collector state not by URL, a 60 s fixture asset so a stall can happen, the device restored to the Release package after a VARIANT run, published paths made relative; status draft -> reviewed
 
 Written for the first time. `AC15` joined the Definition of Done from `review` R2-F7.
@@ -139,9 +143,9 @@ Walk `02` Phase 0.1 to 0.6. **Observation:** `_facts.yml defects[D1]`…`[D5]` e
 **C.3 — Two packages from one tree (`AC7`, `AC15`)** — `02` Phases 4–5
 1. The `build:e2e` script (`C17`), install, launch. **Observation:** `INTERSTICE.app.mode e2e=true host=http://localhost:8099`, and a second title reading `E2E FIXTURE — not a film`.
 2. `⟨commands.build⟩`, install, launch — nothing cleaned in between. **Observation:** `INTERSTICE.app.mode e2e=false host=none`, one title.
-3. `unzip -l build/aarch64-release/interstice_aarch64.vpkg | rg -c "e2e-fixture"` → `0` on the Release package (if `unzip` cannot read a vpkg, list it with whatever `02` Phase 0 found does, and record that command here).
+3. The Release package holds no fixture file. **Open:** a `.vpkg` is Zstandard-compressed, not a zip, and no listing command has been found yet (`_log.md` R5-F5). Until one is, this rests on the design — fixtures are written to `e2e/out/`, which no build reads — and not on an observation.
 
-**C.4 — Capture (`AC3`)** — `02b` Phase 11
+**C.4 — Capture (`AC3`)** — `02b2` Phase 11
 With `E2E_CAPTURE` unset, run the `e2e:release` script. **Observation:** five verdicts and no file under `shots/` — the suite is complete without a pixel. Then with the rung `02` Phase 0.2 chose: the same five verdicts, **identical**, plus the files. A verdict that changes with the capture rung is a defect in the harness.
 
 **C.5 — The RELEASE suite (`AC2`)** — `02b3` Phase 13
@@ -175,7 +179,7 @@ Verbatim from `_facts.yml acceptance[]`, with where each is closed.
 |---|---|---|
 | AC1 | the Phase 0 spike answers D1, D2, D3, D4 and D5 on the Virtual Device, and each answer is in this registry as measured before any Phase 1 code is written | `02` Phase 0, §C.1 |
 | AC2 | one command runs the RELEASE suite against the Release package from a stopped app and exits non-zero if any scenario fails | `02b3` Phase 13, §C.5 |
-| AC3 | every verdict comes from assertions over the trace; no screenshot or clip decides one | `02b` Phase 11, `02b3` Phase 13, §C.4 |
+| AC3 | every verdict comes from assertions over the trace; no screenshot or clip decides one | `02b2` Phase 11, `02b3` Phase 13, §C.4 |
 | AC4 | the selftest shows every scenario can fail: with its decisive line removed from a recorded trace, each one returns fail | `02c` Phase 14, §B.2 |
 | AC5 | a trace with a gap in its sequence numbers yields fail with reason trace_incomplete, never pass | `02` Phase 1, `02b` Phase 7, §B.1, §C.2 |
 | AC6 | a blocked scenario names what blocks it and is never rendered as a pass or left out of the report | `02b3` Phase 13, `02c` Phase 16, §B.2, §C.5, §C.6 |

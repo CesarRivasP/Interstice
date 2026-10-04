@@ -13,6 +13,10 @@
 
 ## Changelog
 
+### 2026-10-04 — v4: build R6 — the harness is built and both suites ran on the Virtual Device: ten scenarios pass, one is blocked, and two fail on defects in the app (D8, D9); the report is generated into docs/e2e; fixture audio falls back to the host voice when Polly is unreachable
+
+Built. The code blocks in the implementation halves are the files as they stand after the first device runs, not as first written.
+
 ### 2026-10-04 — v2: review R2 dispositions and owner confirmation — a launch id on the wire, fixtures addressed by collector state not by URL, a 60 s fixture asset so a stall can happen, the device restored to the Release package after a VARIANT run, published paths made relative; status draft -> reviewed
 
 Written for the first time. Publishing is a copy, because every path in a run record is relative to its run directory.
@@ -96,13 +100,13 @@ function dropOne(events: TraceEvent[], m: Match): TraceEvent[] {
 
 **What changes:** builds everything the VARIANT suite serves, into `e2e/out/fixtures/` (ignored by git): 60 s of the film as segments, three cue clips, three track files. Reuses the pipeline's own `segmentAsset` and `synthesizeCue`, so the fixture's media and audio have the container the device was measured to accept.
 
-**Needs:** `media/tears-of-steel.mp4` (downloaded per `README.md`, never committed), `ffmpeg`, and AWS credentials that can call Polly — three short sentences, once.
+**Needs:** `media/tears-of-steel.mp4` (downloaded per `README.md`, never committed) and `ffmpeg`. Polly speaks the three sentences when AWS credentials are present; otherwise the host's `say` does, into the same container.
 
 **Code:**
 
 ```ts
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { segmentAsset } from '../pipeline/segment.js';
 import { synthesizeCue } from '../pipeline/synthesize.js';
@@ -133,6 +137,31 @@ const durationMs = (file: string): number =>
     ) * 1000,
   );
 
+/**
+ * The fixture's voice. Polly when the credentials are there; otherwise the
+ * host's own `say`, into the SAME container the device was measured to accept
+ * (fragmented mp4, AAC — the MSE path the app set measured). The words
+ * are "Fixture cue N" either way, so nothing a scenario asserts depends on
+ * which one spoke — and a reader with no AWS account can still run the suite.
+ */
+async function speak(text: string, file: string): Promise<'polly' | 'say'> {
+  try {
+    await synthesizeCue(text, file);
+    return 'polly';
+  } catch (err) {
+    console.log(`Polly unavailable (${(err as Error).message.split('\n')[0]}) — using the host voice`);
+    const aiff = `${file}.aiff`;
+    execFileSync('say', ['-o', aiff, text]);
+    execFileSync('ffmpeg', [
+      '-hide_banner', '-loglevel', 'error', '-y', '-i', aiff,
+      '-c:a', 'aac', '-b:a', '96k', '-ar', '44100', '-ac', '2',
+      '-movflags', '+frag_keyframe+empty_moov+default_base_moof', file,
+    ]);
+    rmSync(aiff);
+    return 'say';
+  }
+}
+
 async function main(): Promise<void> {
   mkdirSync(join(OUT, 'cues'), { recursive: true });
 
@@ -160,7 +189,8 @@ async function main(): Promise<void> {
   // 2. the cue audio, and a check that each fits its window with room to spare
   for (const [i, text] of TEXT.entries()) {
     const file = join(OUT, 'cues', `c${i + 1}.m4a`);
-    await synthesizeCue(text, file);
+    const voice = await speak(text, file);
+    console.log(`cue c${i + 1}: ${voice}, ${durationMs(file)} ms`);
     const [start, end] = WINDOWS[i]!;
     const room = end - start - durationMs(file);
     if (room < 1000) throw new Error(`cue c${i + 1} leaves ${room} ms in its window; S10 would fail on the fixture, not on the app`);
@@ -333,7 +363,7 @@ const matrix = criteria
   .map((c) => {
     const behind = allResults.filter((r) => r.covers.includes(c.id));
     return `<tr class="${esc(classOf[c.id] ?? 'unclassified')}"><th>${esc(c.id)}</th><td>${esc(c.item)}</td>
-  <td>${esc(classOf[c.id] ?? 'UNCLASSIFIED')}${partialOf[c.id] ? `<br><small>${esc(partialOf[c.id])}</small>` : ''}</td>
+  <td>${esc((classOf[c.id] ?? 'UNCLASSIFIED').replace(/_/g, ' '))}${partialOf[c.id] ? `<br><small>${esc(partialOf[c.id])}</small>` : ''}</td>
   <td>${behind.map((r) => `<a class="${esc(r.verdict)}" href="#${esc(r.id)}">${esc(r.id)} ${esc(r.verdict)}</a>`).join(' ') || '—'}</td></tr>`;
   })
   .join('\n');
@@ -349,7 +379,7 @@ h1{font-size:28px;margin:0 0 4px}h2{margin:40px 0 12px;font-size:20px}h3{font-si
 .reason{font-weight:600}.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}figure{margin:0}img,video{width:100%;border-radius:4px;display:block}
 .strip{width:100%;height:46px;margin-top:12px}.film{fill:var(--line)}.window{fill:var(--band)}.cue{fill:var(--cue)}
 .tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border-top:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
-code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20px;margin:4px 0}.asserts{list-style:none;padding:0}.cannot{border-top:1px dashed var(--line);padding-top:8px}`;
+a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20px;margin:4px 0}.asserts{list-style:none;padding:0}.cannot{border-top:1px dashed var(--line);padding-top:8px}`;
 
 const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Interstice — verification report</title><style>${css}</style></head><body><main>
@@ -358,7 +388,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta n
 ${runs.map((r) => `<p class="meta"><strong>${esc(r.suite.toUpperCase())}</strong> · ${esc(r.started_at)} · ${esc(r.conditions.target_platform)} · ${esc(r.conditions.build)} · ${esc(r.conditions.content_asset)} · app ${esc(r.app_commit)} · package ${esc(r.package_version)} · capture ${esc(r.capture_rung)} · keys ${esc(r.input_route)} · selftest ${esc(r.selftest.scenarios_that_can_fail)}/${esc(r.selftest.of)} passing scenarios shown able to fail${r.restored_release === null ? '' : ` · Release package restored: ${r.restored_release ? 'yes' : 'NO'}`}</p>`).join('\n')}
 
 <h2>The app's acceptance criteria</h2>
-<p>${esc(criteria.length)} criteria: ${Object.entries(counts).map(([k, v]) => `${esc(v)} ${esc(k.replace('_', ' '))}`).join(' · ')}.
+<p>${esc(criteria.length)} criteria: ${Object.entries(counts).map(([k, v]) => `${esc(v)} ${esc(k.replace(/_/g, ' '))}`).join(' · ')}.
 <strong>RELEASE</strong> results are the submitted binary. <strong>FIXTURE</strong> results ran a test build against a labelled stand-in track that is not the product's and never ships.</p>
 <div class="tablewrap"><table><thead><tr><th>id</th><th>criterion</th><th>class</th><th>evidence</th></tr></thead><tbody>
 ${matrix}

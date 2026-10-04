@@ -32,7 +32,7 @@ tracking:
   issues: []
   pr: null
   milestone: null
-  branch: main
+  branch: e2e-harness
   shipped_in: null
   blocked_by: null
 
@@ -42,6 +42,7 @@ dates:
     - { tag: v1, date: 2026-10-04, note: 'initial decision draft — scope, capture ladder, two suites, fixture track, published report' }
     - { tag: v2, date: 2026-10-04, note: 'review R2 dispositions and owner confirmation — a launch id on the wire, fixtures addressed by collector state not by URL, a 60 s fixture asset so a stall can happen, the device restored to the Release package after a VARIANT run, published paths made relative; status draft -> reviewed' }
     - { tag: v3, date: 2026-10-04, note: 'verify R5 — Phase 0 ran on the Virtual Device: D1, D2, D3 and D5 hold; D4 is dead as written and fixed by keying the Metro cache on the flag (changes C24); the capture rung is grpc, the input route inputd-cli; status reviewed -> implementing' }
+    - { tag: v4, date: 2026-10-04, note: 'build R6 — the harness is built and both suites ran on the Virtual Device: ten scenarios pass, one is blocked, and two fail on defects in the app (D8, D9); the report is generated into docs/e2e; fixture audio falls back to the host voice when Polly is unreachable' }
 
 # =====================================================================
 # DECISIONS
@@ -116,6 +117,10 @@ decisions:
            already has. The fixture is served from the host at run time, is never
            inside any package, never appears in the demo or the submission video, and
            every result that used it is labelled FIXTURE wherever it is shown.
+           THE VOICE IS POLLY WHEN IT ANSWERS AND THE HOST''S OWN `say` WHEN IT DOES
+           NOT (built R6: the AWS session had expired, and a suite that needs a cloud
+           login to say "Fixture cue one" is a suite a judge cannot run). Same
+           container either way.
            THE FIXTURE ASSET IS ITS OWN MEDIA TOO (review R2-F5): the first
            limits.fixture.duration_s seconds of the film, cut and segmented on the host
            by the pipeline the app set already has, and served like the track. The
@@ -250,7 +255,9 @@ limits:
       falsified_by: 'the console refusing `grpc <port>` on this machine, or getScreenshot
                      returning an empty or unchanged frame after a key press — defects D1'
     wrapper_license: 'MIT — read from its LICENSE on 2026-10-04, at commit a9ea5d5f9853806c65d2a4c9ad4dc71c632b8d8b, version 0.2.2'
-    wrapper_license_note: 'pinned to that commit. Its package name is
+    wrapper_license_note: 'installed as an exact devDependency, @fortemate/vega-vvd-driver 0.2.2,
+             with --ignore-scripts; the source read was that of commit a9ea5d5, whose
+             package.json carries the same version. Its package name is
              @fortemate/vega-vvd-driver. Before running it the source was read for what it
              reaches: the emulator console and gRPC endpoint on 127.0.0.1, and ffmpeg as a
              child process. Nothing else. Installed with --ignore-scripts.'
@@ -451,58 +458,60 @@ limits:
 
 # Scope is TWO disjoint lists.
 changes:
-  - { id: C1, file: e2e/run.ts, kind: planned, where: repo,
+  - { id: C1, built_on: 2026-10-04, file: e2e/run.ts, kind: planned, where: repo,
       change: 'the runner and its CLI: preflight, per scenario clean start -> steps -> collect -> verdict, writes contracts.run_record, exits non-zero on any fail. Proves the round trip to the collector with a canary launch before the first scenario, and REINSTALLS THE RELEASE PACKAGE when a VARIANT suite ends, pass or fail' }
-  - { id: C2, file: e2e/device.ts, kind: planned, where: repo,
+  - { id: C2, built_on: 2026-10-04, file: e2e/device.ts, kind: planned, where: repo,
       change: 'the Vega CLI behind one module: virtual device status, install, launch, terminate, port forwarding. Every command comes from _profile.yml' }
-  - { id: C3, file: e2e/input.ts, kind: planned, where: repo,
+  - { id: C3, built_on: 2026-10-04, file: e2e/input.ts, kind: planned, where: repo,
       change: 'remote keys by name, with a hold; inputd-cli first, the gRPC fallback second (limits.input)' }
-  - { id: C4, file: e2e/capture.ts, kind: planned, where: repo,
+  - { id: C4, built_on: 2026-10-04, file: e2e/capture.ts, kind: planned, where: repo,
       change: 'the capture seam of decisions.capture_ladder: screenshot, start/stop clip, and a null implementation',
       depends_on: [decisions.capture_ladder], reviewed_on: 2026-10-04 }
-  - { id: C5, file: e2e/collector.ts, kind: planned, where: repo,
+  - { id: C5, built_on: 2026-10-04, file: e2e/collector.ts, kind: planned, where: repo,
       change: 'the host server: receives beacon lines into contracts.trace_event, serves endpoints.fixtures according to the scenario the runner last armed, with its scripted faults, and detects seq gaps per launch',
       depends_on: [decisions.host_served_fixtures], reviewed_on: 2026-10-04 }
-  - { id: C6, file: e2e/trace.ts, kind: planned, where: repo,
+  - { id: C6, built_on: 2026-10-04, file: e2e/trace.ts, kind: planned, where: repo,
       change: 'line parser and the assertion vocabulary: seen, order, count, within, in_window, absent — `absent` refuses to run without naming the emitter it is absent from, and in_window places an event on the playhead by interpolating between player.progress lines' }
-  - { id: C7, file: e2e/scenarios, kind: planned, where: repo,
+  - { id: C7, built_on: 2026-10-04, file: e2e/scenarios, kind: planned, where: repo,
       change: 'one file per entry of limits.suite.scenarios: use case, steps, assertions, the app criteria covered by id' }
-  - { id: C8, file: e2e/fixtures.ts, kind: planned, where: repo,
+  - { id: C8, built_on: 2026-10-04, file: e2e/fixtures.ts, kind: planned, where: repo,
       change: 'builds the fixture track and its cue audio for asset id e2e-fixture at three verbosity levels',
       depends_on: [decisions.fixture_track], reviewed_on: 2026-10-04 }
-  - { id: C9, file: e2e/report, kind: planned, where: repo,
+  - { id: C9, built_on: 2026-10-04, file: e2e/report, kind: planned, where: repo,
       change: 'run record -> static HTML: use-case gallery, coverage matrix read from the app registry, spoken transcript, timeline strip, run conditions, what this cannot show',
       depends_on: [decisions.report_static_pages, decisions.ac_text_read_not_copied], reviewed_on: 2026-10-04 }
-  - { id: C10, file: e2e/selftest.ts, kind: planned, where: repo,
+  - { id: C10, built_on: 2026-10-04, file: e2e/selftest.ts, kind: planned, where: repo,
       change: 'the harness proving it can fail: every scenario evaluated against its own recorded passing trace with the decisive line removed must come back fail. The recorded traces are committed under e2e/__tests__/traces/ from the first green run' }
-  - { id: C11, file: docs/e2e, kind: planned, where: repo,
+  - { id: C11, built_on: 2026-10-04, file: docs/e2e, kind: planned, where: repo,
       change: 'the published report — generated, committed by `npm run e2e:publish`, never edited by hand. Holds the pages plus run/<suite>/: the run record, its traces and its captures. With it, an empty docs/.nojekyll so Pages serves the folder as it is' }
-  - { id: C12, file: src/diagnostics.ts, kind: planned, where: repo,
+  - { id: C12, built_on: 2026-10-04, file: src/diagnostics.ts, kind: planned, where: repo,
       change: 'each line gains a launch id, a sequence number and a device clock reading (contracts.beacon_query). Owned by the app set as its C22; changed here, registered there' }
   - { id: C13, file: src/e2e.ts, kind: planned, where: repo,
       change: 'new: the build-time flag resolved to contracts.e2e_config or null. The only place the flag is read',
       depends_on: [decisions.two_suites], reviewed_on: 2026-10-04, built_on: 2026-10-04 }
   - { id: C14, file: src/App.tsx, kind: planned, where: repo,
       change: 'when C13 yields a config: the fixture title joins the list under limits.fixture.title_label and its asset, track directory and cue audio resolve to the host. Emits INTERSTICE.app.mode at module load in BOTH builds. Unchanged otherwise', built_on: 2026-10-04 }
-  - { id: C15, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo,
+  - { id: C15, built_on: 2026-10-04, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo,
       change: 'the three emitters of limits.trace.new_lines that live in the screen: a throttled player.progress, overlay.shown / overlay.cleared carrying what is spoken, and ad.state carrying the description state in full' }
-  - { id: C16, file: tools/beacon-server.mjs, kind: planned, where: repo,
+  - { id: C16, built_on: 2026-10-04, file: tools/beacon-server.mjs, kind: planned, where: repo,
       change: 'prints seq and device time; stays the zero-dependency reader for manual runs' }
-  - { id: C17, file: package.json, kind: planned, where: repo,
+  - { id: C17, built_on: 2026-10-04, file: package.json, kind: planned, where: repo,
       change: 'scripts: e2e, e2e:release, e2e:variant, e2e:report, e2e:publish, e2e:selftest, build:e2e' }
-  - { id: C18, file: vitest.config.ts, kind: planned, where: repo,
+  - { id: C18, built_on: 2026-10-04, file: vitest.config.ts, kind: planned, where: repo,
       change: 'include e2e/__tests__ so the parser, the assertions and the selftest run under `npm test`' }
-  - { id: C19, file: .gitignore, kind: planned, where: repo,
+  - { id: C19, built_on: 2026-10-04, file: .gitignore, kind: planned, where: repo,
       change: 'ignore e2e/out/' }
   - { id: C20, file: README.md, kind: planned, where: repo,
       change: 'a Verification section: the report link, the one command, and what a judge needs installed to re-run it' }
-  - { id: C21, file: FRICTION-LOG.md, kind: planned, where: repo,
+  - { id: C21, built_on: 2026-10-04, file: FRICTION-LOG.md, kind: planned, where: repo,
       change: 'dated entries for what building this met on the platform: no screenshot command, key injection, anything Phase 0 turns up' }
   - { id: C22, file: 'GitHub Pages: main branch, /docs folder', kind: planned, where: external,
       change: 'the repository setting that serves docs/e2e/. Changed by the owner by hand' }
   - { id: C23, file: babel.config.js, kind: planned, where: repo,
       change: 'a ten-line inline plugin that replaces the identifier __INTERSTICE_E2E__ with the value of the INTERSTICE_E2E environment variable, or the empty string. The mechanism behind decisions.two_suites, and what defects D4 tests',
       depends_on: [decisions.two_suites], reviewed_on: 2026-10-04, built_on: 2026-10-04 }
+  - { id: C25, file: e2e/spoken.ts, kind: planned, where: repo, built_on: 2026-10-04,
+      change: 'what the app said, in order, from the trace: overlay sentences as emitted, description-state sentences produced by the package''s own stateMessage' }
   - { id: C24, file: metro.config.js, kind: planned, where: repo, built_on: 2026-10-04,
       change: 'cacheVersion carries the value of INTERSTICE_E2E, so a Release build can never be served a transform compiled for the flagged one. Without it defects D4 fails in the dangerous direction',
       depends_on: [decisions.two_suites], reviewed_on: 2026-10-04 }
@@ -615,7 +624,7 @@ defects:
     falsified_by: 'INTERSTICE.loader.miss for a fixture path the server logged as served, or INTERSTICE.buffer.failed on a host-served segment'
     log_line: 'INTERSTICE.loader.miss path=<path> — the package TrackLoader; INTERSTICE.buffer.appended <label> bytes=<n> — the package SegmentBuffer'
     status: fixed
-    outcome: 'holds for the track path and for media segments. Cue audio from the host is not yet exercised — no fixture track existed in this run — and is the first thing the VARIANT suite will show.'
+    outcome: 'holds for the track path, media segments and — seen in the first VARIANT run — cue audio: three host-served clips played, each inside its window (S10).'
     note: 'half of this is already measured by the app set: on 2026-09-22 device
            JavaScript fetched a 200 from the host over reverse forwarding
            (`docs/features/interstice/_facts.yml` limits.vega_media.media_process_is_separate).
@@ -641,6 +650,36 @@ defects:
            a device. Found while deriving scenarios from the code; reported to the owner
            with this set.'
     outcome: 'S17 is rendered blocked, naming this entry, until the app gains a seek control.'
+
+  - id: D8
+    role: symptom
+    claim: 'After BACK, the same title cannot be opened again: the second open never
+            completes and the screen stays in loading, with no error.'
+    basis: measured
+    evidence: { how: device, date: 2026-10-04, n: 5,
+                spread: 'five of five: once by hand in Phase 0, four times as S04',
+                cmd: 'the e2e:release script, scenario S04 — ENTER, wait for player.progress, BACK, ENTER',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'clip: 20 s of Tears of Steel, 4 segments' },
+                value: 'second launch of the title: app.play, loader.miss, scheduler.load, "player.surface created handle=2" twice — then nothing for 20 s. No buffer.appended, no player.opened, no player.error. The first open in the same launch is normal.' }
+    log_line: 'INTERSTICE.player.opened segments=<n> init=<yes|none> — the package vega adapter, at the end of open()'
+    status: open
+    owned_by: 'docs/features/interstice/ and the package it consumes — one adapter instance is created at module scope in src/App.tsx and reused after destroy()'
+    note_ownership: 'found by S04 on its first run and never seen by hand because no manual procedure plays a title twice. It is why S04 is FAIL in the published report, and it stays FAIL until the app is fixed: a harness that passed it would be wrong.'
+    outcome: 'S04 fails, naming the assertion. AC2 of the app — BACK has a stated destination — holds; "and the viewer can start over" does not.'
+
+  - id: D9
+    role: symptom
+    claim: 'A track file that is not valid JSON is reported as MISSING, not as unreadable.'
+    basis: measured
+    evidence: { how: device, date: 2026-10-04, n: 2, spread: 'both runs the same',
+                cmd: 'the e2e:variant script, scenario S13 — the standard track served cut in half',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'e2e-fixture: first 60 s of Tears of Steel, host-served' },
+                value: 'INTERSTICE.loader.miss path=http://localhost:8099/fx/e2e-fixture.standard.track.json, then ad.state kind=missing. No loader.load, no kind=malformed.' }
+    log_line: 'INTERSTICE.loader.load path=<path> ok=false reason=malformed — the package TrackLoader; it is never reached, because readJson throws first'
+    status: open
+    owned_by: 'docs/features/interstice/ — readJson in src/App.tsx throws on a parse failure exactly as it does on a 404, and the loader treats every throw as absence'
+    note_ownership: 'the app''s own manual step C.6 expects "a DIFFERENT stated message" for a truncated file. The malformed branch is reachable only by valid JSON of the wrong shape.'
+    outcome: 'S13 fails. The viewer is told there is no track when there is one that could not be read.'
 
   - id: D7
     role: contributing
@@ -702,13 +741,15 @@ alternatives:
     basis: decided
 
 worst_case:
-  basis: asserted
-  falsified_by: 'the first full run of both suites'
-  release_suite_wall_clock: null
-  published_report_size: null
-  note: 'neither has been run. Bounded in advance by limits.timing.scenario_timeout_ms per
-         scenario and limits.report.max_total_mb for the report; the measured values
-         replace these nulls after Phase 1.'
+  basis: measured
+  evidence: { how: device, date: 2026-10-04, n: 1, spread: 'single published run per suite',
+              cmd: 'the e2e:release and e2e:variant scripts with --no-build; du -sk docs/e2e',
+              conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'clip: 20 s of Tears of Steel, 4 segments' },
+              value: 'RELEASE: 88.9 s of scenario time for five scenarios. VARIANT: 181.7 s for seven run and one blocked. docs/e2e: 2412 KB with ten screenshots and one 12 s clip.' }
+  release_suite_wall_clock: '88.9 s of scenario time, plus about 20 s per package build'
+  published_report_size: '2.4 MB'
+  note: 'the longest scenario is S15 at 45 s, half of limits.timing.scenario_timeout_ms.
+         The report is a tenth of limits.report.max_total_mb.'
 
 # =====================================================================
 # CONTRACTS
@@ -780,29 +821,35 @@ env_vars: [INTERSTICE_E2E, BEACON_PORT, E2E_CAPTURE]
 tests_baseline:
   basis: measured
   evidence: { how: shell, cmd: 'npm test', date: 2026-10-04, n: 1, exit_code: 0,
-              value: 'jest: Tests 24 passed, 24 total · vitest: Test Files 10 passed (10), Tests 70 passed (70)',
-              note: 'the repository as it stands, before this set adds anything.
-                     `_profile.yml` commands.tests_expect still reads "63 passed, 63
-                     total", which was the jest count before 2026-09-27; exit 0 is the
-                     pass signal the profile itself names as authoritative. Reported to
-                     the owner rather than edited from this set.' }
+              value: 'jest: Tests 24 passed, 24 total · vitest: Test Files 15 passed (15), Tests 116 passed (116)',
+              note: 'before this set: jest 24, vitest 10 files and 70 tests. This set adds
+                     five files and 46 tests under e2e/__tests__ — trace, collector,
+                     scenarios, selftest, report. `_profile.yml` commands.tests_expect was
+                     re-measured the same day and now reads "24 passed, 24 total", the
+                     jest line; exit 0 remains the authoritative signal.
+                     e2e/__tests__/fixtures.test.ts, named in 02e §B.2, is NOT written.' }
 
 acceptance:
   - { id: AC1, item: 'the Phase 0 spike answers D1, D2, D3, D4 and D5 on the Virtual Device, and each answer is in this registry as measured before any Phase 1 code is written', status: approved, verified_on: 2026-10-04,
       evidence: 'defects D1..D5 each carry basis: measured with n, conditions and the decisive lines. Four hold; D4 was dead as written and holds with changes C24. Three files of Phases 4-5 (babel.config.js, src/e2e.ts, the flag half of src/App.tsx) were written DURING the spike because D4 and D5 cannot be asked without them; no file under e2e/ exists yet.' }
-  - { id: AC2, item: 'one command runs the RELEASE suite against the Release package from a stopped app and exits non-zero if any scenario fails', status: written }
+  - { id: AC2, item: 'one command runs the RELEASE suite against the Release package from a stopped app and exits non-zero if any scenario fails', status: approved, verified_on: 2026-10-04,
+      evidence: 'npm run e2e:release: five verdicts, S04 FAIL on defects D8, exit code 1. Four runs.' }
   - { id: AC3, item: 'every verdict comes from assertions over the trace; no screenshot or clip decides one', status: written }
-  - { id: AC4, item: 'the selftest shows every scenario can fail: with its decisive line removed from a recorded trace, each one returns fail', status: written }
+  - { id: AC4, item: 'the selftest shows every scenario can fail: with its decisive line removed from a recorded trace, each one returns fail', status: approved, verified_on: 2026-10-04,
+      evidence: 'run records: selftest 4 of 4 (RELEASE) and 6 of 6 (VARIANT) passing scenarios shown able to fail; e2e/__tests__/selftest.test.ts over ten recorded traces.' }
   - { id: AC5, item: 'a trace with a gap in its sequence numbers yields fail with reason trace_incomplete, never pass', status: written }
-  - { id: AC6, item: 'a blocked scenario names what blocks it and is never rendered as a pass or left out of the report', status: written }
+  - { id: AC6, item: 'a blocked scenario names what blocks it and is never rendered as a pass or left out of the report', status: executed, verified_on: 2026-10-04,
+      evidence: 'S17 is BLOCKED naming D6 in the run record and in the report. The other blocked path — no line from the device — has not been exercised on the device (02e §C.5 step 3).' }
   - { id: AC7, item: 'every result that used the fixture track is labelled FIXTURE wherever it appears, and no fixture file is inside the Release package', status: written }
   - { id: AC8, item: 'the report shows, per scenario: the use case in a sentence, the steps taken, what was captured, what the app spoke, the decisive trace lines, the app criteria covered, the verdict and the run conditions', status: written }
   - { id: AC9, item: 'the report carries a coverage matrix with one row per criterion of the app, its text read from the app registry at build time, its class, and the scenarios behind it; no criterion is missing', status: written }
   - { id: AC10, item: 'the report states what it cannot show — audible ducking, VoiceView, the memory bound on hardware, cue placement against dialogue — on the same page as what it does', status: written }
-  - { id: AC11, item: 'the report rebuilds from its committed run record with no device attached', status: written }
+  - { id: AC11, item: 'the report rebuilds from its committed run record with no device attached', status: approved, verified_on: 2026-10-04,
+      evidence: 'e2e/__tests__/report.test.ts builds it from a run record in a temp directory; npm run e2e:report rebuilds docs/e2e/index.html from docs/e2e/run/.' }
   - { id: AC12, item: 'the published report is within limits.report.max_total_mb, carries limits.report.attribution on every page showing the film, and is linked from README.md', status: written }
   - { id: AC13, item: 'a timeline strip per cue scenario shows windows, cue starts and ends, and the duck and restore instants, drawn from the trace', status: written }
-  - { id: AC15, item: 'when a VARIANT suite ends, pass or fail, the device holds the Release package again, and the next launch emits INTERSTICE.app.mode e2e=false', status: written }
+  - { id: AC15, item: 'when a VARIANT suite ends, pass or fail, the device holds the Release package again, and the next launch emits INTERSTICE.app.mode e2e=false', status: approved, verified_on: 2026-10-04,
+      evidence: 'restored_release: true in both VARIANT runs, each of which ended with a failing scenario; the RELEASE run made afterwards asserted app.mode e2e=false in S01.' }
   - { id: AC14, item: 'FRICTION-LOG.md gains a dated entry for each platform obstacle met while building this, written the day it is met', status: written }
 
 docs:
@@ -810,9 +857,9 @@ docs:
   - { id: "02", file: 02-implementation.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,
       note: 'preamble (governs 02b and 02e too) + Phases 0-6: the spike gate and the app-side changes' }
   - { id: 02b, file: 02b-harness.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,
-      note: 'Phases 7-11: trace, collector, device, input, capture' }
+      note: 'Phases 7-10: trace, collector, device, input' }
   - { id: 02b2, file: 02b2-scenarios.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,
-      note: 'Phase 12: the scenarios' }
+      note: 'Phases 11-12: capture, the scenarios' }
   - { id: 02b3, file: 02b3-runner.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,
       note: 'Phase 13: the runner' }
   - { id: 02c, file: 02c-report-and-delivery.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,

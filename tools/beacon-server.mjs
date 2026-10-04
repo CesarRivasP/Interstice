@@ -23,7 +23,9 @@ createServer((req, res) => {
   const msg = url.searchParams.get('m');
   if (msg) {
     const ts = new Date().toISOString().slice(11, 23);
-    console.log(`${ts}  ${msg}`);
+    const boot = url.searchParams.get('b') ?? '------';
+    const seq = (url.searchParams.get('s') ?? '').padStart(4, ' ');
+    console.log(`${ts}  ${boot} ${seq}  ${msg}`);
   }
   res.writeHead(204, { 'Access-Control-Allow-Origin': '*' });
   res.end();

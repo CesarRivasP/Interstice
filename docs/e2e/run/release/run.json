@@ -1,0 +1,422 @@
+{
+  "run_id": "2026-10-04T16-41-25-178Z-release",
+  "started_at": "2026-10-04T16:42:58.985Z",
+  "suite": "release",
+  "conditions": {
+    "target_platform": "Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480)",
+    "build": "Release aarch64, SDK 0.24.12112",
+    "content_asset": "clip: 20 s of Tears of Steel, 4 segments, packaged"
+  },
+  "app_commit": "5025830",
+  "package_version": "0.1.0",
+  "capture_rung": "grpc",
+  "input_route": "inputd-cli",
+  "selftest": {
+    "ran": true,
+    "scenarios_that_can_fail": 4,
+    "of": 4
+  },
+  "restored_release": null,
+  "results": [
+    {
+      "id": "S01",
+      "name": "launch-and-list",
+      "suite": "release",
+      "use_case": "The viewer opens the app and lands on the title list with a title focused.",
+      "covers": [
+        "AC1",
+        "AC2"
+      ],
+      "fixture": false,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2094,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 2554,
+          "action": "shot",
+          "detail": "The title list on launch"
+        },
+        {
+          "at_ms": 3814,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 3814,
+          "action": "wait",
+          "detail": "app.play"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "seen",
+          "expect": "app.mode e2e=false",
+          "ok": true,
+          "matched_seq": 3
+        },
+        {
+          "kind": "seen",
+          "expect": "asset.segments n=(checked) init=set",
+          "ok": true,
+          "matched_seq": 0
+        },
+        {
+          "kind": "seen",
+          "expect": "app.play id=tears-of-steel",
+          "ok": true,
+          "matched_seq": 4
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "The video paused while it loads more. Press back to return to the list."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S01-0.jpg",
+          "at_seq": 0,
+          "caption": "The title list on launch"
+        }
+      ],
+      "trace_path": "traces/S01.jsonl",
+      "duration_ms": 5037
+    },
+    {
+      "id": "S02",
+      "name": "play-to-end",
+      "suite": "release",
+      "use_case": "The viewer plays the demo clip from start to finish.",
+      "covers": [
+        "AC1"
+      ],
+      "fixture": false,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2125,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 3414,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 3414,
+          "action": "wait",
+          "detail": "player.play"
+        },
+        {
+          "at_ms": 4423,
+          "action": "shot",
+          "detail": "The film playing"
+        },
+        {
+          "at_ms": 22964,
+          "action": "wait",
+          "detail": "player.progress"
+        },
+        {
+          "at_ms": 23718,
+          "action": "wait",
+          "detail": "buffer.evicted"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "order",
+          "expect": "buffer.complete → player.opened → player.play → player.progress",
+          "ok": true,
+          "matched_seq": 25
+        },
+        {
+          "kind": "count",
+          "expect": "buffer.appended _=/^seg/ ×4 (saw 4)",
+          "ok": true,
+          "matched_seq": 17
+        },
+        {
+          "kind": "seen",
+          "expect": "player.progress pos_ms=(checked)",
+          "ok": true,
+          "matched_seq": 50
+        },
+        {
+          "kind": "count",
+          "expect": "buffer.evicted ×1 (saw 1)",
+          "ok": true,
+          "matched_seq": 51
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "The video paused while it loads more. Press back to return to the list."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S02-0.jpg",
+          "at_seq": 22,
+          "caption": "The film playing"
+        }
+      ],
+      "trace_path": "traces/S02.jsonl",
+      "duration_ms": 24985,
+      "cannot_show": "The full film: this is the 20 s clip."
+    },
+    {
+      "id": "S03",
+      "name": "probe-cue-ducks",
+      "suite": "release",
+      "use_case": "A description cue speaks over the film and the film comes back to full.",
+      "covers": [
+        "AC5"
+      ],
+      "fixture": false,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2184,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 3512,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 5241,
+          "action": "wait",
+          "detail": "audio.duck"
+        },
+        {
+          "at_ms": 5691,
+          "action": "shot",
+          "detail": "During the cue"
+        },
+        {
+          "at_ms": 8100,
+          "action": "wait",
+          "detail": "audio.restored"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "order",
+          "expect": "cue.fire → audio.duck id=probe to_pct=25 → player.progress → cue.audio state=ended → audio.restored id=probe",
+          "ok": true,
+          "matched_seq": 32
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "The video paused while it loads more. Press back to return to the list."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S03-0.jpg",
+          "at_seq": 24,
+          "caption": "During the cue"
+        },
+        {
+          "kind": "clip",
+          "path": "clips/S03.mp4",
+          "at_seq": null,
+          "caption": "The cue, with the film ducked under it"
+        }
+      ],
+      "trace_path": "traces/S03.jsonl",
+      "duration_ms": 17643,
+      "cannot_show": "That a listener heard the film get quieter. The volume property was set to 25% and restored; audible ducking closes on hardware."
+    },
+    {
+      "id": "S04",
+      "name": "back-returns-to-list",
+      "suite": "release",
+      "use_case": "The viewer presses BACK during playback and is on the list again, able to start over.",
+      "covers": [
+        "AC2"
+      ],
+      "fixture": false,
+      "verdict": "fail",
+      "reason": "assertion failed: player.opened ×2 (saw 1)",
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2116,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 3366,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 4349,
+          "action": "wait",
+          "detail": "player.progress"
+        },
+        {
+          "at_ms": 5718,
+          "action": "keys",
+          "detail": "BACK"
+        },
+        {
+          "at_ms": 5718,
+          "action": "wait",
+          "detail": "player.back"
+        },
+        {
+          "at_ms": 6395,
+          "action": "shot",
+          "detail": "Back on the list"
+        },
+        {
+          "at_ms": 7702,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 27703,
+          "action": "wait",
+          "detail": "player.opened — NOT SEEN"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "seen",
+          "expect": "player.back from=playing",
+          "ok": true,
+          "matched_seq": 29
+        },
+        {
+          "kind": "count",
+          "expect": "app.play id=tears-of-steel ×2 (saw 2)",
+          "ok": true,
+          "matched_seq": 35
+        },
+        {
+          "kind": "count",
+          "expect": "player.opened ×2 (saw 1)",
+          "ok": false,
+          "matched_seq": 19
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "The video paused while it loads more. Press back to return to the list.",
+        "Loading title",
+        "No description track was found for this title. Playback continues without description."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S04-0.jpg",
+          "at_seq": 34,
+          "caption": "Back on the list"
+        }
+      ],
+      "trace_path": "traces/S04.jsonl",
+      "duration_ms": 29096
+    },
+    {
+      "id": "S05",
+      "name": "no-track-is-stated",
+      "suite": "release",
+      "use_case": "The title has no description track; the app says so and the film plays anyway.",
+      "covers": [
+        "AC8"
+      ],
+      "fixture": false,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2135,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 3533,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 3533,
+          "action": "wait",
+          "detail": "controls.announce"
+        },
+        {
+          "at_ms": 5698,
+          "action": "wait",
+          "detail": "player.progress"
+        },
+        {
+          "at_ms": 6781,
+          "action": "shot",
+          "detail": "The missing-track state, on screen"
+        },
+        {
+          "at_ms": 10970,
+          "action": "wait",
+          "detail": "player.progress"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "seen",
+          "expect": "controls.announce kind=missing",
+          "ok": true,
+          "matched_seq": 5
+        },
+        {
+          "kind": "order",
+          "expect": "loader.miss → player.progress → player.progress",
+          "ok": true,
+          "matched_seq": 30
+        },
+        {
+          "kind": "absent",
+          "expect": "no player.stalled between player.progress and player.progress pos_ms=(checked) [emitter: src/screens/PlayerScreen.tsx onStalled -> player.stalled]",
+          "ok": true,
+          "matched_seq": 37
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "The video paused while it loads more. Press back to return to the list."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S05-0.jpg",
+          "at_seq": 26,
+          "caption": "The missing-track state, on screen"
+        }
+      ],
+      "trace_path": "traces/S05.jsonl",
+      "duration_ms": 12170
+    }
+  ]
+}

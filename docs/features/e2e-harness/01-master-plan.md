@@ -8,8 +8,8 @@
 - **External owner:** nobody with an ask. The reader outside the build is the hackathon judging panel, who receive the published report and owe nothing in return
 - **Related documents:**
   - `02-implementation.md` — preamble (governs every half) + Phases 0–6: the spike gate and the app-side changes
-  - `02b-harness.md` — Phases 7–11: trace, collector, device, input, capture
-  - `02b2-scenarios.md` — Phase 12: the scenarios
+  - `02b-harness.md` — Phases 7–10: trace, collector, device, input
+  - `02b2-scenarios.md` — Phases 11–12: capture, the scenarios
   - `02b3-runner.md` — Phase 13: the runner
   - `02c-report-and-delivery.md` — Phases 14–18: selftest, fixtures, report, publication, friction log
   - `02e-tests-and-e2e.md` — test plan, manual E2E and Definition of Done
@@ -22,6 +22,14 @@
 ---
 
 ## Changelog
+
+### 2026-10-04 — v4: build R6 — the harness is built and both suites ran on the Virtual Device: ten scenarios pass, one is blocked, and two fail on defects in the app (D8, D9); the report is generated into docs/e2e; fixture audio falls back to the host voice when Polly is unreachable
+
+Everything through the report is built, and both suites have run. **RELEASE**: `S01`, `S02`, `S03`, `S05` pass; `S04` fails. **VARIANT**: `S10`, `S11`, `S12`, `S14`, `S15`, `S16` pass; `S13` fails; `S17` is blocked. The device held the Release package again after each VARIANT run.
+
+The two failures are the app's, not the harness's, and both were invisible to every manual procedure: after BACK the same title cannot be opened a second time (`D8` — no step ever played a title twice), and a corrupt track file is announced as *missing* rather than unreadable (`D9`). `S15` is the first time a mid-film stall and its recovery have been seen on a device at all.
+
+The first runs also found four defects in the harness as specified, each now a test: a parser that rejected a digit in a key, lines of a terminated app attributed to the next scenario, waits satisfied by an earlier occurrence of the same line, and an assertion that the film never stalls on a platform where every playback starts with one.
 
 ### 2026-10-04 — v3: verify R5 — Phase 0 ran on the Virtual Device: D1, D2, D3 and D5 hold; D4 is dead as written and fixed by keying the Metro cache on the flag (changes C24); the capture rung is grpc, the input route inputd-cli; status reviewed -> implementing
 
@@ -143,6 +151,7 @@ Each of the five judging criteria gets something it can check:
 | `C21` | `FRICTION-LOG.md` | dated entries for what building this met |
 | `C22` | GitHub Pages: main branch, /docs folder | the setting that serves the report; changed by the owner by hand |
 | `C23` | `babel.config.js` | an inline plugin that turns the build flag into a constant in the bundle |
+| `C25` | `e2e/spoken.ts` | what the app said, in order, read from the trace |
 | `C24` | `metro.config.js` | the flag is part of the transform cache version, so a Release build is never served a flagged transform |
 
 **The scenarios** (`limits.suite`). `covers` names criteria of `docs/features/interstice/_facts.yml` acceptance[].

@@ -1,6 +1,6 @@
 # Implementation (2 of 5) — E2E harness — the harness on the host
 
-> Complements `01-master-plan.md`. Phases 7–11. Continues from `02-implementation.md` (preamble, Phases 0–6) and continues in `02b2-scenarios.md` (Phase 12).
+> Complements `01-master-plan.md`. Phases 7–10. Continues from `02-implementation.md` (preamble, Phases 0–6) and continues in `02b2-scenarios.md` (Phases 11–12).
 
 - **Date:** 2026-10-04
 - **Branch:** `main`
@@ -14,6 +14,10 @@
 ---
 
 ## Changelog
+
+### 2026-10-04 — v4: build R6 — the harness is built and both suites ran on the Virtual Device: ten scenarios pass, one is blocked, and two fail on defects in the app (D8, D9); the report is generated into docs/e2e; fixture audio falls back to the host voice when Polly is unreachable
+
+Built. The code blocks in the implementation halves are the files as they stand after the first device runs, not as first written.
 
 ### 2026-10-04 — v2: review R2 dispositions and owner confirmation — a launch id on the wire, fixtures addressed by collector state not by URL, a 60 s fixture asset so a stall can happen, the device restored to the Release package after a VARIANT run, published paths made relative; status draft -> reviewed
 
@@ -56,7 +60,7 @@ export function parseLine(line: string): Pick<TraceEvent, 'name' | 'fields'> {
   let last: string | null = null;
   for (const token of tokens) {
     const eq = token.indexOf('=');
-    if (eq > 0 && /^[a-z_]+$/.test(token.slice(0, eq))) {
+    if (eq > 0 && /^[a-z][a-z0-9_]*$/.test(token.slice(0, eq))) {
       last = token.slice(0, eq);
       fields[last] = token.slice(eq + 1);
     } else if (last) {
@@ -114,7 +118,7 @@ export interface AssertionResult {
 const show = (m: Match): string =>
   m.name +
   Object.entries(m.where ?? {})
-    .map(([k, v]) => ` ${k}=${typeof v === 'function' ? '<fn>' : String(v)}`)
+    .map(([k, v]) => ` ${k}=${typeof v === 'function' ? '(checked)' : String(v)}`)
     .join('');
 
 const first = (events: TraceEvent[], m: Match, from = 0): number => {
@@ -256,7 +260,15 @@ export interface Collector {
   events(): TraceEvent[];
   /** how many events exist now — a scenario's slice starts here */
   mark(): number;
+  /**
+   * launch ids that STARTED since a mark: those whose seq 0 arrived after it.
+   * Not "every id seen since": a terminated app keeps emitting for a second or
+   * two, and its late lines arrive after the next scenario's mark.
+   */
+  bootsSince(from: number): Set<string>;
   waitFor(m: Match, timeoutMs: number, from: number): Promise<TraceEvent | null>;
+  /** the arrival index just past an event `waitFor` returned */
+  after(e: TraceEvent): number;
   arm(faults: Fault[]): void;
   disarm(): void;
   /** answer every held request */
@@ -320,6 +332,8 @@ export function createCollector(opts: { port: number; fixtureRoot: string }): Pr
   const api: Collector = {
     events: () => ordered(received),
     mark: () => received.length,
+    after: (e) => received.indexOf(e) + 1,
+    bootsSince: (from) => new Set(received.slice(from).filter((e) => e.seq === 0).map((e) => e.boot)),
     waitFor(m, timeoutMs, from) {
       return new Promise((done) => {
         const check = () => {
@@ -358,7 +372,18 @@ export function createCollector(opts: { port: number; fixtureRoot: string }): Pr
     close: () => new Promise((done) => server.close(() => done())),
   };
 
-  return new Promise((ready) => server.listen(opts.port, '127.0.0.1', () => ready(api)));
+  return new Promise((ready, refuse) => {
+    // A stale reader on this port silently eats every line the app sends: the
+    // beacon is fire-and-forget, so nothing on the device would say so.
+    server.once('error', (err: NodeJS.ErrnoException) =>
+      refuse(
+        err.code === 'EADDRINUSE'
+          ? new Error(`port ${opts.port} is taken — another beacon reader is running (lsof -nP -iTCP:${opts.port} -sTCP:LISTEN)`)
+          : err,
+      ),
+    );
+    server.listen(opts.port, '127.0.0.1', () => ready(api));
+  });
 }
 ```
 
@@ -499,85 +524,6 @@ There is no `hold`. The one scenario that needs it, `S17`, is blocked by `D6`, a
 
 ---
 
-### Phase 11 — `C4` `e2e/capture.ts`
-
-**File:** `e2e/capture.ts` `(new)`
-**Anchor:** new file, full content below.
-
-**What changes:** the seam of `decisions.capture_ladder`. The null rung is complete and is what the harness runs on until Phase 0 says otherwise.
-
-**Code:**
-
-```ts
-import { execFileSync } from 'node:child_process';
-import { existsSync, statSync } from 'node:fs';
-
-/** contracts.run_record.capture_rung */
-export type Rung = 'grpc' | 'appium' | 'none';
-
-export interface Capture {
-  rung: Rung;
-  /** true when a non-empty file was written. Never throws: a missing picture is not a failed scenario. */
-  screenshot(path: string): Promise<boolean>;
-  startClip(path: string): Promise<void>;
-  /** true when a non-empty clip was written */
-  stopClip(): Promise<boolean>;
-}
-
-const written = (path: string) => existsSync(path) && statSync(path).size > 0;
-
-/** rung 3 — always available, and enough for a verdict */
-const none: Capture = {
-  rung: 'none',
-  screenshot: async () => false,
-  startClip: async () => {},
-  stopClip: async () => false,
-};
-
-/**
- * rung 1 — the emulator gRPC interface, through the wrapper of R-VVD-DRIVER.
- *
- * [AFTER PHASE 0] `vvd screenshot <file>` is the command as reported in
- * R-THREAD-TOOLKIT. Confirm it, and fill the two clip commands, from the
- * wrapper's README at the commit pinned in `02` Phase 0.2. If its license
- * ruled it out, this object talks to EmulatorController directly instead and
- * keeps the same three methods.
- */
-function grpc(bin: string): Capture {
-  return {
-    rung: 'grpc',
-    async screenshot(path) {
-      try {
-        execFileSync(bin, ['screenshot', path], { stdio: 'ignore', timeout: 10_000 });
-        return written(path);
-      } catch {
-        return false;
-      }
-    },
-    startClip: async () => {
-      /* [AFTER PHASE 0] */
-    },
-    stopClip: async () => false,
-  };
-}
-
-/** E2E_CAPTURE = none | grpc:<path to the wrapper binary>. Unset means none. */
-export function createCapture(env = process.env.E2E_CAPTURE ?? 'none'): Capture {
-  if (env.startsWith('grpc:')) return grpc(env.slice('grpc:'.length));
-  return none;
-}
-```
-
-**Measured in `02` Phase 0.2:** the rung is `grpc`; a film frame is 1.36 MB as PNG and 76 KB as a 1280-wide JPEG (`limits.capture` `frame_size`). When building this phase, `screenshot` therefore writes the PNG to a temp path and converts it with `ffmpeg -vf scale=1280:-1 -q:v 4` to the `.jpg` path it was given; the scenario paths in `02b3` Phase 13 end in `.jpg`. The clip is `vvd record <file> --seconds <n>`, which records for a fixed time: `startClip` spawns it and `stopClip` waits for it to exit.
-
-The `appium` rung is not written. It is built only if `02` Phase 0.2 ends on it, and then against the same interface.
-
-**Contracts implemented:** `decisions.capture_ladder`, `decisions.trace_is_the_oracle` (a capture cannot fail a scenario), `env_vars` (`E2E_CAPTURE`).
-
-**Phase 11 verification:** `02e-tests-and-e2e.md` §C.4.
-
----
-
 ## Continues in `02b2-scenarios.md`
 
-Phase 12: the scenarios (`C7`). Then `02b3-runner.md`, Phase 13: the runner (`C1`).
+Phase 11: capture (`C4`). Phase 12: the scenarios (`C7`). Then `02b3-runner.md`, Phase 13: the runner (`C1`).

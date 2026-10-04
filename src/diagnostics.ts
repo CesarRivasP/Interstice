@@ -16,10 +16,19 @@
  */
 const BEACON = 'http://localhost:8099/';
 
+// One id per launch. The sequence restarts at 0 with the module, and a
+// collector session spans many launches: without this a lost line in one launch
+// is hidden by the same number from the one before it.
+const BOOT = Math.random().toString(36).slice(2, 8);
+let seq = 0;
+
 export function log(line: string): void {
   console.log(line);
+  const s = seq++;
   try {
-    void fetch(`${BEACON}?m=${encodeURIComponent(line)}`).catch(() => {});
+    void fetch(
+      `${BEACON}?m=${encodeURIComponent(line)}&b=${BOOT}&s=${s}&t=${Date.now()}`,
+    ).catch(() => {});
   } catch {
     // the beacon is diagnostic only: never let it break playback
   }

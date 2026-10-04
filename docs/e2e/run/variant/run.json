@@ -1,0 +1,695 @@
+{
+  "run_id": "2026-10-04T16-35-32-657Z-variant",
+  "started_at": "2026-10-04T16:38:42.303Z",
+  "suite": "variant",
+  "conditions": {
+    "target_platform": "Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480)",
+    "build": "Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112",
+    "content_asset": "e2e-fixture: first 60 s of Tears of Steel, host-served"
+  },
+  "app_commit": "5025830",
+  "package_version": "0.1.0",
+  "capture_rung": "grpc",
+  "input_route": "inputd-cli",
+  "selftest": {
+    "ran": true,
+    "scenarios_that_can_fail": 6,
+    "of": 6
+  },
+  "restored_release": true,
+  "results": [
+    {
+      "id": "S10",
+      "name": "cues-stay-in-window",
+      "suite": "variant",
+      "use_case": "Three cues each start and finish inside their window.",
+      "covers": [
+        "AC4"
+      ],
+      "fixture": true,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2033,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 4539,
+          "action": "keys",
+          "detail": "DOWN ENTER"
+        },
+        {
+          "at_ms": 4539,
+          "action": "wait",
+          "detail": "app.play"
+        },
+        {
+          "at_ms": 11502,
+          "action": "wait",
+          "detail": "audio.restored"
+        },
+        {
+          "at_ms": 12001,
+          "action": "shot",
+          "detail": "After the first cue"
+        },
+        {
+          "at_ms": 31722,
+          "action": "wait",
+          "detail": "audio.restored"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "in_window",
+          "expect": "audio.duck id=c1 … audio.restored id=c1 inside [4000, 9000] ms (was 4187 … 5720)",
+          "ok": true,
+          "matched_seq": 38
+        },
+        {
+          "kind": "in_window",
+          "expect": "audio.duck id=c2 … audio.restored id=c2 inside [14000, 20000] ms (was 14173 … 15800)",
+          "ok": true,
+          "matched_seq": 56
+        },
+        {
+          "kind": "in_window",
+          "expect": "audio.duck id=c3 … audio.restored id=c3 inside [24000, 28000] ms (was 24223 … 25899)",
+          "ok": true,
+          "matched_seq": 77
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "Audio description on, standard, 3 descriptions",
+        "The video paused while it loads more. Press back to return to the list."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S10-0.jpg",
+          "at_seq": 38,
+          "caption": "After the first cue"
+        }
+      ],
+      "trace_path": "traces/S10.jsonl",
+      "duration_ms": 33097,
+      "windows_ms": [
+        [
+          4000,
+          9000
+        ],
+        [
+          14000,
+          20000
+        ],
+        [
+          24000,
+          28000
+        ]
+      ],
+      "cannot_show": "That a cue avoids dialogue. These windows are declared by the fixture, not derived from subtitles."
+    },
+    {
+      "id": "S11",
+      "name": "toggle-off-and-on",
+      "suite": "variant",
+      "use_case": "The viewer switches description off mid-film and back on; the film never stops.",
+      "covers": [
+        "AC3"
+      ],
+      "fixture": true,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2164,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 4644,
+          "action": "keys",
+          "detail": "DOWN ENTER"
+        },
+        {
+          "at_ms": 4644,
+          "action": "wait",
+          "detail": "app.play"
+        },
+        {
+          "at_ms": 11149,
+          "action": "wait",
+          "detail": "audio.restored"
+        },
+        {
+          "at_ms": 12452,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 12453,
+          "action": "wait",
+          "detail": "controls.toggle"
+        },
+        {
+          "at_ms": 13003,
+          "action": "shot",
+          "detail": "Description off"
+        },
+        {
+          "at_ms": 26643,
+          "action": "wait",
+          "detail": "player.progress"
+        },
+        {
+          "at_ms": 28064,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 28064,
+          "action": "wait",
+          "detail": "controls.toggle"
+        },
+        {
+          "at_ms": 31249,
+          "action": "wait",
+          "detail": "audio.restored"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "absent",
+          "expect": "no audio.duck id=c2 between controls.toggle to=false and controls.toggle to=true [emitter: the package DescriptionAudio.speak -> audio.duck]",
+          "ok": true,
+          "matched_seq": 62
+        },
+        {
+          "kind": "absent",
+          "expect": "no player.stalled between controls.toggle to=false and audio.restored id=c3 [emitter: src/screens/PlayerScreen.tsx onStalled -> player.stalled]",
+          "ok": true,
+          "matched_seq": 78
+        },
+        {
+          "kind": "order",
+          "expect": "controls.toggle to=false → player.progress → controls.toggle to=true → audio.duck id=c3",
+          "ok": true,
+          "matched_seq": 70
+        },
+        {
+          "kind": "count",
+          "expect": "audio.duck id=c2 ×0 (saw 0)",
+          "ok": true,
+          "matched_seq": null
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "Audio description on, standard, 3 descriptions",
+        "The video paused while it loads more. Press back to return to the list.",
+        "Audio description off",
+        "Audio description on, standard, 3 descriptions"
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S11-0.jpg",
+          "at_seq": 43,
+          "caption": "Description off"
+        }
+      ],
+      "trace_path": "traces/S11.jsonl",
+      "duration_ms": 32228,
+      "windows_ms": [
+        [
+          4000,
+          9000
+        ],
+        [
+          14000,
+          20000
+        ],
+        [
+          24000,
+          28000
+        ]
+      ]
+    },
+    {
+      "id": "S12",
+      "name": "verbosity-switch",
+      "suite": "variant",
+      "use_case": "The viewer moves between concise, standard and detailed while watching.",
+      "covers": [
+        "AC17"
+      ],
+      "fixture": true,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2088,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 4600,
+          "action": "keys",
+          "detail": "DOWN ENTER"
+        },
+        {
+          "at_ms": 4600,
+          "action": "wait",
+          "detail": "app.play"
+        },
+        {
+          "at_ms": 4600,
+          "action": "wait",
+          "detail": "loader.load"
+        },
+        {
+          "at_ms": 5973,
+          "action": "wait",
+          "detail": "player.progress"
+        },
+        {
+          "at_ms": 8766,
+          "action": "keys",
+          "detail": "DOWN ENTER"
+        },
+        {
+          "at_ms": 8766,
+          "action": "wait",
+          "detail": "loader.load"
+        },
+        {
+          "at_ms": 9252,
+          "action": "shot",
+          "detail": "Concise selected"
+        },
+        {
+          "at_ms": 13091,
+          "action": "keys",
+          "detail": "DOWN DOWN ENTER"
+        },
+        {
+          "at_ms": 13091,
+          "action": "wait",
+          "detail": "loader.miss"
+        },
+        {
+          "at_ms": 18006,
+          "action": "wait",
+          "detail": "player.progress"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "order",
+          "expect": "loader.load path=/standard/ ok=true cues=3 → controls.verbosity to=concise → loader.load path=/concise/ ok=true cues=2 → controls.verbosity to=detailed → loader.miss path=/detailed/ → loader.load path=/standard/ ok=true cues=3 → player.progress",
+          "ok": true,
+          "matched_seq": 54
+        },
+        {
+          "kind": "absent",
+          "expect": "no player.stalled between controls.verbosity to=concise and player.progress pos_ms=(checked) [emitter: src/screens/PlayerScreen.tsx onStalled -> player.stalled]",
+          "ok": true,
+          "matched_seq": 63
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "Audio description on, standard, 3 descriptions",
+        "The video paused while it loads more. Press back to return to the list.",
+        "Audio description on, concise, 2 descriptions",
+        "Audio description on, standard, 3 descriptions"
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S12-0.jpg",
+          "at_seq": 34,
+          "caption": "Concise selected"
+        }
+      ],
+      "trace_path": "traces/S12.jsonl",
+      "duration_ms": 19031
+    },
+    {
+      "id": "S13",
+      "name": "malformed-track-is-stated",
+      "suite": "variant",
+      "use_case": "The track file is corrupt; the app says something different from \"missing\" and the film plays.",
+      "covers": [
+        "AC8"
+      ],
+      "fixture": true,
+      "verdict": "fail",
+      "reason": "assertion failed: ad.state kind=malformed",
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2083,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 4587,
+          "action": "keys",
+          "detail": "DOWN ENTER"
+        },
+        {
+          "at_ms": 4587,
+          "action": "wait",
+          "detail": "app.play"
+        },
+        {
+          "at_ms": 4587,
+          "action": "wait",
+          "detail": "ad.state"
+        },
+        {
+          "at_ms": 5126,
+          "action": "shot",
+          "detail": "The unreadable-track state, on screen"
+        },
+        {
+          "at_ms": 10613,
+          "action": "wait",
+          "detail": "player.progress"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "seen",
+          "expect": "ad.state kind=malformed",
+          "ok": false,
+          "matched_seq": null
+        },
+        {
+          "kind": "count",
+          "expect": "ad.state kind=missing ×1 (saw 2)",
+          "ok": false,
+          "matched_seq": 10
+        },
+        {
+          "kind": "order",
+          "expect": "controls.announce kind=malformed → player.progress → player.progress",
+          "ok": false,
+          "matched_seq": null
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "The video paused while it loads more. Press back to return to the list."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S13-0.jpg",
+          "at_seq": 23,
+          "caption": "The unreadable-track state, on screen"
+        }
+      ],
+      "trace_path": "traces/S13.jsonl",
+      "duration_ms": 11757
+    },
+    {
+      "id": "S14",
+      "name": "failed-cue-restores-volume",
+      "suite": "variant",
+      "use_case": "One cue has no audio; the film must not be left quiet.",
+      "covers": [
+        "AC5"
+      ],
+      "fixture": true,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2033,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 4537,
+          "action": "keys",
+          "detail": "DOWN ENTER"
+        },
+        {
+          "at_ms": 4537,
+          "action": "wait",
+          "detail": "app.play"
+        },
+        {
+          "at_ms": 19516,
+          "action": "wait",
+          "detail": "audio.failed"
+        },
+        {
+          "at_ms": 30890,
+          "action": "wait",
+          "detail": "audio.restored"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "order",
+          "expect": "audio.duck id=c2 → audio.failed id=c2 → audio.restored id=c2 → player.progress",
+          "ok": true,
+          "matched_seq": 54
+        },
+        {
+          "kind": "order",
+          "expect": "audio.restored id=c2 → audio.duck id=c3 → audio.restored id=c3",
+          "ok": true,
+          "matched_seq": 75
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "Audio description on, standard, 3 descriptions",
+        "The video paused while it loads more. Press back to return to the list."
+      ],
+      "artifacts": [],
+      "trace_path": "traces/S14.jsonl",
+      "duration_ms": 32292,
+      "windows_ms": [
+        [
+          4000,
+          9000
+        ],
+        [
+          14000,
+          20000
+        ],
+        [
+          24000,
+          28000
+        ]
+      ],
+      "cannot_show": "The audible level. The restore is the volume property returning to 100%."
+    },
+    {
+      "id": "S15",
+      "name": "stall-and-recover",
+      "suite": "variant",
+      "use_case": "The bytes run short mid-film; the viewer is told, and playback resumes when they arrive.",
+      "covers": [
+        "AC24"
+      ],
+      "fixture": true,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2106,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 4784,
+          "action": "keys",
+          "detail": "DOWN ENTER"
+        },
+        {
+          "at_ms": 4784,
+          "action": "wait",
+          "detail": "app.play"
+        },
+        {
+          "at_ms": 35988,
+          "action": "wait",
+          "detail": "player.progress"
+        },
+        {
+          "at_ms": 41615,
+          "action": "wait",
+          "detail": "overlay.shown"
+        },
+        {
+          "at_ms": 42678,
+          "action": "shot",
+          "detail": "Stalled: the picture is frozen and the app says so"
+        },
+        {
+          "at_ms": 42678,
+          "action": "release",
+          "detail": "held fixture requests answered"
+        },
+        {
+          "at_ms": 42746,
+          "action": "wait",
+          "detail": "player.resumed"
+        },
+        {
+          "at_ms": 43270,
+          "action": "wait",
+          "detail": "player.progress"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "order",
+          "expect": "player.progress pos_ms=(checked) → player.stalled → overlay.shown status=stalled → player.resumed from=stalled → overlay.cleared → player.progress",
+          "ok": true,
+          "matched_seq": 97
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "Audio description on, standard, 3 descriptions",
+        "The video paused while it loads more. Press back to return to the list."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S15-0.jpg",
+          "at_seq": 83,
+          "caption": "Stalled: the picture is frozen and the app says so"
+        }
+      ],
+      "trace_path": "traces/S15.jsonl",
+      "duration_ms": 44634
+    },
+    {
+      "id": "S16",
+      "name": "error-state-has-a-way-out",
+      "suite": "variant",
+      "use_case": "The title cannot be opened; the viewer is told and BACK still works.",
+      "covers": [
+        "AC2"
+      ],
+      "fixture": true,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 2204,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 4761,
+          "action": "keys",
+          "detail": "DOWN ENTER"
+        },
+        {
+          "at_ms": 4761,
+          "action": "wait",
+          "detail": "app.play"
+        },
+        {
+          "at_ms": 4761,
+          "action": "wait",
+          "detail": "overlay.shown"
+        },
+        {
+          "at_ms": 5200,
+          "action": "shot",
+          "detail": "The error state"
+        },
+        {
+          "at_ms": 6438,
+          "action": "keys",
+          "detail": "BACK"
+        },
+        {
+          "at_ms": 6438,
+          "action": "wait",
+          "detail": "player.back"
+        },
+        {
+          "at_ms": 7725,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 7725,
+          "action": "wait",
+          "detail": "app.play"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "order",
+          "expect": "overlay.shown status=error → player.back from=error → app.play id=tears-of-steel",
+          "ok": true,
+          "matched_seq": 23
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "No description track was found for this title. Playback continues without description.",
+        "Audio description on, standard, 3 descriptions",
+        "This title could not be played. Network request failed",
+        "Loading title",
+        "No description track was found for this title. Playback continues without description."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S16-0.jpg",
+          "at_seq": 21,
+          "caption": "The error state"
+        }
+      ],
+      "trace_path": "traces/S16.jsonl",
+      "duration_ms": 8640
+    },
+    {
+      "id": "S17",
+      "name": "held-seek-coalesces",
+      "suite": "variant",
+      "use_case": "The viewer holds a direction to seek; the scheduler resyncs once.",
+      "covers": [
+        "AC6"
+      ],
+      "fixture": true,
+      "verdict": "blocked",
+      "reason": "blocked by D6 — the app has no seek control",
+      "blocked_by": "D6 — the app has no seek control",
+      "steps": [],
+      "assertions": [],
+      "spoken": [],
+      "artifacts": [],
+      "trace_path": "traces/S17.jsonl",
+      "duration_ms": 0
+    }
+  ]
+}

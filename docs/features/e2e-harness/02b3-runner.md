@@ -15,6 +15,10 @@
 
 ## Changelog
 
+### 2026-10-04 — v4: build R6 — the harness is built and both suites ran on the Virtual Device: ten scenarios pass, one is blocked, and two fail on defects in the app (D8, D9); the report is generated into docs/e2e; fixture audio falls back to the host voice when Polly is unreachable
+
+Built. The code blocks in the implementation halves are the files as they stand after the first device runs, not as first written.
+
 ### 2026-10-04 — v2: review R2 dispositions and owner confirmation — a launch id on the wire, fixtures addressed by collector state not by URL, a 60 s fixture asset so a stall can happen, the device restored to the Release package after a VARIANT run, published paths made relative; status draft -> reviewed
 
 Split out on a phase boundary. The runner is the only module that touches every other one.
@@ -88,6 +92,12 @@ async function runScenario(s: Scenario, collector: Collector, dir: string): Prom
   device.terminate();
   collector.arm(s.faults ?? []);
   const from = collector.mark();
+  // Waits are SEQUENTIAL: each looks only at what arrived after the event the
+  // previous wait matched, or after the last key press. Without this, "wait for
+  // player.opened" after a second ENTER is satisfied by the first open, and
+  // "wait for the stall" is satisfied by the stall every playback starts with —
+  // both happened on the first device runs.
+  let cursor = from;
   device.launch();
 
   for (const step of s.steps) {
@@ -96,24 +106,26 @@ async function runScenario(s: Scenario, collector: Collector, dir: string): Prom
       break;
     }
     if (step.do === 'keys') {
+      cursor = collector.mark();
       await pressAll(step.keys);
       base.steps.push({ at_ms: at(), action: 'keys', detail: step.keys.join(' ') });
     } else if (step.do === 'wait') {
-      const hit = await collector.waitFor(step.for, Math.min(step.timeout_ms ?? WAIT, deadline - Date.now()), from);
+      const hit = await collector.waitFor(step.for, Math.min(step.timeout_ms ?? WAIT, deadline - Date.now()), cursor);
       base.steps.push({ at_ms: at(), action: 'wait', detail: `${step.for.name}${hit ? '' : ' — NOT SEEN'}` });
       if (!hit) {
         stepFailure = `waited for ${step.for.name} and it did not arrive`;
         break;
       }
+      cursor = collector.after(hit);
     } else if (step.do === 'shot') {
-      const path = `shots/${s.id}-${base.artifacts.length}.png`;
+      const path = `shots/${s.id}-${base.artifacts.length}.jpg`;
       if (await capture.screenshot(join(dir, path))) {
         const seen = collector.events();
         base.artifacts.push({ kind: 'screenshot', path, at_seq: seen[seen.length - 1]?.seq ?? null, caption: step.caption });
       }
       base.steps.push({ at_ms: at(), action: 'shot', detail: step.caption });
     } else if (step.do === 'clip_start') {
-      await capture.startClip(join(dir, `clips/${s.id}.mp4`));
+      await capture.startClip(join(dir, `clips/${s.id}.mp4`), step.seconds);
     } else if (step.do === 'clip_stop') {
       if (await capture.stopClip()) {
         base.artifacts.push({ kind: 'clip', path: `clips/${s.id}.mp4`, at_seq: null, caption: step.caption });
@@ -128,8 +140,8 @@ async function runScenario(s: Scenario, collector: Collector, dir: string): Prom
   device.terminate();
   collector.disarm();
 
-  // This scenario's launch only: everything that ARRIVED since the mark, ordered.
-  const mine = new Set(collector.events().slice().filter((e) => e.t_host >= new Date(started).toISOString()).map((e) => e.boot));
+  // This scenario's launch only: the launch ids that STARTED since the mark.
+  const mine = collector.bootsSince(from);
   const events = ordered(collector.events().filter((e) => mine.has(e.boot)));
   writeFileSync(join(dir, base.trace_path), events.map((e) => JSON.stringify(e)).join('\n') + '\n');
 
@@ -149,12 +161,18 @@ async function main(): Promise<void> {
   if (!device.virtualDeviceRunning()) throw new Error('the Vega Virtual Device is not running — `vega virtual-device start`');
   if (suite === 'variant' && !existsSync('e2e/out/fixtures/asset.json')) throw new Error('no fixtures — `npm run e2e:fixtures`');
 
-  const run_id = `${new Date().toISOString().replace(/[:.]/g, '-')}-${suite}`;
+  const started_at = new Date().toISOString();
+  const run_id = `${started_at.replace(/[:.]/g, '-')}-${suite}`;
   const dir = join('e2e/out', run_id);
   for (const sub of ['traces', 'shots', 'clips']) mkdirSync(join(dir, sub), { recursive: true });
 
   if (!noBuild) device.buildPackages(suite);
   const collector = await createCollector({ port: PORT, fixtureRoot: 'e2e/out/fixtures' });
+  try {
+    capture.prepare();
+  } catch (err) {
+    console.error(`capture unavailable, continuing without pictures: ${(err as Error).message}`);
+  }
   device.reverseForward(PORT);
   device.install(device.PKG[suite]);
 
@@ -200,7 +218,7 @@ async function main(): Promise<void> {
   /** contracts.run_record */
   const record = {
     run_id,
-    started_at: new Date().toISOString(),
+    started_at,
     suite,
     conditions: {
       target_platform: device.describeDevice(),

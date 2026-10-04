@@ -69,6 +69,17 @@ Nearly four fifths of the film is silence this product can use.
 
 ---
 
+## Verification
+
+**[The verification report](https://cesarrivasp.github.io/Interstice/e2e/)** shows the app running through its use cases on the Vega Virtual Device: what was on screen, what the viewer was told, and the trace lines that decided each result — mapped to every acceptance criterion in `docs/features/interstice/`, including the ones it cannot close and the two it currently fails. The same page is in the repository at `docs/e2e/index.html`.
+
+To re-run it: a booted Vega Virtual Device (SDK 0.24), Node 20+, `ffmpeg`, then
+
+    npm run e2e:release     # the submitted build — five scenarios, no fixtures
+    npm run e2e:report      # rebuilds the page from the committed run; needs no device
+
+`npm run e2e:variant` runs a test build against a labelled fixture and injects faults; it additionally needs `media/tears-of-steel.mp4` and `npm run e2e:fixtures` once. How it is built, and what it cannot show: `docs/features/e2e-harness/`.
+
 ## Status
 
 This is a hackathon build in progress. What is true today, and what is not, is tracked

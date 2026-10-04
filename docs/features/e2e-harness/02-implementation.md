@@ -1,6 +1,6 @@
 # Implementation (1 of 5) — E2E harness — the spike gate and the app-side changes
 
-> Complements `01-master-plan.md`. Code steps, file by file. This file holds the preamble and Phases 0–6; `02b-harness.md` holds Phases 7–11, `02b2-scenarios.md` Phase 12, `02b3-runner.md` Phase 13 and `02c-report-and-delivery.md` Phases 14–18; the test plan, the manual E2E and the Definition of Done live in `02e-tests-and-e2e.md`.
+> Complements `01-master-plan.md`. Code steps, file by file. This file holds the preamble and Phases 0–6; `02b-harness.md` holds Phases 7–10, `02b2-scenarios.md` Phases 11–12, `02b3-runner.md` Phase 13 and `02c-report-and-delivery.md` Phases 14–18; the test plan, the manual E2E and the Definition of Done live in `02e-tests-and-e2e.md`.
 > Written by `implement` (stage 2), after `review` R2 ran, R3 dispositioned its findings, and the owner confirmed on 2026-10-04.
 
 - **Date:** 2026-10-04
@@ -11,11 +11,15 @@
 > **This document is executable, not descriptive.** Its reader is whoever builds it — possibly a smaller model with none of the authoring conversation.
 > The preamble below governs `02b-harness.md`, `02b2-scenarios.md`, `02b3-runner.md`, `02c-report-and-delivery.md` and `02e-tests-and-e2e.md` too.
 
-**The set of eight:** `01` (the decision) · `02` (preamble, Phases 0–6) · `02b` (Phases 7–11) · `02b2` (Phase 12) · `02b3` (Phase 13) · `02c` (Phases 14–18) · `02e` (tests, manual E2E, Definition of Done) · `03` (what the judging panel receives).
+**The set of eight:** `01` (the decision) · `02` (preamble, Phases 0–6) · `02b` (Phases 7–10) · `02b2` (Phases 11–12) · `02b3` (Phase 13) · `02c` (Phases 14–18) · `02e` (tests, manual E2E, Definition of Done) · `03` (what the judging panel receives).
 
 ---
 
 ## Changelog
+
+### 2026-10-04 — v4: build R6 — the harness is built and both suites ran on the Virtual Device: ten scenarios pass, one is blocked, and two fail on defects in the app (D8, D9); the report is generated into docs/e2e; fixture audio falls back to the host voice when Polly is unreachable
+
+Built. The code blocks in the implementation halves are the files as they stand after the first device runs, not as first written.
 
 ### 2026-10-04 — v3: verify R5 — Phase 0 ran on the Virtual Device: D1, D2, D3 and D5 hold; D4 is dead as written and fixed by keying the Metro cache on the flag (changes C24); the capture rung is grpc, the input route inputd-cli; status reviewed -> implementing
 
@@ -532,4 +536,4 @@ and re-measure `tests_expect` in the same edit: it still reads `63 passed, 63 to
 
 ## Continues in `02b-harness.md`
 
-Phases 7–11: the trace parser and assertions (`C6`), the collector (`C5`), the device, input and capture modules (`C2`, `C3`, `C4`). Then `02b2-scenarios.md`, Phase 12: the scenarios (`C7`), and `02b3-runner.md`, Phase 13: the runner (`C1`). Then `02c-report-and-delivery.md`, Phases 14–18: the selftest (`C10`), the fixtures (`C8`), the report (`C9`), publication (`C11`, `C20`, `C22`) and the friction log (`C21`). Then `02e-tests-and-e2e.md`: Part B, Part C and the Definition of Done.
+Phases 7–10: the trace parser and assertions (`C6`), the collector (`C5`), the device and input modules (`C2`, `C3`). Then `02b2-scenarios.md`, Phases 11–12: capture (`C4`) and the scenarios (`C7`), and `02b3-runner.md`, Phase 13: the runner (`C1`). Then `02c-report-and-delivery.md`, Phases 14–18: the selftest (`C10`), the fixtures (`C8`), the report (`C9`), publication (`C11`, `C20`, `C22`) and the friction log (`C21`). Then `02e-tests-and-e2e.md`: Part B, Part C and the Definition of Done.

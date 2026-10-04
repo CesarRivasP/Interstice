@@ -1,6 +1,6 @@
-# Implementation (3 of 5) — E2E harness — the scenarios
+# Implementation (3 of 5) — E2E harness — capture, and the scenarios
 
-> Complements `01-master-plan.md`. Phase 12. Continues from `02b-harness.md` and continues in `02b3-runner.md`.
+> Complements `01-master-plan.md`. Phases 11–12. Continues from `02b-harness.md` and continues in `02b3-runner.md`.
 
 - **Date:** 2026-10-04
 - **Branch:** `main`
@@ -15,6 +15,10 @@
 
 ## Changelog
 
+### 2026-10-04 — v4: build R6 — the harness is built and both suites ran on the Virtual Device: ten scenarios pass, one is blocked, and two fail on defects in the app (D8, D9); the report is generated into docs/e2e; fixture audio falls back to the host voice when Polly is unreachable
+
+Built. The code blocks in the implementation halves are the files as they stand after the first device runs, not as first written.
+
 ### 2026-10-04 — v2: review R2 dispositions and owner confirmation — a launch id on the wire, fixtures addressed by collector state not by URL, a 60 s fixture asset so a stall can happen, the device restored to the Release package after a VARIANT run, published paths made relative; status draft -> reviewed
 
 Split out of the host-side half on a phase boundary, because the scenarios are data and are the part that changes when the app does.
@@ -22,6 +26,107 @@ Split out of the host-side half on a phase boundary, because the scenarios are d
 ---
 
 ## Part A — Implementation plan (continued)
+
+### Phase 11 — `C4` `e2e/capture.ts`
+
+**File:** `e2e/capture.ts` `(new)`
+**Anchor:** new file, full content below.
+
+**What changes:** the seam of `decisions.capture_ladder`. The null rung is complete and is what the harness runs on until Phase 0 says otherwise.
+
+**Code:**
+
+```ts
+import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
+import { existsSync, rmSync, statSync } from 'node:fs';
+
+/** contracts.run_record.capture_rung */
+export type Rung = 'grpc' | 'appium' | 'none';
+
+export interface Capture {
+  rung: Rung;
+  /** once per run, before the first capture */
+  prepare(): void;
+  /** true when a non-empty file was written. Never throws: a missing picture is not a failed scenario. */
+  screenshot(path: string): Promise<boolean>;
+  /** records for a fixed time from now */
+  startClip(path: string, seconds: number): Promise<void>;
+  /** waits for the recording to end; true when a non-empty clip was written */
+  stopClip(): Promise<boolean>;
+}
+
+const written = (path: string) => existsSync(path) && statSync(path).size > 0;
+
+/** rung 3 — always available, and enough for a verdict */
+const none: Capture = {
+  rung: 'none',
+  prepare: () => {},
+  screenshot: async () => false,
+  startClip: async () => {},
+  stopClip: async () => false,
+};
+
+/**
+ * rung 1 — the emulator gRPC interface, through the wrapper of R-VVD-DRIVER
+ * (MIT, pinned at a9ea5d5; measured on 2026-10-04, defects D1 and D3).
+ * `bin` is its dist/bin.js. The wrapper is run with this Node, never installed.
+ */
+function grpc(bin: string): Capture {
+  const vvd = (args: string[], timeout: number) =>
+    execFileSync(process.execPath, [bin, ...args], { stdio: 'ignore', timeout });
+  let recording: { child: ChildProcess; path: string; done: Promise<void> } | null = null;
+
+  return {
+    rung: 'grpc',
+    prepare() {
+      // off after every start of the device; safe to repeat
+      vvd(['enable-grpc'], 15_000);
+    },
+    async screenshot(path) {
+      // limits.capture.frame_size: a film frame is 1.36 MB as PNG and 76 KB as
+      // a 1280-wide JPEG, and the published bound is 300 KB.
+      const png = `${path}.png`;
+      try {
+        vvd(['screenshot', png], 10_000);
+        execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', png, '-vf', 'scale=1280:-1', '-q:v', '4', path]);
+        return written(path);
+      } catch {
+        return false;
+      } finally {
+        rmSync(png, { force: true });
+      }
+    },
+    async startClip(path, seconds) {
+      const child = spawn(process.execPath, [bin, 'record', path, '--seconds', String(seconds)], { stdio: 'ignore' });
+      const done = new Promise<void>((resolve) => child.once('exit', () => resolve()));
+      recording = { child, path, done };
+    },
+    async stopClip() {
+      if (!recording) return false;
+      const { path, done } = recording;
+      recording = null;
+      await done;
+      return written(path);
+    },
+  };
+}
+
+/** E2E_CAPTURE = none | grpc:<path to the wrapper's dist/bin.js>. Unset means none. */
+export function createCapture(env = process.env.E2E_CAPTURE ?? 'none'): Capture {
+  if (env.startsWith('grpc:')) return grpc(env.slice('grpc:'.length));
+  return none;
+}
+```
+
+**Measured in `02` Phase 0.2:** the rung is `grpc`; a film frame is 1.36 MB as PNG and 76 KB as a 1280-wide JPEG (`limits.capture` `frame_size`). When building this phase, `screenshot` therefore writes the PNG to a temp path and converts it with `ffmpeg -vf scale=1280:-1 -q:v 4` to the `.jpg` path it was given; the scenario paths in `02b3` Phase 13 end in `.jpg`. The clip is `vvd record <file> --seconds <n>`, which records for a fixed time: `startClip` spawns it and `stopClip` waits for it to exit.
+
+The `appium` rung is not written. It is built only if `02` Phase 0.2 ends on it, and then against the same interface.
+
+**Contracts implemented:** `decisions.capture_ladder`, `decisions.trace_is_the_oracle` (a capture cannot fail a scenario), `env_vars` (`E2E_CAPTURE`).
+
+**Phase 11 verification:** `02e-tests-and-e2e.md` §C.4.
+
+---
 
 ### Phase 12 — `C7` `e2e/scenarios`
 
@@ -40,7 +145,8 @@ export type Step =
   | { do: 'keys'; keys: Key[] }
   | { do: 'wait'; for: Match; timeout_ms?: number }
   | { do: 'shot'; caption: string }
-  | { do: 'clip_start' }
+  /** record for a fixed time from here; the wrapper cannot be stopped early */
+  | { do: 'clip_start'; seconds: number }
   | { do: 'clip_stop'; caption: string }
   /** answer the requests a `hold` fault is sitting on */
   | { do: 'release' };
@@ -100,11 +206,11 @@ export const RELEASE: Scenario[] = [
       { do: 'keys', keys: ['ENTER'] },
       { do: 'wait', for: { name: 'player.play' } },
       { do: 'shot', caption: 'The film playing' },
-      { do: 'wait', for: { name: 'buffer.evicted' }, timeout_ms: 40_000 },
-      { do: 'wait', for: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 19_000 } }, timeout_ms: 10_000 },
+      { do: 'wait', for: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 19_000 } }, timeout_ms: 40_000 },
+      { do: 'wait', for: { name: 'buffer.evicted' }, timeout_ms: 10_000 },
     ],
     assertions: [
-      { kind: 'order', expect: [{ name: 'player.opened' }, { name: 'buffer.complete' }, { name: 'player.play' }, progress] },
+      { kind: 'order', expect: [{ name: 'buffer.complete' }, { name: 'player.opened' }, { name: 'player.play' }, progress] },
       { kind: 'count', expect: { name: 'buffer.appended', where: { _: /^seg/ } }, exactly: 4 },
       { kind: 'seen', expect: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 19_000 } } },
       // Exactly one. Two is the loop of 2026-09-27, where evicting after
@@ -120,7 +226,7 @@ export const RELEASE: Scenario[] = [
     steps: [
       { do: 'wait', for: { name: 'asset.segments' } },
       { do: 'keys', keys: ['ENTER'] },
-      { do: 'clip_start' },
+      { do: 'clip_start', seconds: 12 },
       { do: 'wait', for: { name: 'audio.duck' } },
       { do: 'shot', caption: 'During the cue' },
       { do: 'wait', for: { name: 'audio.restored', where: { id: 'probe' } }, timeout_ms: 20_000 },
@@ -166,6 +272,7 @@ export const RELEASE: Scenario[] = [
       { do: 'wait', for: { name: 'asset.segments' } },
       { do: 'keys', keys: ['ENTER'] },
       { do: 'wait', for: { name: 'controls.announce' } },
+      { do: 'wait', for: progress, timeout_ms: 20_000 },
       { do: 'shot', caption: 'The missing-track state, on screen' },
       { do: 'wait', for: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 5_000 } }, timeout_ms: 20_000 },
     ],
@@ -173,7 +280,12 @@ export const RELEASE: Scenario[] = [
       { kind: 'seen', expect: { name: 'controls.announce', where: { kind: 'missing' } } },
       // the film is still moving AFTER the loader gave up
       { kind: 'order', expect: [{ name: 'loader.miss' }, progress, progress] },
-      { kind: 'count', expect: { name: 'player.stalled' }, exactly: 0 },
+      // Not "no stall at all": MSE emits `waiting` at the start of every normal
+      // playback on this device. No stall once the film is moving.
+      { kind: 'absent', expect: { name: 'player.stalled' },
+        after: progress,
+        before: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 5_000 } },
+        emitter: 'src/screens/PlayerScreen.tsx onStalled -> player.stalled' },
     ],
   },
 ];
@@ -187,7 +299,7 @@ The announce is asserted as `seen`, not ordered after `loader.miss`, and the rea
 
 ```ts
 import { readFileSync } from 'node:fs';
-import type { Scenario } from './types.js';
+import type { Scenario, Step } from './types.js';
 
 // limits.fixture — the values are the registry's, the fixture builder writes
 // the same ones into the track (02c Phase 15).
@@ -197,12 +309,12 @@ const TOLERANCE = 300; // limits.timing.window_tolerance_ms
 const STALL_WAIT = 60_000; // limits.timing.stall_wait_ms
 
 const progress = { name: 'player.progress' };
-const select = [
+const select: Step[] = [
   { do: 'wait', for: { name: 'asset.segments' } },
   // second title in the list
   { do: 'keys', keys: ['DOWN', 'ENTER'] },
   { do: 'wait', for: { name: 'app.play', where: { id: FIXTURE_ID } } },
-] as const;
+];
 const duck = (id: string) => ({ name: 'audio.duck', where: { id } });
 const restored = (id: string) => ({ name: 'audio.restored', where: { id } });
 const past = (ms: number) => ({ name: 'player.progress', where: { pos_ms: (v: string) => Number(v) >= ms } });
@@ -270,6 +382,7 @@ export const VARIANT: Scenario[] = [
     steps: [
       ...select,
       { do: 'wait', for: { name: 'loader.load', where: { ok: 'true', cues: '3' } } },
+      { do: 'wait', for: progress }, // past the stall every playback starts with
       { do: 'keys', keys: ['DOWN', 'ENTER'] }, // switch -> concise
       { do: 'wait', for: { name: 'loader.load', where: { path: /concise/, ok: 'true' } } },
       { do: 'shot', caption: 'Concise selected' },
@@ -287,7 +400,10 @@ export const VARIANT: Scenario[] = [
         { name: 'loader.load', where: { path: /standard/, ok: 'true', cues: '3' } },
         progress,
       ] },
-      { kind: 'count', expect: { name: 'player.stalled' }, exactly: 0 },
+      { kind: 'absent', expect: { name: 'player.stalled' },
+        after: { name: 'controls.verbosity', where: { to: 'concise' } },
+        before: past(12_000),
+        emitter: 'src/screens/PlayerScreen.tsx onStalled -> player.stalled' },
     ],
   },
   {

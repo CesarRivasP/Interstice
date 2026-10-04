@@ -268,3 +268,19 @@ Its entry point exports `ADControls`, which loads React Native, which does not r
 - R45-F5 `DRIFT`: `_profile.yml commands.tests_expect` reads "63 passed, 63 total"; jest reports 24 since R44.
 **Validation:** `npm test` exit 0 — jest 24, vitest 70 · `npm run lint` exit 0.
 **Still open:** as R44, plus the five above.
+
+---
+
+## R46 · 2026-10-04 · claude-fable-5-1 (Claude Code) · handoff from the e2e-harness set
+**Read:** `_facts.yml` (1929 lines, blob 02842d2) · `_log.md` (through R45 end)
+**Log read through:** R45
+**What this is:** the harness of `docs/features/e2e-harness/` is built and ran both of its suites against this app on the Virtual Device. This entry carries what it found here. Nothing in this set's registry or documents was edited this round. The shared profile was: `docs/features/_profile.yml` (73 lines, blob 526f7e4) — `commands.tests_expect` re-measured to the jest line it has printed since R44 (R45-F5 → **confirmed**, fixed), and three `e2e_*` commands added.
+**Files of this set changed by that one:** `src/diagnostics.ts` (`C22`: every line now carries a launch id, a sequence number and the device clock) · `src/screens/PlayerScreen.tsx` (`C2`: three new lines — `player.progress` once a second, `overlay.shown`/`overlay.cleared` with the spoken sentence, `ad.state`) · `tools/beacon-server.mjs` prints the two new fields. `npm test` exit 0 with them.
+**Findings for this set to disposition — none is fixed:**
+- R46-F1 `FUNCTIONAL` `acceptance[AC2]`: **after BACK the same title cannot be opened again.** The second open stops after `player.surface created handle=2`: no append, no `player.opened`, no error, for 20 s. Five of five on the device. One adapter is created at module scope in `src/App.tsx` and reused after `destroy()`. Evidence: `docs/features/e2e-harness/_facts.yml` defects D8, and scenario S04 in `docs/e2e/`.
+- R46-F2 `FUNCTIONAL` `acceptance[AC8]`: **a corrupt track file is announced as missing.** `readJson` in `src/App.tsx` throws on a parse failure exactly as on a 404, and the loader reads every throw as absence. `02e` Part C §C.6 expects "a different stated message" for a truncated file; it gets the same one. Evidence: defects D9 there, scenario S13.
+- **Shown working on a device for the first time**, which this set had only as unit tests: `AC24` — a mid-film stall is announced and playback resumes when the bytes arrive (S15) · `AC5`'s failure branch — a cue whose audio cannot be fetched still returns the film to full (S14) · `AC3` (S11) · `AC17` with its fallback (S12) · `AC4`'s scheduler half, three cues each inside its window (S10). All on a FIXTURE track, labelled as such; none of it speaks to the generated track, which still waits on `defects[D4]`.
+- R45-F1..F5 stand as written.
+**Edits:** `docs/features/_profile.yml` (73 lines, blob 526f7e4) — the shared profile, as described above. No file of this set.
+**Validation:** `npm test` exit 0 — jest 24, vitest 116 · `npm run lint` exit 0.
+**Still open:** as R45, plus R46-F1 and R46-F2.
