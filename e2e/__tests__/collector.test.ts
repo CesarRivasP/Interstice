@@ -55,6 +55,43 @@ describe('collector — beacon', () => {
   });
 });
 
+describe('collector — who may talk to it', () => {
+  // Fails if: the handler's exceptions are uncaught. One malformed request
+  // would end the collector mid-run.
+  it('answers 400 to a malformed escape and keeps serving', async () => {
+    const { c, url } = await start();
+    expect((await fetch(`${url}/fx/%E0%A4%A`)).status).toBe(400);
+    expect((await fetch(`${url}/?m=INTERSTICE.alive&b=k&s=0&t=1`)).status).toBe(204);
+    expect(c.events().map((e) => e.name)).toEqual(['alive']);
+  });
+
+  // Fails if: loopback binding is taken for authentication. A page in a
+  // browser on this machine can reach 127.0.0.1 and would forge trace lines.
+  it('refuses a request that carries an Origin, and stores nothing from it', async () => {
+    const { c, url } = await start();
+    const res = await fetch(`${url}/?m=INTERSTICE.forged&b=k&s=0&t=1`, { headers: { Origin: 'https://example.com' } });
+    expect(res.status).toBe(403);
+    expect(c.events()).toEqual([]);
+    expect((await fetch(`${url}/fx/a.json`, { headers: { Origin: 'https://example.com' } })).status).toBe(403);
+  });
+
+  it('sends no CORS header', async () => {
+    const { url } = await start();
+    const res = await fetch(`${url}/fx/a.json`);
+    expect(res.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  // DNS rebinding: a foreign name resolving to 127.0.0.1 arrives with its own Host.
+  it('refuses a Host that is not its own', async () => {
+    const { url } = await start();
+    const { request } = await import('node:http');
+    const status = await new Promise<number>((done) => {
+      request(`${url}/fx/a.json`, { headers: { Host: 'evil.example:80' } }, (r) => done(r.statusCode ?? 0)).end();
+    });
+    expect(status).toBe(403);
+  });
+});
+
 describe('collector — fixtures and faults', () => {
   // Fails if: the root check goes. The server would read any file the user can.
   it('serves the fixture directory and nothing outside it', async () => {

@@ -1,5 +1,5 @@
 import { createReadStream, existsSync, statSync } from 'node:fs';
-import { createServer, type ServerResponse } from 'node:http';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { resolve, sep } from 'node:path';
 import { matches, ordered, parseLine, type Match, type TraceEvent } from './trace.js';
 
@@ -48,11 +48,32 @@ export function createCollector(opts: { port: number; fixtureRoot: string }): Pr
   const sendFile = (res: ServerResponse, file: string, half: boolean) => {
     const size = statSync(file).size;
     const end = half ? Math.max(0, Math.floor(size / 2) - 1) : size - 1;
-    res.writeHead(200, { 'Content-Length': end + 1, 'Access-Control-Allow-Origin': '*' });
-    createReadStream(file, { start: 0, end }).pipe(res);
+    res.writeHead(200, { 'Content-Length': end + 1 });
+    // a file that vanishes mid-read must end the response, not the process
+    createReadStream(file, { start: 0, end })
+      .on('error', () => res.destroy())
+      .pipe(res);
   };
 
-  const server = createServer((req, res) => {
+  /**
+   * Who may talk to this server: the app on the device, through the reverse
+   * port forward, and nothing else.
+   *
+   * Binding to loopback is not enough. A page open in a browser on this
+   * machine can also reach 127.0.0.1, and with it could inject trace lines —
+   * forging the evidence a verdict is computed from — or read the fixtures.
+   * So: no CORS header is ever sent, a request carrying an Origin (which a
+   * browser adds and the app's fetch does not) is refused, and the Host must
+   * be this server's own, which closes DNS rebinding.
+   */
+  const allowed = (req: IncomingMessage): boolean => {
+    if (req.headers.origin !== undefined) return false;
+    const host = req.headers.host ?? '';
+    return host === `localhost:${opts.port}` || host === `127.0.0.1:${opts.port}`;
+  };
+
+  const handle = (req: IncomingMessage, res: ServerResponse): void => {
+    if (!allowed(req)) return void res.writeHead(403).end();
     const url = new URL(req.url ?? '/', `http://localhost:${opts.port}`);
 
     // endpoints.fixtures
@@ -85,7 +106,19 @@ export function createCollector(opts: { port: number; fixtureRoot: string }): Pr
       });
       for (const wake of waiters) wake();
     }
-    res.writeHead(204, { 'Access-Control-Allow-Origin': '*' }).end();
+    res.writeHead(204).end();
+  };
+
+  // A malformed request — a bad percent-escape, an unparseable URL — throws
+  // inside the handler. Uncaught, one such request would take the collector
+  // down mid-run and every scenario after it would read as the app going silent.
+  const server = createServer((req, res) => {
+    try {
+      handle(req, res);
+    } catch {
+      if (!res.headersSent) res.writeHead(400);
+      res.end();
+    }
   });
 
   const api: Collector = {

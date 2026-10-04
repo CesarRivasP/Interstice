@@ -19,7 +19,23 @@ import { createServer } from 'node:http';
 const PORT = Number(process.env.BEACON_PORT ?? 8099);
 
 createServer((req, res) => {
-  const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
+  // Loopback is reachable by any page open in a browser on this machine. The
+  // app's fetch sends no Origin and addresses this host by name; refuse the rest,
+  // and never let a malformed request end the process.
+  const host = req.headers.host ?? '';
+  if (req.headers.origin !== undefined || (host !== `localhost:${PORT}` && host !== `127.0.0.1:${PORT}`)) {
+    res.writeHead(403);
+    res.end();
+    return;
+  }
+  let url;
+  try {
+    url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
+  } catch {
+    res.writeHead(400);
+    res.end();
+    return;
+  }
   const msg = url.searchParams.get('m');
   if (msg) {
     const ts = new Date().toISOString().slice(11, 23);
@@ -27,7 +43,7 @@ createServer((req, res) => {
     const seq = (url.searchParams.get('s') ?? '').padStart(4, ' ');
     console.log(`${ts}  ${boot} ${seq}  ${msg}`);
   }
-  res.writeHead(204, { 'Access-Control-Allow-Origin': '*' });
+  res.writeHead(204);
   res.end();
 }).listen(PORT, '127.0.0.1', () => {
   console.log(`beacon listening on http://127.0.0.1:${PORT}`);
