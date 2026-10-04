@@ -117,6 +117,24 @@ Amazon feedback is not diluted by things Amazon cannot act on.
 - **and the form cannot be found.** The Model access page is retired and offers none. Invoking an Anthropic model — which is the only case the documentation says needs use-case details — returns the same `Error 002` and surfaces nothing. `put-use-case-for-model-access` exists in the CLI but takes an opaque blob of at least 1100 bytes. So the service knows a form is missing, will not say so in the error a developer actually sees, and provides no reachable way to submit it.
 - **what would have helped:** one sentence. `Error 002` could say *"this account has not submitted the required use-case details"* and link the form, exactly as `GetUseCaseForModelAccess` already does. The information exists inside the service and is withheld from the error that needs it. Two further notes: `authorizationStatus: NOT_AUTHORIZED` beside three `AVAILABLE`s reads as an entitlement problem and is not one; and the retired Model access page mentions a use-case form only for *Anthropic* models, while the requirement here gated *every* model including Amazon's own Nova.
 
+### 2026-10-04 — a build-time flag survives into the next build, in the direction that hurts
+
+- **tool:** `react-native build-vega` (Vega SDK 0.24.12112) with Metro
+- **expected:** a constant compiled in from an environment variable by a Babel plugin reflects the environment of the build that is running. Two builds from one tree: `INTERSTICE_E2E=… build-vega` for a test package, plain `npm run build` for the one that ships.
+- **happened:** the Release build made *after* the flagged one launched reporting the test host — `INTERSTICE.app.mode e2e=true host=http://localhost:8099`. Four alternating builds, four launches, all `e2e=true`. Metro's transform cache does not key on the environment, so every later build was served the transform compiled for the first. Each build exited 0 and printed `build-vega completed`; nothing distinguishes a package built from cache from one that was not.
+- **workaround:** `cacheVersion` in `metro.config.js`, set from the same variable. Five alternating builds then came out right.
+- **time_lost:** 3 min — only because the test plan already said "build flagged, then Release, clean nothing, and read the line". Without that step this is not a time cost: it is a submitted binary with a test switch in it.
+- **what would have helped:** `build-vega` printing whether the bundle came from cache, and a documented `--reset-cache`. A note in the Vega build docs that environment-driven Babel transforms need a `cacheVersion` would cost one paragraph.
+
+### 2026-10-04 — pixels and sound from the Virtual Device do exist, through a door Vega does not document
+
+- **tool:** Vega Virtual Device (SDK 0.24.12112), Vega CLI 1.3.4
+- **expected:** following the 2026-09-25 entry above — no capture path at all, and (recorded in the spec) no way to hear the device, which is why audible ducking was parked as hardware-only.
+- **happened:** the emulator under the Virtual Device has its own gRPC interface. Once its console is told `grpc 8554`, `getScreenshot` returns the real 1920x1080 frame, current after a key press, and the audio stream can be recorded: a 12 s clip came back with `mean_volume -14.4 dB`. Found through another entrant's open-source wrapper ([fortemate/vega-vvd-driver](https://github.com/fortemate/vega-vvd-driver), MIT) and their community thread — not through any Amazon page. Their notes say `inputd-cli` never reaches an app; here it does (`KEY_ENTER`, `KEY_BACK`, `KEY_DOWN`, six presses, six trace lines), on the same SDK and OS build. Two developers, one platform, opposite observations of the same binary.
+- **workaround:** the wrapper, pinned to a commit, for capture; `vega device run-cmd -c 'inputd-cli button_press KEY_*'` for keys.
+- **time_lost:** 15 min to find, read and verify — after 45 min on 2026-09-25 concluding it could not be done.
+- **what would have helped:** `vega device screenshot`, `vega device record` and `vega device press`, documented, for the Virtual Device and for devices in developer mode. The capability is already in the product; it is the command that is missing. Amazon staff have this as a feature request (community thread 29258).
+
 ---
 
 ## Toolchain

@@ -4,6 +4,8 @@ import {PlayerScreen} from './screens/PlayerScreen';
 import {setLogger} from 'react-native-tv-audio-description';
 import {createVegaAdapter} from 'react-native-tv-audio-description/vega';
 import {log} from './diagnostics';
+import {E2E, type E2EConfig} from './e2e';
+import type {AssetSource} from 'react-native-tv-audio-description';
 
 // Required rather than referenced by string so that metro bundles it into the
 // package: `mp4` is in metro's default assetExts, and the build's asset-copy
@@ -73,6 +75,10 @@ log(`INTERSTICE.asset.cue uri=${resolvedCue?.uri ?? 'NONE'}`);
 // here, over the same beacon (limits.vega_media.no_js_console).
 setLogger(line => log(`INTERSTICE.${line}`));
 
+// Which build this is, in every launch of either build. S01 asserts e2e=false
+// on the Release package, and AC15 asserts it again after a VARIANT run.
+log(`INTERSTICE.app.mode e2e=${E2E !== null} host=${E2E?.host ?? 'none'}`);
+
 // The one place the platform is chosen. Everything else in src/ reaches the
 // device only through this object — enforced by pipeline/__tests__/seam.test.ts,
 // not by good intentions.
@@ -83,7 +89,12 @@ const media = createVegaAdapter();
  * One title. `decisions.demo_asset_licensing` — openly licensed, dialogue
  * bearing, and recorded with its license in README.md.
  */
-const TITLES = [{id: 'tears-of-steel', label: 'Tears of Steel'}];
+const TITLES = [
+  {id: 'tears-of-steel', label: 'Tears of Steel'},
+  // VARIANT build only. The label is limits.fixture.title_label, verbatim: if
+  // this build is ever on screen when it should not be, it says so itself.
+  ...(E2E ? [{id: E2E.asset_id, label: 'E2E FIXTURE — not a film'}] : []),
+];
 
 /**
  * Track files sit beside the asset and are fetched like any other packaged file.
@@ -97,18 +108,59 @@ async function readJson(path: string): Promise<unknown> {
   return response.json();
 }
 
+type Playing = {id: string; asset: AssetSource; assetDir: string; cueUri: string};
+
+/** contracts.fixture_asset, read from the host and resolved against it */
+async function fixtureAsset(e2e: E2EConfig): Promise<AssetSource> {
+  const layout = (await readJson(`${e2e.segment_base}/asset.json`)) as {
+    init: string;
+    segments: {index: number; start_ms: number; end_ms: number; uri: string}[];
+  };
+  return {
+    initUri: `${e2e.segment_base}/${layout.init}`,
+    segments: layout.segments.map(s => ({
+      ...s,
+      uri: `${e2e.segment_base}/${s.uri}`,
+    })),
+  };
+}
+
 export const App = () => {
-  const [playing, setPlaying] = useState<string | null>(null);
+  const [playing, setPlaying] = useState<Playing | null>(null);
   const exit = useCallback(() => setPlaying(null), []);
+
+  const start = useCallback(async (id: string) => {
+    log(`INTERSTICE.app.play id=${id}`);
+    if (E2E && id === E2E.asset_id) {
+      try {
+        // no probe cue here: the only cues that fire are the fixture track's
+        setPlaying({
+          id,
+          asset: await fixtureAsset(E2E),
+          assetDir: E2E.asset_dir,
+          cueUri: '',
+        });
+      } catch (err) {
+        log(`INTERSTICE.app.fixture failed err=${(err as Error).message}`);
+      }
+      return;
+    }
+    setPlaying({
+      id,
+      asset: DEMO_ASSET,
+      assetDir: '/pkg/bundle/assets/src/assets',
+      cueUri: resolvedCue?.uri ?? '',
+    });
+  }, []);
 
   if (playing) {
     return (
       <PlayerScreen
         media={media}
-        asset={DEMO_ASSET}
-        cueUri={resolvedCue?.uri ?? ''}
-        assetDir="/pkg/bundle/assets/src/assets"
-        assetId={playing}
+        asset={playing.asset}
+        cueUri={playing.cueUri}
+        assetDir={playing.assetDir}
+        assetId={playing.id}
         readJson={readJson}
         onExit={exit}
       />
@@ -118,17 +170,14 @@ export const App = () => {
   return (
     <View style={styles.list}>
       <Text style={styles.heading}>Interstice</Text>
-      {TITLES.map(title => (
+      {TITLES.map((title, index) => (
         <Pressable
           key={title.id}
           accessible
           accessibilityRole="button"
           accessibilityLabel={`Play ${title.label}`}
-          hasTVPreferredFocus
-          onPress={() => {
-            log(`INTERSTICE.app.play id=${title.id}`);
-            setPlaying(title.id);
-          }}>
+          hasTVPreferredFocus={index === 0}
+          onPress={() => void start(title.id)}>
           <Text style={styles.title}>{title.label}</Text>
         </Pressable>
       ))}

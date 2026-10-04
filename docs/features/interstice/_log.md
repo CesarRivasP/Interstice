@@ -251,3 +251,20 @@ Its entry point exports `ADControls`, which loads React Native, which does not r
 **Validation:** `npm test` exit 0 — jest **24**, vitest 70 · `npm run lint` exit 0 (11 warnings, down from 18, none new) · `npm run build:release` exit 0 and the Virtual Device run above · `audit.py` below.
 **Still open:** the Bedrock use-case form · `AC20` **10-16** · `AC5`, `AC15`, `AC23` hardware-only · `AC16` · `AC19` · R44-F1, the package's Node entry.
 **Next mode:** `C13`/`C14` — the friction log and the submission, now that the three deliverables that are code exist; the R43 device findings are friction-log material.
+
+---
+
+## R45 · 2026-10-04 · claude-fable-5-1 (Claude Code) · handoff from the e2e-harness set
+**Read:** `_facts.yml` (1927 lines, blob 422b42b) · `_log.md` (253 lines, blob 61ff333 — through R44 end) · `02e-tests-and-done.md` (284 lines, blob 6b8d022)
+**Log read through:** R44
+**What this is:** a sibling set, `docs/features/e2e-harness/`, was written and its spike gate run on the Virtual Device today. It changes four files this set owns and found things in this set's app. Both are recorded here so they are not only in another set's log.
+**Edits:** `_facts.yml` (1929 lines, blob 02842d2) — one entry added, `changes[C28]` `src/e2e.ts`, because `scope.test.ts` fails on any source file with no entry · `02e-tests-and-done.md` (284 lines, blob cb0a84a) — one sentence in §B.2 citing it. Nothing else in this set was touched.
+**Files of this set changed by that one:** `src/App.tsx` (`C1`: a build-mode line at module load, and — only in a build made with `INTERSTICE_E2E` set — a second title served from a test host) · `babel.config.js` and `metro.config.js` (the flag, and the cache version that keeps it out of the Release package). `src/diagnostics.ts` (`C22`) and `src/screens/PlayerScreen.tsx` (`C2`) are next.
+**Findings for this set to disposition — none is fixed:**
+- R45-F1 `FUNCTIONAL` `acceptance[AC6]`: **the app has no seek.** Nothing in `src/` or in the package sets the playhead; the adapter listens for `seeked` and nothing causes one. `02e` Part C §C.4 cannot be walked as written.
+- R45-F2 `FUNCTIONAL` `acceptance[AC8]`: `PlayerScreen` starts in `{kind: 'missing'}`, so *"No description track was found"* is announced **before the loader has looked** — measured on the device, `controls.announce kind=missing` 2–16 ms ahead of `loader.miss` on three launches. On a title that has a track it will say that and then the opposite.
+- R45-F3 `FUNCTIONAL` `acceptance[AC8]`, `[AC2]`: the first screenshots of this app show **no visible sentence in the missing-track state** (the package's controls are unstyled; default text colour on black) and **no focus indicator on the title list**.
+- R45-F4 `CONTRADICTION` `limits.vega_media.concurrent_streams`, `.input_injection`: both say there is no screenshot and no audio capture path off the Virtual Device. Through the emulator's gRPC interface there is: 1920x1080 frames, and a 12 s clip with `mean_volume -14.4 dB`. Evidence on `docs/features/e2e-harness/_facts.yml` defects D1 and D3. To be corrected beside the originals, per `references/evidence.md`; `AC5`'s "hardware only" rests on it.
+- R45-F5 `DRIFT`: `_profile.yml commands.tests_expect` reads "63 passed, 63 total"; jest reports 24 since R44.
+**Validation:** `npm test` exit 0 — jest 24, vitest 70 · `npm run lint` exit 0.
+**Still open:** as R44, plus the five above.

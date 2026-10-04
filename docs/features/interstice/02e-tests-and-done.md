@@ -148,7 +148,7 @@ It mirrors **only the measured surface** in `limits.vega_media`. **A mock richer
 > `02c` Phase 7 stated this as a command to run by hand. **A check that lives only in a document runs when somebody remembers it**, and this one decays silently: the first import outside the seam costs nothing and breaks nothing, and by the time `changes[C12]` is packaged the seam is a comment.
 
 **`scope.test.ts`** (2) — walks the tree and fails if any source file has no `changes[]` entry.
-> **Ten components reached the device without one** (`R36-F1`). `changes[]` is what `review` sweeps and what `implement` writes phases against, so a file the registry has never heard of is outside both — the gap sweep could not have found a hazard in `SegmentBuffer` for fifteen rounds. Generated files under `src/assets/` are excluded: they are output, not scope. Mutation-checked.
+> **Ten components reached the device without one** (`R36-F1`). `changes[]` is what `review` sweeps and what `implement` writes phases against, so a file the registry has never heard of is outside both — the gap sweep could not have found a hazard in `SegmentBuffer` for fifteen rounds. Generated files under `src/assets/` are excluded: they are output, not scope. Mutation-checked. It fired again on 2026-10-04, on `src/e2e.ts` — a file written by the sibling set `docs/features/e2e-harness/` — until `changes[C28]` registered it here.
 
 ### The contract test that needs `D4`
 
