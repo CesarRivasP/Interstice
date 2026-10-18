@@ -73,7 +73,7 @@ dropped the trailing gap would have deleted it.
 
 ## Verification
 
-**[The verification report](https://cesarrivasp.github.io/Interstice/e2e/)** (`docs/e2e/index.html` in this repository) shows the app running through its use cases on the Vega Virtual Device: what was on screen, what the viewer was told, and the trace lines that decided each result — mapped to every acceptance criterion in `docs/features/interstice/`, including the ones it cannot close and the two it currently fails. The same page is in the repository at `docs/e2e/index.html`.
+**[The verification report](https://cesarrivasp.github.io/Interstice/e2e/)** (`docs/e2e/index.html` in this repository) shows the app running through its use cases on the Vega Virtual Device: what was on screen, what the viewer was told, and the trace lines that decided each result — mapped to every acceptance criterion in `docs/features/interstice/`, including the ones it cannot close. The two it failed on 2026-10-04 (reopening a title after BACK, a corrupt track announced as missing) were fixed and re-run green on 2026-10-18.
 
 To re-run it: a booted Vega Virtual Device (SDK 0.24), Node 20+, `ffmpeg`, then
 
@@ -111,9 +111,9 @@ tracked here rather than implied. The registry behind every line is
   "✅ Description of the frames generated end to end by the pipeline against <model>; the
   track in the demo is that one, and no cue text is hand-written" — and drop the
   "labelled fixture track" clause above. -->
-- ⚠️ Two defects the harness found on the device are open at the time of writing — the same
-  title cannot be reopened after BACK, and a corrupt track file is announced as missing.
-  The report above is the current word on both.
+- ✅ The two defects the harness found on the device on 2026-10-04 — the same title could
+  not be reopened after BACK, and a corrupt track file was announced as missing — are fixed
+  and re-verified on the device on 2026-10-18; the report above is the run that shows it.
 - ❌ **VoiceView is not demonstrated.** It cannot be enabled on the Vega Virtual Device by
   any documented route (the config write returns `No permission for operation`), and no
   physical Fire TV was available. The controls carry accessibility roles and labels, and
