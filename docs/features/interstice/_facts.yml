@@ -435,6 +435,43 @@ limits:
                    on this project and schedule.* gains no date from it. Recorded
                    because the absence of a deadline is a fact worth knowing once,
                    rather than a question worth asking twice.'
+    rules_reread:
+      basis: measured
+      evidence: { how: shell, date: 2026-10-18, n: 1,
+                  cmd: 'curl -sS -A "Mozilla/5.0" -o rules.html -w "%{http_code} %{size_download}" https://amazonappdev2026.devpost.com/rules && python3 -c "strip tags from rules.html, print 300 chars around Friction / Product Feedback / hello world / GitHub username / Critical"; curl -sS https://r.jina.ai/https://amazonappdev2026.devpost.com/details/faqs | rg -A2 footage; curl -sS https://r.jina.ai/https://amazonappdev2026.devpost.com/resources | rg "October 7th"; curl -sS https://r.jina.ai/https://amazonappdev2026.devpost.com/updates | rg -A3 "Office Hours #2"',
+                  value: 'rules 200 189043 bytes. "Optional – Friction Log Entries: specific task attempted, steps taken, expected vs. actual result, severity rating, workaround used, and actionable suggestion. Participants who submit friction logs score higher in judging (up to 10% bonus)." · "Include Product Feedback for each tool, API, or SDK used in your project, tell us: Which developer tools, apis and SDKs did you use and for what? What worked well? (i.e. setup, documentation, docs, testing, performance, reliability) What needs work? (i.e. system errors, docs sections, missing features, compatibility issues, tool limitations, required workarounds) How was your onboarding experience (getting from zero to hello world) Would you build with these devices and services again? Yes/No and please tell us why" · "For AWS Builder (Mini Challenge): Describe which AWS service(s) you used and how, in your Product Feedback answer." · "For Open Source (Mini Challenge): Provide contribution URL, project repository URL, GitHub username, and a description of what you did, how it works, and why it matters." · "Optional – Feature Requests: description, why it matters to their project, and priority rating (Critical / Important / Nice-to-have)" · faqs: "Any third-party media you use needs to be content you have the rights to use, and your video should primarily demonstrate your own project. Properly-attributed, brief supporting or background footage is typically fine - check with us on the specifics (how much of the video it makes up and how it is used) before finalizing." · resources: "October 7th Update: Unfortunately, we are out of credit codes and are no longer accepting credit requests." · updates: "Office Hours #2 Monday, October 19 | 11:00 am to 12:00 pm CT (9:00 am PT)"',
+                  note: 'THE RULES PAGE ANSWERS A BROWSER USER AGENT. Without one it returned 202 empty (R1); through the read proxy it is a 403 behind a JavaScript challenge (2026-10-18). With -A "Mozilla/5.0" it is 200 and the full HTML, which is what makes this measured rather than read by hand. The faqs, resources and updates pages come through the proxy unchanged. The deadline on the page still reads "Oct 23, 2026 @ 12:00pm PDT".' }
+      friction_log_entry_shape: 'specific task attempted, steps taken, expected vs. actual result,
+                   severity rating, workaround used, actionable suggestion. FRICTION-LOG.md
+                   gained a severity scale and a severity + steps line per entry on 2026-10-18
+                   (changes[C13]); decisions.friction_log_shape predates the re-read and names
+                   neither — the decision is the floor, the rules are the shape that scores.'
+      product_feedback_required: 'per tool, API or SDK: (1) used for what, (2) what worked well,
+                   (3) what needs work, (4) onboarding from zero to hello world, (5) build with
+                   it again yes/no and why. Not optional — the 2026-10-05 tips mail calls it
+                   "a required part of every submission". Drafted in SUBMISSION.md §2.8 for
+                   seven tools.'
+      feature_request_priorities: 'Critical / Important / Nice-to-have — optional block, SUBMISSION.md §2.9'
+      open_source_required: 'contribution URL, project repository URL, GitHub username, what / how / why — SUBMISSION.md §2.6'
+      aws_builder_required: 'which AWS service(s) and how, inside the product feedback — SUBMISSION.md §2.7'
+      video_third_party_media: 'FAQ added ~2026-10-06: rights required, properly attributed,
+                   brief supporting footage typically fine, "check with us on the specifics
+                   before finalizing". Tears of Steel (CC BY 3.0) is played INSIDE the app as
+                   the asset the product describes — it is the subject, not background — and
+                   the attribution line is SUBMISSION.md §4. The "check with us" is the one
+                   question for office_hours_2.'
+      aws_credits_exhausted: '2026-10-07 — resources page: no more credit codes. Ours was
+                   redeemed 2026-09-25 (aws_credits_redeemed), so nothing here depends on it.'
+      office_hours_2: '2026-10-19 09:00 PT (11:00 CT), Zoom, per the updates page — the last
+                   organiser contact before the form.'
+      submission_tips:
+        basis: asserted
+        source: 'Devpost "Strong Submission Tips" mail of 2026-10-05; the updates page carries
+                 its first paragraph verbatim and truncates the rest behind a login'
+        falsified_by: 'the full update text, read logged in, saying something other than the three points below'
+        what: 'name the track tool explicitly in the description, in Built With and in the
+               video; no API keys anywhere — repository, video or form; treat the video as a
+               pitch: problem, the solution working, who it is for, how it uses the track tool.'
     friction_log_bonus_pct: 10
     repo_must_be: 'EITHER public with a detectable open-source license file (visible in the
                    GitHub About section) OR private and shared with testing@devpost.com plus
@@ -1118,11 +1155,13 @@ changes:
                extracted as a standalone public repo with a runnable example,
                license and README. Commits must land inside the submission window' }
   - { id: C13, file: FRICTION-LOG.md, kind: planned, where: repo,
+      built: '2026-10-18 (R47-W3) — closed out. 15 entries dated 2026-09-22..2026-10-04 on four distinct days, each committed the day it is dated, plus the dated 2026-10-18 update under the 09-26 entry (acceptance[AC11] has the per-entry commit dates). A severity scale (Critical / High / Medium / Low) and a severity + steps line per entry were added at close-out per limits.hackathon.rules_reread.friction_log_entry_shape, each marked "added 2026-10-18"; no dated word changed. The 2026-10-18 Bedrock fact (form submitted via PutUseCaseForModelAccess, Error 002 unchanged, AWS docs point at Sales) sits under the 09-26 entry. 2 Critical, 3 High, 4 Medium, 6 Low.',
       change: 'dated friction entries collected WHILE building per
                decisions.friction_log_shape — tool | expected | happened |
                workaround | time_lost, 5–8 real entries, never reconstructed at
                the end' }
   - { id: C14, file: SUBMISSION.md, kind: planned, where: repo,
+      built: '2026-10-18 (R47-W3) — written, PENDING the video URL and one fork. Holds the Devpost field checklist; paste-ready text per field, with [IF GENERATED TRACK LANDS] / [IF NOT] variants wherever a claim depends on a generated track existing on 10-22 (today [IF NOT] is true); the Open Source and AWS Builder blocks; product feedback for seven tools on the five required questions; feature requests with priority; the AC16 figure with its source; the statement that AC20 was dropped; the video script per 02d §16.6 with the VoiceView and AC20 honesty beats; and the Tears of Steel attribution. There is NO validation quote — the change text below predates the drop.',
       change: 'demo video script with gap visualization per
                decisions.gap_visualization (timeline strip + split-screen
                before/after), product-feedback draft, user-validation quote per
@@ -1864,16 +1903,41 @@ acceptance:
                   cmd: 'git clone https://github.com/CesarRivasP/react-native-tv-audio-description.git <empty dir> && npm install && npm run example && npm test; npm view react-native-tv-audio-description version license gitHead',
                   value: 'public repo, MIT; install exit 0, example exit 0 ("all invariants held"), 85 tests passed; npm 0.1.0, license MIT, gitHead 86d9ad6 = tag v0.1.0',
                   note: 'COMMITS: every one dated 2026-09-27, after this project began (09-19) and before limits.hackathon.submission_deadline. The period''s START is elided ("...") in limits.hackathon''s own evidence, so "inside the window" rests on the project having started inside it, not on a measured start date. Cross-links both ways: the package README and CHANGELOG link to this repo, and this repo''s README links to the package (R44).' } }
-  - { id: AC11, item: 'FRICTION-LOG.md holds dated entries written during the build, not reconstructed at the end', status: written }
-  - { id: AC12, item: 'the demo video is under 3 minutes, in English, and shows the app running on the target platform', status: written }
-  - { id: AC13, item: 'every Devpost field is submitted before 2026-10-23 12:00 PT, with the primary track and both mini challenges declared', status: written }
+  - { id: AC11, item: 'FRICTION-LOG.md holds dated entries written during the build, not reconstructed at the end', status: executed,
+      verified_on: 2026-10-18,
+      evidence: { how: shell, date: 2026-10-18, n: 1,
+                  cmd: 'rg -o "^### 2026-[0-9-]+" FRICTION-LOG.md | sort | uniq -c; for each heading: git log --reverse --format=%as -S"<heading>" -- FRICTION-LOG.md | head -1',
+                  value: '15 entries on 4 distinct days: 6x 2026-09-22, 6x 2026-09-25, 1x 2026-09-26, 2x 2026-10-04. First commit carrying each heading (entry date -> commit date): 2026-09-22->2026-09-22, 2026-09-22->2026-09-22, 2026-09-22->2026-09-22, 2026-09-22->2026-09-22, 2026-09-25->2026-09-25, 2026-09-25->2026-09-25, 2026-09-25->2026-09-25, 2026-09-25->2026-09-25, 2026-09-25->2026-09-25, 2026-09-25->2026-09-25, 2026-09-26->2026-09-26, 2026-10-04->2026-10-04, 2026-10-04->2026-10-04, 2026-09-22->2026-09-22, 2026-09-22->2026-09-22',
+                  note: 'the close-out edits of 2026-10-18 (severity scale, severity + steps lines, the Bedrock update) are marked inline with their date and touch no dated word, so a reader can tell what was written on the day from what was added at the end.' },
+      attempts: [ { date: 2026-10-18, outcome: passed, env: 'R47-W3, documents only, no device' } ] }
+  - { id: AC12, item: 'the demo video is under 3 minutes, in English, and shows the app running on the target platform', status: written,
+      attempts: [ { date: 2026-10-18, outcome: aborted_no_conditions,
+                    aborted_because: 'the video is not recorded. The script is SUBMISSION.md §3 (2:45 target, the order of 02d §16.6, the VoiceView and AC20 beats stated on screen), the URL placeholder is §2.4; recording waits on the 10-22 fork between a generated and a fixture track',
+                    env: 'R47-W3, documents only' } ] }
+  - { id: AC13, item: 'every Devpost field is submitted before 2026-10-23 12:00 PT, with the primary track and both mini challenges declared', status: written,
+      attempts: [ { date: 2026-10-18, outcome: aborted_no_conditions,
+                    aborted_because: 'the form is filled once, by hand, on 10-22. Every field is drafted in SUBMISSION.md §2 against limits.hackathon.rules_reread — name, tagline, description naming Vega OS / Fire TV / Amazon Bedrock / Amazon Polly, Built With, URLs, track and both mini challenges, the Open Source and AWS Builder blocks, product feedback, feature requests, friction log — with the video URL missing and one fork open',
+                    env: 'R47-W3, documents only' } ] }
   - { id: AC14, item: 'the author watches the demo asset end to end with the description track and rates every cue 1–5 against the picture; track mean and % failed are recorded and the worst cues are regenerated before the demo video is recorded', status: written }
   - { id: AC15, item: 'the control surface is exercised under VoiceView: every control is reachable and announces its state, and the demo video shows it', status: written, closes_on: 'physical hardware only — limits.vega_media.voiceview_not_enablable, measured 2026-09-25' }
-  - { id: AC16, item: 'the submission package cites at least one sourced figure on audio-description coverage; the figure and its source enter the registry before the prose', status: written }
+  - { id: AC16, item: 'the submission package cites at least one sourced figure on audio-description coverage; the figure and its source enter the registry before the prose', status: executed,
+      verified_on: 2026-10-18,
+      figure: '13,109 unique titles with an English audio description track at year-end 2025, across cinema, DVD, Spectrum Access and over 20 streaming services; +24% over year-end 2024 (Netflix +307, Prime Video +597 in the year)',
+      source: 'ADP Webmaster Report 2025 — American Council of the Blind, Audio Description Project — https://adp.acb.org/node/315600',
+      evidence: { how: shell, date: 2026-10-18, n: 1,
+                  cmd: 'curl -sS https://r.jina.ai/https://adp.acb.org/node/315600 > adp.md; rg -n "13,109" adp.md; rg -n "24% over" adp.md; rg -n "Netflix: " adp.md; rg -n "Prime Video: " adp.md',
+                  value: 'At year-end, we had 13,109 unique titles available with English audio description tracks from Cinema, DVD, Spectrum Access, and over 20 streaming services. This was an increase of 24% over year-end 2024, which was 2% more than 2024 over 2023. · Netflix: +307,11% · Prime Video: +597, +10%',
+                  note: 'entered here before SUBMISSION.md §2.11, README and the video script cited it, as the criterion requires. The page carries no publication date beyond the report year. SECONDARY, older and narrower, kept for a percentage if the form asks for one: Lenstore, UK, Netflix, data as of 2021-01-12 — "Only 25.4% of the titles available to stream have Audio Descriptions, whereas 74.5% do not." https://www.lenstore.co.uk/research/the-accessibility-of-streaming/ . A blog figure of "7% of streaming content" attributed to ACB could not be found on any ACB page and is NOT used.' },
+      attempts: [ { date: 2026-10-18, outcome: passed, env: 'R47-W3, web read through the text proxy' } ] }
   - { id: AC17, item: 'three verbosity levels (concise/standard/detailed) are selectable from the remote, rescale max_words_per_cue per limits.ad.verbosity_scales, and are demonstrated in the demo', status: written }
   - { id: AC18, item: 'a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch', status: written }
   - { id: AC19, item: 'the submission video visualizes the gap structure (timeline strip with dialogue vs gaps + split-screen before/after with ducking) using data from C7', status: written }
-  - { id: AC20, item: 'at least one blind/low-vision viewer validates the track before Phase 5 (20–30 min, with/without comparison, consent on file); anonymized quote retained for SUBMISSION.md/video', status: written }
+  - { id: AC20, item: 'at least one blind/low-vision viewer validates the track before Phase 5 (20–30 min, with/without comparison, consent on file); anonymized quote retained for SUBMISSION.md/video', status: retired,
+      retired_on: 2026-10-18,
+      retired_because: 'decisions.user_validation set a hard cut-off — nobody confirmed by 10-16 and AC20 is dropped and the submission says so. Nobody was confirmed. Dropped on that rule, two days after the cut-off, rather than the deadline moved or a quote invented; stated in SUBMISSION.md §2.11, README Status, 03 §A.6 and the video script. owners.external and tracking.blocked_by (1) describe a dependency that no longer exists; they are left for the coordinator, who owns the header.',
+      attempts: [ { date: 2026-10-18, outcome: aborted_no_conditions,
+                    aborted_because: 'no participant confirmed by the 2026-10-16 cut-off that decisions.user_validation set',
+                    env: 'R47-W3' } ] }
   # AC21 / AC22 were removed on 2026-09-19 (review R5) together with C15/C16.
   # A criterion whose component is deferred is a criterion nothing can satisfy —
   # base gap sweep, §Trimming scope. They return verbatim if
