@@ -102,6 +102,10 @@ export const RELEASE: Scenario[] = [
     ],
     assertions: [
       { kind: 'seen', expect: { name: 'controls.announce', where: { kind: 'missing' } } },
+      // The announcement comes AFTER the loader looked, never before. Until
+      // R47-W1 it was asserted as `seen` only, because the app announced
+      // `missing` on mount, 2–16 ms ahead of loader.miss (R45-F2).
+      { kind: 'order', expect: [{ name: 'loader.miss' }, { name: 'controls.announce', where: { kind: 'missing' } }] },
       // the film is still moving AFTER the loader gave up
       { kind: 'order', expect: [{ name: 'loader.miss' }, progress, progress] },
       // Not "no stall at all": MSE emits `waiting` at the start of every normal
