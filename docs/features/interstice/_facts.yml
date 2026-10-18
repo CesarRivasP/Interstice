@@ -1850,13 +1850,23 @@ tests_baseline:
 
 acceptance:
   - { id: AC1, item: 'the app runs on the Vega simulator and plays the demo asset end to end', status: written }
-  - { id: AC2, item: 'every screen state — loading, playing, error, empty — has a focusable element, and BACK during playback has a stated destination', status: written }
+  - { id: AC2, item: 'every screen state — loading, playing, error, empty — has a focusable element, and BACK during playback has a stated destination', status: written,
+      attempts: [
+        { date: 2026-10-04, outcome: failed, env: 'Vega Virtual Device, OS 1.2, Release aarch64, SDK 0.24.12112 — e2e-harness S04, run 2026-10-04T16-41-25-178Z-release',
+          note: 'BACK reached the list (player.back from=playing) but the second ENTER never produced a second player.opened: the viewer could not start over — R46-F1 in `_log.md`, the second-open hang the e2e-harness set tracks as its D8.' },
+        { date: 2026-10-18, outcome: passed, env: 'Vega Virtual Device, OS 1.2, Release aarch64, SDK 0.24.12112 — e2e-harness S04 and S01, run 2026-10-18T20-10-13-786Z-release, app commit 866ccec',
+          note: 'the BACK half: player.back from=playing, then a second app.play and a second player.opened, 2.0 s apart. The "focusable element in every state" half is not what a trace can show — a focus indicator visible on screen is R45-F3 and still open — so status stays written; the flip is the owner''s.' } ] }
   - { id: AC3, item: 'description can be toggled on and off from the remote without interrupting playback', status: written }
   - { id: AC4, item: 'description cues play inside real dialogue gaps and never overlap dialogue', status: written }
   - { id: AC5, item: 'the main track ducks to limits.ad.duck_target_pct during a cue and returns to full afterwards', status: written }
   - { id: AC6, item: 'seeking and held-direction key repeat resync the scheduler without firing a cue per key event', status: written }
   - { id: AC7, item: 'the description track is produced end to end by the pipeline from asset plus subtitles — no cue text is hand-written', status: written }
-  - { id: AC8, item: 'a failed or missing track produces a stated visible and spoken state, not silence', status: written }
+  - { id: AC8, item: 'a failed or missing track produces a stated visible and spoken state, not silence', status: written,
+      attempts: [
+        { date: 2026-10-04, outcome: failed, env: 'Vega Virtual Device, OS 1.2, Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112 — e2e-harness S05 and S13, runs 2026-10-04T16-41-25-178Z-release and 2026-10-04T16-35-32-657Z-variant',
+          note: 'missing (S05): spoken, but announced 2–16 ms BEFORE loader.miss — before anybody had looked (R45-F2). Malformed (S13): the truncated file was announced as missing, the same sentence as absence — R46-F2, the second-open hang''s sibling in the e2e-harness set, its D9.' },
+        { date: 2026-10-18, outcome: passed, env: 'Vega Virtual Device, OS 1.2, Release aarch64 (+ INTERSTICE_E2E for S13), SDK 0.24.12112 — e2e-harness S05 run 2026-10-18T20-10-13-786Z-release and S13 run 2026-10-18T20-12-14-975Z-variant, app commit 866ccec',
+          note: 'the SPOKEN half: missing is announced after loader.miss and never before it; a truncated file yields loader.load ok=false reason=malformed and "The description track for this title could not be read" — a different sentence from absence — while player.progress keeps advancing. The VISIBLE half is R45-F3(b), still open: the package controls are unstyled and the sentence is dark text on a black screen. So status stays written; the flip is the owner''s.' } ] }
   - { id: AC9, item: 'the live capture layer, if it ships, is off by default and names where the frame goes before the first send', status: written }
   - { id: AC10, item: 'react-native-tv-audio-description is public, licensed, documented, and has a runnable example, with commits inside the submission window', status: executed,
       verified_on: 2026-09-27,
