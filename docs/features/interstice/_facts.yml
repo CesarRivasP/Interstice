@@ -322,6 +322,12 @@ decisions:
     why: 'the 10% bonus is not guaranteed (accepted risk) and a log written
            at the end reads as fabricated; a shaped log written as a by-product
            costs near zero and is the only form that scores.'
+    amended: '2026-10-18 (coordinator merge of R47-W3-F1): the rules page re-read
+              that day names a severity rating and the steps taken as part of the
+              scoring shape (limits.hackathon.rules_reread), so every entry now
+              carries severity: and steps; the count is 15, past the 5–8 target,
+              every one dated the day it was committed (AC11). The shape line above
+              is the original decision; the file is the amended one.'
     cited_in: ['01 §3.1', '01 §3.2', '01 §7']
 
   typesafe_judgment_layer:

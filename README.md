@@ -159,6 +159,14 @@ the attribution — is drafted in [`SUBMISSION.md`](SUBMISSION.md).
 - AWS credentials with `bedrock:InvokeModel` and `polly:SynthesizeSpeech` (pipeline only —
   the app calls no AWS service at runtime; on the entrant account Bedrock is refused, see Status)
 
+**Two generated inputs the app imports, not in git.** `src/App.tsx` imports
+`src/assets/seg/segments.ts`, written by `pipeline/prepare.ts` next to the fragmented
+segments it emits for the 20 s excerpt `src/assets/clip.mp4` (`media/clip.manifest.json`).
+Both are gitignored build output, so a fresh clone fails `npm test` and the Vega build with
+`Cannot find module './assets/seg/segments'` until they exist. Regenerating them is not yet
+a single command: cut the excerpt with ffmpeg per the manifest and run `prepare.ts` over it
+(see `pipeline/__tests__/prepare.test.ts` for the call). Tracked as a known gap.
+
 **Install and verify**
 
 ```bash
