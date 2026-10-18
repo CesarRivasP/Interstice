@@ -35,6 +35,7 @@
   "dependencies": {
     "@amazon-devices/react-native-kepler": "~4.0.0",
     "@amazon-devices/react-native-w3cmedia": "~2.3.2",
+    "@anthropic-ai/sdk": "^0.135.0",
     "@aws-sdk/client-bedrock-runtime": "^3.0.0",
     "@aws-sdk/client-polly": "^3.0.0",
     "react": "19.2.0",

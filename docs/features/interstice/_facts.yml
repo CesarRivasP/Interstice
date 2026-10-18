@@ -1041,6 +1041,33 @@ changes:
                the player short of the end in a `waiting` that never resolves.' }
   - { id: C28, file: src/e2e.ts, kind: planned, where: repo, built: '2026-10-04 (R45) — owned by docs/features/e2e-harness as its C13',
       change: 'the build-time flag resolved to a test-host config, or null. A Release build compiles it to null: the flag is a constant written by babel.config.js, and metro.config.js keys its transform cache on it. Nothing at run time can change it.' }
+  - { id: C29, file: pipeline/run.ts, kind: planned, where: repo, built: '2026-10-18 (R47-W2)',
+      change: 'the orchestrator: subtitles -> gaps and cues (C7) -> frames (C8) ->
+               descriptions (C9) -> synthesis and one track file per verbosity level
+               (C10), under generated/<asset_id>/. Every stage is idempotent — frames
+               are indexed on disk and reused, descriptions are cached per window key
+               and level and only an ok entry is final, a clip whose sentence has not
+               changed is not re-synthesised — so a re-run pays only for what is missing
+               or failed, which is also how AC14 regenerates the worst cues. --dry-run
+               runs the same code with the fake provider and a fake Polly (ffmpeg
+               silence in the C10 container), so the whole flow runs with no account
+               and no network: 163 fake calls, three validating tracks, second run
+               zero calls (pipeline/__tests__/run.test.ts).' }
+  - { id: C30, file: pipeline/providers/, kind: planned, where: repo, built: '2026-10-18 (R47-W2)',
+      change: 'the DescriptionProvider seam alternatives[A5] relied on — up to
+               limits.ad.frames_per_gap_max JPEG frames plus text in, one string out —
+               with three implementations. BedrockConverseProvider: the Converse API with
+               image blocks, BEDROCK_MODEL_ID, backoff per limits.bedrock.on_throttle,
+               and the account-level Error 002 of defects[D4] surfaced ONCE as a fatal
+               error whose message names DESCRIPTION_PROVIDER=anthropic — the pipeline
+               never switches providers on its own. AnthropicProvider: the Messages API,
+               ANTHROPIC_API_KEY, ANTHROPIC_MODEL_ID defaulting to claude-sonnet-5-5 (the
+               latest Sonnet the installed @anthropic-ai/sdk 0.135.0 types name), a
+               refusal returned as an empty answer so validation fails the cue. Fake
+               Provider: answers from the prompt (about the words it asked for), for
+               --dry-run and the suite. Selected by DESCRIPTION_PROVIDER=bedrock|anthropic,
+               default bedrock. A DIRECTORY entry: scope.test.ts reads a trailing slash
+               as covering every source file beneath it.' }
   - { id: C26, file: pipeline/segment.ts, kind: planned, where: repo,
       built: '2026-09-26 (R35)',
       change: 'cuts the asset into fragmented-MP4 segments plus an init segment, for
@@ -1083,6 +1110,14 @@ changes:
                frames for a minute and a half of film; after C7 splits it, each
                12-second window gets its own three.' }
   - { id: C9, file: pipeline/describe.ts, kind: planned, where: repo,
+      built: '2026-10-18 (R47-W2) — written and unit-tested behind the DescriptionProvider
+              seam of changes[C30]: prompt building, the S2 fence, shape and budget
+              validation, one retry with the budget restated, rolling context and the
+              cast pass are pure functions under 26 tests, and the dry run exercises
+              them end to end on the demo subtitles (47/55/60 cues, 163 calls). NOT YET
+              RUN AGAINST A REAL MODEL: Bedrock is still refused (defects[D4], re-measured
+              2026-10-18) and no ANTHROPIC_API_KEY was present in the build session, so
+              acceptance[AC7] records an attempt, not a pass.',
       change: 'dramatis personae pass (one Bedrock call) then per CUE (re-scoped
                R13 — cues, not gaps): up to
                limits.ad.frames_per_gap_max frames + surrounding subtitle context
@@ -1097,7 +1132,12 @@ changes:
               with Polly and ffmpeg injected. The END-TO-END run waits on defects[D4]:
               a track needs cue TEXT, that comes from changes[C9], and AC7 forbids
               hand-writing any. The container half IS measured — limits.polly.container_chain
-              ran real Polly bytes through ffmpeg to the device in R23.',
+              ran real Polly bytes through ffmpeg to the device in R23.
+              2026-10-18 (R47-W2): changes[C29] (pipeline/run.ts) now wires C7 -> C8 -> C9
+              -> C10 end to end, and the dry run emits all three track files — 47/55/60
+              cues, fake provider, fake Polly — each validating against the package
+              TrackLoader. The PAID end-to-end run still waits on D4 or on an
+              ANTHROPIC_API_KEY (alternatives[A5]).',
       change: 'Polly synthesis per cue plus emission of the track file matching
                (note R13: cue count now varies by verbosity level, because
                limits.ad.min_useful_words drops more windows at concise than at
@@ -1339,8 +1379,8 @@ defects:
             the entrant AWS account, in every region tried, while Polly on the same credentials
             succeeds. The block is account-scoped and Bedrock-specific.'
     basis: measured
-    evidence: { how: shell, date: 2026-09-26, n: 5,
-                spread: 'byte-identical on all four runs — 2026-09-22, 2026-09-25 (after the credit GRANT), 2026-09-26 (after the credit REDEMPTION, which required a payment method on file), 2026-09-26 from the BEDROCK CONSOLE PLAYGROUND (a different code path with a console session), and 2026-09-26 from a NEWLY CREATED IAM USER holding bedrock:InvokeModel — three identities, two code paths, one answer',
+    evidence: { how: shell, date: 2026-10-18, n: 6,
+                spread: 'byte-identical on all four runs — 2026-09-22, 2026-09-25 (after the credit GRANT), 2026-09-26 (after the credit REDEMPTION, which required a payment method on file), 2026-09-26 from the BEDROCK CONSOLE PLAYGROUND (a different code path with a console session), and 2026-09-26 from a NEWLY CREATED IAM USER holding bedrock:InvokeModel — three identities, two code paths, one answer. SIXTH RUN 2026-10-18, ~16:05 America/Caracas, AFTER the use-case form was submitted via PutUseCaseForModelAccess: GetUseCaseForModelAccess now returns the form, and Converse on amazon.nova-lite-v1:0 and amazon.nova-pro-v1:0 in us-east-1 and us-west-2 still returns the same Error 002, at 5 s and again at ~5 min',
                 cmd: 'aws bedrock-runtime converse --region us-east-1 --model-id amazon.nova-lite-v1:0 --messages ... ; aws bedrock get-foundation-model-availability --region us-east-1 --model-id amazon.nova-lite-v1:0',
                 value: 'ValidationException — "Error 002: Access to Bedrock models is not
                         allowed for this account"; identical in us-east-1, us-west-2 and
@@ -1387,7 +1427,19 @@ defects:
               mentions a form. The console playground fails and never mentions a form.
               Every eliminated hypothesis below was eliminated correctly; none of them
               could have been the answer, because the answer was a prerequisite nobody
-              was told about.'
+              was told about.
+              FALSIFIED 2026-10-18 (R47-W2). The form was submitted
+              (PutUseCaseForModelAccess, ~16:05 America/Caracas; GetUseCaseForModelAccess
+              returns it) and Converse on nova-lite and nova-pro in us-east-1 and
+              us-west-2 still returns Error 002, at 5 s and at ~5 min. The form was a
+              missing prerequisite, not THE cause, for Nova: the AWS documentation now
+              states that the use-case form applies to Anthropic models only, and that
+              a persistent Error 002 means "contact AWS Sales". So the 09-26 hypothesis
+              that the form gates every model is dead, nothing an entrant can run
+              changes the answer, and what remains is an AWS Sales conversation on the
+              owner''s clock. The pipeline carries the alternatives[A5] fallback
+              (changes[C30]: DESCRIPTION_PROVIDER=anthropic), chosen by the operator,
+              never silently. STILL OPEN.'
     note: 'RULED OUT by measurement, so no later round re-tests them: not regional (three
            regions, same error) · not the API shape (InvokeModel and Converse, same error)
            · not the retired Model-access console page (it is retired; models auto-enable
@@ -1831,7 +1883,10 @@ endpoints:
 # variables pointing at halves of a file that already describes both is a second
 # source of truth for the same facts. Names only, never values, and no credential
 # reaches the app bundle: the device reads a generated track file and calls nothing.
-env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_MANIFEST, TYPESAFE_API_KEY]
+# DESCRIPTION_PROVIDER, ANTHROPIC_API_KEY and ANTHROPIC_MODEL_ID were added in R47-W2
+# with changes[C30]: the alternatives[A5] fallback for changes[C9] while defects[D4]
+# stands. bedrock is the default; the switch is the operator's, never the pipeline's.
+env_vars: [AWS_REGION, BEDROCK_MODEL_ID, POLLY_VOICE_ID, DEMO_ASSET_MANIFEST, TYPESAFE_API_KEY, DESCRIPTION_PROVIDER, ANTHROPIC_API_KEY, ANTHROPIC_MODEL_ID]
 
 # =====================================================================
 # VERIFICATION ANCHORS
@@ -1899,7 +1954,9 @@ acceptance:
   - { id: AC4, item: 'description cues play inside real dialogue gaps and never overlap dialogue', status: written }
   - { id: AC5, item: 'the main track ducks to limits.ad.duck_target_pct during a cue and returns to full afterwards', status: written }
   - { id: AC6, item: 'seeking and held-direction key repeat resync the scheduler without firing a cue per key event', status: written }
-  - { id: AC7, item: 'the description track is produced end to end by the pipeline from asset plus subtitles — no cue text is hand-written', status: written }
+  - { id: AC7, item: 'the description track is produced end to end by the pipeline from asset plus subtitles — no cue text is hand-written', status: written,
+      attempts: [{ date: 2026-10-18, round: R47-W2, outcome: aborted_no_conditions,
+                   aborted_because: 'the pipeline runs end to end only with the fake provider (npm run pipeline -- --dry-run: 163 fake calls, three tracks validating against the package TrackLoader, exit 0). Bedrock still returns Error 002 after the use-case form (defects[D4]) and ANTHROPIC_API_KEY was not set in the build session, so no real model has produced a cue; the dry-run tracks are fake text and prove the flow, not the criterion.' }] }
   - { id: AC8, item: 'a failed or missing track produces a stated visible and spoken state, not silence', status: written,
       attempts: [
         { date: 2026-10-04, outcome: failed, env: 'Vega Virtual Device, OS 1.2, Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112 — e2e-harness S05 and S13, runs 2026-10-04T16-41-25-178Z-release and 2026-10-04T16-35-32-657Z-variant',

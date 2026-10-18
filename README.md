@@ -177,14 +177,36 @@ vega run-app build/x86_64-release/interstice_x86_64.vpkg com.cesarrivasp.interst
 
 **Run the pipeline**
 
+The asset manifest (`media/tears-of-steel.manifest.json`) names the media file, the
+subtitles and the describable content windows. The media file itself is downloaded, never
+committed. Output lands under `generated/<asset_id>/`: one `<asset_id>.<verbosity>.track.json`
+per level, `audio/` with one fragmented-mp4 clip per cue, and `frames/` plus `cache/` so a
+re-run pays only for what is missing or failed.
+
 ```bash
+# No account, no network: a fake vision model and a fake Polly (ffmpeg silence),
+# everything else real. Runs without the media file too (frames are stubbed then).
+npm run pipeline -- --dry-run
+
+# Bedrock for the descriptions (the default provider), Polly for the voice
 export AWS_REGION=us-east-1
 export BEDROCK_MODEL_ID=amazon.nova-pro-v1:0
 export POLLY_VOICE_ID=Joanna
-export DEMO_ASSET_PATH=/path/to/tears-of-steel.mp4
-export DEMO_SUBTITLES_PATH=media/tears-of-steel.en.srt
+export DEMO_ASSET_MANIFEST=media/tears-of-steel.manifest.json
 npm run pipeline
+
+# Anthropic Messages API for the descriptions, Polly for the voice
+export DESCRIPTION_PROVIDER=anthropic
+export ANTHROPIC_API_KEY=...           # ANTHROPIC_MODEL_ID defaults to claude-sonnet-5-5
+npm run pipeline
+
+# Optional flags: --levels standard,concise  --limit 5  --out <dir>  --frames stub
 ```
+
+If Bedrock answers with the account-level `Error 002` the run stops on its first call with
+a message naming `DESCRIPTION_PROVIDER=anthropic`. The pipeline never switches providers on
+its own. A throttle is retried with exponential backoff, five attempts, then that one cue is
+written `status: failed` and the track still emits.
 
 Environment variables carry **names only** — no credential is in the repository or in the
 app bundle. The device reads a generated track file; it does not call AWS.
