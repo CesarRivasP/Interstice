@@ -56,8 +56,12 @@ describe('changes[] covers the tree', () => {
   // has never heard of is outside all three.
   it('declares every source file under src/ and pipeline/', () => {
     const declared = declaredFiles();
+    // A `file:` ending in `/` is a DIRECTORY entry and covers every source file
+    // beneath it — `changes[C30]` (pipeline/providers/) is one component with
+    // one seam, not six.
+    const dirs = [...declared].filter((d) => d.endsWith('/'));
     const undeclared = [...sourceFiles('src'), ...sourceFiles('pipeline')].filter(
-      (f) => !declared.has(f),
+      (f) => !declared.has(f) && !dirs.some((d) => f.startsWith(d)),
     );
 
     expect(undeclared).toEqual([]);
