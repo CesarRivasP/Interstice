@@ -1126,7 +1126,22 @@ changes:
       change: 'demo video script with gap visualization per
                decisions.gap_visualization (timeline strip + split-screen
                before/after), product-feedback draft, user-validation quote per
-               decisions.user_validation, and the Devpost field checklist' }
+               decisions.user_validation, and the Devpost field checklist.
+               AC19 SUB-ITEM, BUILT 2026-10-18 (R47-W4): tools/viz/ renders both
+               visualizations offline from C7 — tools/viz/model.ts runs
+               pipeline/gaps.ts over the asset subtitles and manifest, so every
+               figure on screen is computed, never typed; timeline.ts writes the
+               strip as dependency-free SVG, rasterized by raster.ts with
+               rsvg-convert or ImageMagick (no browser); split.ts drives ffmpeg
+               (overlay PNGs switched by enable=between(t,…), one ducking
+               expression in t shared by the audio volume and the level bar).
+               `npm run viz` → docs/video/gap-timeline-{video,readme}.{svg,png}
+               and docs/video/gap-split-screen.mp4 (30 s, 1280x720, 2.9 MB). The
+               clip carries PLACEHOLDER captions and the film ducked only, until
+               a contracts.description_track for the asset exists beside it —
+               then the same command captions the real cue and mixes its clip.
+               The attribution line appears on every frame that shows the film.
+               The video that embeds these is still this entry, not yet cut.' }
 
 related_docs:
   # External references found by re-reading the hackathon resources page in R10.
@@ -1872,7 +1887,15 @@ acceptance:
   - { id: AC16, item: 'the submission package cites at least one sourced figure on audio-description coverage; the figure and its source enter the registry before the prose', status: written }
   - { id: AC17, item: 'three verbosity levels (concise/standard/detailed) are selectable from the remote, rescale max_words_per_cue per limits.ad.verbosity_scales, and are demonstrated in the demo', status: written }
   - { id: AC18, item: 'a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch', status: written }
-  - { id: AC19, item: 'the submission video visualizes the gap structure (timeline strip with dialogue vs gaps + split-screen before/after with ducking) using data from C7', status: written }
+  - id: AC19
+    item: 'the submission video visualizes the gap structure (timeline strip with dialogue vs gaps + split-screen before/after with ducking) using data from C7'
+    status: written
+    # The two renders exist and are built from C7; the video that embeds them is
+    # changes[C14], not yet cut. The criterion flips to executed with the video.
+    attempts:
+      - date: 2026-10-18
+        outcome: passed
+        env: 'the renders only — `npm run viz` on macOS, ImageMagick 7.1.2-21 (rsvg-convert absent), ffmpeg 8.1 (no drawtext; drawbox not re-evaluated per frame, so the level bar is a sliding PNG); film from the main checkout via --film; no generated track yet, so the clip says PLACEHOLDER. Evidence: docs/video/gap-timeline-video.{svg,png} (1920x1080, zoom inset 3:25–4:55), docs/video/gap-timeline-readme.{svg,png} (1200 wide), docs/video/gap-split-screen.mp4 (3:35–4:05: gap 9 at 6.0 s and gap 10 at 4.0 s captioned, the 1.5 s gap at 3:58 shown dropped). Figures the strip prints, computed live and pinned by pipeline/__tests__/viz-model.test.ts: 76 subtitle cues, 67 speech spans, 38 gaps, 18.6% dialogue, 78.6% silence ≥ 1.5 s (61.5% inside the content windows), 55 cue windows at standard (47 concise, 60 detailed), 30 silences rejected under 1500 ms, 9 gaps split, 5 windows dropped. Ducking measured on the clip with volumedetect: the gap at 3:38–3:41 reads mean_volume -11.4 dB in the film and -23.5 dB in the clip, a 12.1 dB drop = 25% amplitude.'
   - { id: AC20, item: 'at least one blind/low-vision viewer validates the track before Phase 5 (20–30 min, with/without comparison, consent on file); anonymized quote retained for SUBMISSION.md/video', status: written }
   # AC21 / AC22 were removed on 2026-09-19 (review R5) together with C15/C16.
   # A criterion whose component is deferred is a criterion nothing can satisfy —
