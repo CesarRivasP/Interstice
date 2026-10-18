@@ -5,7 +5,7 @@ import {setLogger} from 'react-native-tv-audio-description';
 import {createVegaAdapter} from 'react-native-tv-audio-description/vega';
 import {log} from './diagnostics';
 import {E2E, type E2EConfig} from './e2e';
-import type {AssetSource} from 'react-native-tv-audio-description';
+import type {AssetSource, MediaAdapter} from 'react-native-tv-audio-description';
 
 // Required rather than referenced by string so that metro bundles it into the
 // package: `mp4` is in metro's default assetExts, and the build's asset-copy
@@ -79,10 +79,24 @@ setLogger(line => log(`INTERSTICE.${line}`));
 // on the Release package, and AC15 asserts it again after a VARIANT run.
 log(`INTERSTICE.app.mode e2e=${E2E !== null} host=${E2E?.host ?? 'none'}`);
 
-// The one place the platform is chosen. Everything else in src/ reaches the
-// device only through this object — enforced by pipeline/__tests__/seam.test.ts,
-// not by good intentions.
-const media = createVegaAdapter();
+/**
+ * The one place the platform is chosen. Everything else in src/ reaches the
+ * device only through the object this returns — enforced by
+ * pipeline/__tests__/seam.test.ts, not by good intentions.
+ *
+ * ONE ADAPTER PER OPEN, never one per module. The package's contract is one
+ * adapter per screen (its README: `useMemo(() => createVegaAdapter(), [])`
+ * inside the player), and its Vega adapter is single-use in practice: after
+ * `destroy()` has deinitialized the native player, `open()` on the same object
+ * attaches a MediaSource to a player that no longer exists and `sourceopen`
+ * never fires — no append, no `player.opened`, no error, forever. That was
+ * `docs/features/e2e-harness/_facts.yml` defects[D8], measured five of five
+ * on the Virtual Device: a module-scope adapter here was reused after BACK,
+ * and the second open of the same title sat on "Loading" for 20 s. A fresh
+ * adapter per open is what the package asks for, and it is also what makes
+ * the second open indistinguishable from the first.
+ */
+const openMedia = (): MediaAdapter => createVegaAdapter();
 
 
 /**
@@ -101,14 +115,38 @@ const TITLES = [
  * `limits.vega_media.url_mode_broken` is about the PLAYER, not about fetch —
  * JavaScript reaches packaged paths fine, which R18 measured before anything
  * else worked.
+ *
+ * The package's loader reads EVERY throw from this function as absence
+ * (`loader.miss`, then "No description track was found"). So a throw here must
+ * mean the file is not there — a non-2xx status, or fetch itself rejecting —
+ * and nothing else. A file that IS there but is not JSON is a different
+ * failure with a different sentence (AC8, `02e` Part C §C.6: a truncated
+ * track gets "could not be read", not "was not found"), and that sentence is
+ * reachable only by handing the loader a value its validator rejects. The raw
+ * text is that value: it is what was read, and it is not an object.
+ * `docs/features/e2e-harness/_facts.yml` defects[D9] is what happened while
+ * this function threw on the parse failure too.
  */
-async function readJson(path: string): Promise<unknown> {
+export async function readJson(path: string): Promise<unknown> {
   const response = await fetch(path);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return response.json();
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as unknown;
+  } catch (err) {
+    log(`INTERSTICE.app.unparseable path=${path} err=${(err as Error).message}`);
+    return text;
+  }
 }
 
-type Playing = {id: string; asset: AssetSource; assetDir: string; cueUri: string};
+type Playing = {
+  id: string;
+  asset: AssetSource;
+  assetDir: string;
+  cueUri: string;
+  /** this open's adapter — see openMedia() */
+  media: MediaAdapter;
+};
 
 /** contracts.fixture_asset, read from the host and resolved against it */
 async function fixtureAsset(e2e: E2EConfig): Promise<AssetSource> {
@@ -139,6 +177,7 @@ export const App = () => {
           asset: await fixtureAsset(E2E),
           assetDir: E2E.asset_dir,
           cueUri: '',
+          media: openMedia(),
         });
       } catch (err) {
         log(`INTERSTICE.app.fixture failed err=${(err as Error).message}`);
@@ -150,13 +189,14 @@ export const App = () => {
       asset: DEMO_ASSET,
       assetDir: '/pkg/bundle/assets/src/assets',
       cueUri: resolvedCue?.uri ?? '',
+      media: openMedia(),
     });
   }, []);
 
   if (playing) {
     return (
       <PlayerScreen
-        media={media}
+        media={playing.media}
         asset={playing.asset}
         cueUri={playing.cueUri}
         assetDir={playing.assetDir}

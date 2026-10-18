@@ -4,6 +4,7 @@ import {act, render, waitFor} from '@testing-library/react-native';
 
 import {PlayerScreen} from '../src/screens/PlayerScreen';
 import {fakeAdapter, type FakeAdapter} from './fakes/adapter';
+import {lines} from './mocks/diagnostics';
 
 const URI = 'file:///pkg/bundle/assets/src/assets/clip.mp4';
 
@@ -245,6 +246,46 @@ describe('PlayerScreen — the track, and the state when there is none (AC8)', (
     readJson.mockResolvedValue({not: 'a track'});
     const view = renderPlayer();
     await waitFor(() => expect(view.getByLabelText(/could not be read/)).toBeTruthy());
+  });
+
+  // Fails if: a file that exists but is not JSON is announced as missing. This
+  // is what App.readJson hands over for a truncated file (e2e-harness D9): the
+  // raw text, which the package's validator refuses as "not an object".
+  it('announces a track that could not be parsed as unreadable, not as absent', async () => {
+    readJson.mockResolvedValue('{"version":"1","asset_id":"tears-of-steel","cu');
+    const view = renderPlayer();
+    await waitFor(() => expect(view.getByLabelText(/could not be read/)).toBeTruthy());
+    expect(view.queryByLabelText(/No description track was found/)).toBeNull();
+    expect(media.video.isPlaying()).toBe(true);
+  });
+
+  // Fails if: the screen announces a description state before the loader has
+  // answered. It used to start in {kind: 'missing'}, so "No description track
+  // was found" was spoken 2–16 ms BEFORE loader.miss on the device (R45-F2) —
+  // and on a title that has a track it would say that, then the opposite.
+  it('says nothing about the description until the loader has answered', async () => {
+    let answer: (() => void) | null = null;
+    readJson.mockImplementation(
+      () =>
+        new Promise<unknown>((_, reject) => {
+          answer = () => reject(new Error('ENOENT'));
+        }),
+    );
+    lines.length = 0;
+    const view = renderPlayer();
+    await waitFor(() => expect(media.video.isPlaying()).toBe(true));
+
+    expect(view.queryByLabelText(/No description track was found/)).toBeNull();
+    expect(view.queryByLabelText(/could not be read/)).toBeNull();
+    expect(lines.filter(l => l.startsWith('INTERSTICE.ad.state'))).toEqual([]);
+
+    await act(async () => answer?.());
+    await waitFor(() =>
+      expect(view.getByLabelText(/No description track was found/)).toBeTruthy(),
+    );
+    expect(lines.filter(l => l.startsWith('INTERSTICE.ad.state'))).toEqual([
+      'INTERSTICE.ad.state kind=missing',
+    ]);
   });
 
   it('loads a real track and offers the controls', async () => {

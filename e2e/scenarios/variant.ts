@@ -119,7 +119,10 @@ export const VARIANT: Scenario[] = [
     ],
     assertions: [
       { kind: 'seen', expect: { name: 'ad.state', where: { kind: 'malformed' } } },
-      { kind: 'count', expect: { name: 'ad.state', where: { kind: 'missing' } }, exactly: 1 }, // the initial "not loaded yet", and no other
+      // None at all — not even the initial one. Until R47-W1 the screen started
+      // in `missing` and announced it before the loader had looked (R45-F2);
+      // now nothing is said about the description until the loader answers.
+      { kind: 'count', expect: { name: 'ad.state', where: { kind: 'missing' } }, exactly: 0 },
       { kind: 'order', expect: [{ name: 'controls.announce', where: { kind: 'malformed' } }, progress, progress] },
     ],
   },
