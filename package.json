@@ -30,7 +30,11 @@
     "e2e:selftest": "vitest run e2e/__tests__/selftest.test.ts",
     "e2e:report": "tsx e2e/report/build.ts",
     "e2e:publish": "tsx e2e/report/publish.ts",
-    "lint:e2e": "tsc --noEmit -p e2e/tsconfig.json"
+    "lint:e2e": "tsc --noEmit -p e2e/tsconfig.json",
+    "viz": "npm-run-all viz:timeline viz:split",
+    "viz:timeline": "tsx tools/viz/cli.ts timeline",
+    "viz:split": "tsx tools/viz/cli.ts split",
+    "viz:check": "tsc --noEmit -p tools/viz/tsconfig.json"
   },
   "dependencies": {
     "@amazon-devices/react-native-kepler": "~4.0.0",

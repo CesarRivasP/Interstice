@@ -1,0 +1,4 @@
+{
+  "extends": "../../pipeline/tsconfig.json",
+  "include": ["."]
+}
