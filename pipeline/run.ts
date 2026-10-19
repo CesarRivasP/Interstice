@@ -319,8 +319,30 @@ export function optionsFromArgv(argv: string[], env: NodeJS.ProcessEnv): RunOpti
   };
 }
 
+/**
+ * A `.env` in the working directory fills in variables the shell did not set —
+ * never overrides one. KEY=value lines, `#` comments, optional single/double
+ * quotes; no expansion. `.env` is gitignored (names only in the repository).
+ */
+export function loadDotEnv(env: NodeJS.ProcessEnv, path = '.env'): NodeJS.ProcessEnv {
+  if (!existsSync(path)) return env;
+  for (const raw of readFileSync(path, 'utf8').split('\n')) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq < 1) continue;
+    const key = line.slice(0, eq).trim().replace(/^export\s+/, '');
+    let value = line.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    if (env[key] === undefined) env[key] = value;
+  }
+  return env;
+}
+
 if (process.argv[1] && /run\.ts$/.test(process.argv[1])) {
-  runPipeline(optionsFromArgv(process.argv.slice(2), process.env)).catch((err) => {
+  runPipeline(optionsFromArgv(process.argv.slice(2), loadDotEnv(process.env))).catch((err) => {
     console.error('INTERSTICE.run.fatal', err instanceof Error ? err.message : err);
     process.exit(1);
   });

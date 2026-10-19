@@ -403,3 +403,70 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 **Edits:** `_facts.yml` (2089 lines, blob 76cc081) · `README.md` (269 lines, blob 9b6ec93) · `_log.md` (this entry).
 **Still open:** `D4` Bedrock — AWS Sales / support, owner's clock · `AC7` needs a key or an unblocked account (`DESCRIPTION_PROVIDER=anthropic npm run pipeline -- --levels standard --limit 5` first) · `AC12`/`AC13` the video and the Devpost form on 10-22 · `AC14` the quality watch once a track exists · the findings above.
 **Next mode:** the owner pushes `e2e-harness`, merges to `main`, enables GitHub Pages (`/docs`); then a real pipeline run, `AC14`, the video.
+
+
+---
+
+## R48 · 2026-10-18 · claude-fable-5-1 (Claude Code) · implement
+**Read:** `_log.md` through R47-M · `pipeline/providers/{types,anthropic,index,backoff}.ts` · `pipeline/run.ts` entry point · `README.md` §Run the pipeline · `_facts.yml changes[C30]`, `env_vars`.
+**Log read through:** R47-M
+**About to do:** the owner holds a Google Gemini API key and no Anthropic key, and `defects[D4]` still closes Bedrock (re-measured today). Add Gemini as a third real implementation of the `changes[C30]` seam so `changes[C9]` can run for real before the deadline, and let `run.ts` read a gitignored `.env` so the key never has to live in a shell profile. Price checked on the official page 2026-10-18: Flash models at 0.30–0.75 USD per 1M input tokens with a free tier; the 163-call run is under one dollar.
+
+### Built
+- `pipeline/providers/gemini.ts` — `GeminiProvider`: `generateContent` over Node `fetch`, no SDK; frames as `inline_data` jpeg parts before the text; `x-goog-api-key` header; `usageMetadata` into `usage`; 429/500/503 → `ProviderError retryable` under `withBackoff` (`limits.bedrock.on_throttle`), any other non-2xx fatal on the first attempt; a safety block (HTTP 200, no candidate text) returned empty so validation writes the cue `failed`, never hand-written (`AC7`). `DEFAULT_GEMINI_MODEL = gemini-3.8-flash` (first written as 2.5-flash; the first real call answered 404 *no longer available to new users*, naming 3.8), `GEMINI_MODEL_ID` overrides, and the track's `model_id` records whichever ran.
+- `pipeline/providers/index.ts` — `DESCRIPTION_PROVIDER=gemini`, needs `GEMINI_API_KEY`; `PROVIDER_NAMES` gains it; `types.ts` id union gains `'gemini'`.
+- `pipeline/run.ts` — `loadDotEnv`: a `.env` in the working directory fills variables the shell did not set, never overrides one.
+- `README.md` §Run the pipeline: the Gemini block and the `.env` line; the fail-fast sentence names both fallbacks.
+- Tests: `providers.test.ts` +4 (parts order and header, 429 retried to `MAX_ATTEMPTS` then 400 fatal on the first try, safety block → empty, selection only with a key).
+**Not done:** no real call was made — `GEMINI_API_KEY` was not visible in this session (not in `.zshrc`/`.zprofile`/`.zshenv`, no `.env`). The first real run is `DESCRIPTION_PROVIDER=gemini npm run pipeline -- --levels standard --limit 5`, then `AC7`.
+**Edits:** `pipeline/providers/gemini.ts` (new) · `pipeline/providers/{index,types}.ts` · `pipeline/run.ts` · `pipeline/__tests__/providers.test.ts` · `README.md` (275 lines, blob f3ccc8c) · `_facts.yml` (2098 lines, blob a8419c4 — `changes[C30]` appended, `env_vars` +2).
+**Validation:** `npm run lint` exit 0 · vitest **178** (was 174) · jest unchanged (30).
+**Still open:** as R47-M, plus the first real Gemini run.
+**Next mode:** verify — run `--limit 5`, read the five cues against the frames, then the full run and `AC14`.
+
+---
+
+## R49 · 2026-10-19 · claude-opus-5-5 (Claude Code) · verify
+**Read:** `pipeline/providers/gemini.ts` · `pipeline/describe.ts` (the provider-error branch) · `_log.md` through R48
+**Log read through:** R48
+**About to do:** the first real run of `changes[C9]`, free of cost: Bedrock still `Error 002` (re-measured 2026-10-19 as the account ROOT, us-east-1 and us-west-2, nova-lite and nova-pro, `authorizationStatus AUTHORIZED` beside it), and the owner chose no paid tier anywhere.
+
+### Measured
+- **Gemini free tier is 20 requests per model per day** (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, `quotaValue 20`), and 3.x Flash models answer 503 under load. `gemini-2.5-flash` answers 404 to new users. Gemini 3.x thinks by default and the thoughts are billed against `maxOutputTokens` — 57 of 60 tokens on a probe, empty answer — so thinking is off (`608eb25`). The provider now rotates through a model list, drops a model whose daily quota is gone, skips an overloaded one at once, and paces calls (`7c28f27`, `4195664`).
+- **Ollama, `qwen2.5vl:7b`, on the build machine (M1 Pro, 16 GB):** 13.8 GiB resident, the cast pass 3 min 45 s and empty, the second cue past the 5 min fetch timeout. Built (`OllamaProvider`) and unit-tested; not usable on this machine for a full run.
+- **Standard level, Gemini rotating six models at 7 s spacing:** **21 of 55 cues ok**, 34 failed when every model's daily quota was spent. Every ok cue within its budget at the first attempt. Track emitted at `generated/tears-of-steel/tears-of-steel.standard.track.json` (gitignored) with the 34 marked `failed`. Polly synthesized every ok cue.
+- Sample, `0-11500`: *A title card reads, "the Mango Open Movie project." Next, huge rocket thruster cones loom above a massive industrial launch complex shrouded in mist.* · `73800-84600`: *A sniper in a bell tower aims at a ship. Below him, a newspaper covering Thom's face reads, 'ROBOTICIST CREATES KILLER ROBOTS'.*
+
+**Validation:** vitest 186+ · lint 0.
+**Still open:** 34 standard cues — the quotas reset at midnight Pacific; the cache makes the re-run pay only for them. `AC7` flips to executed when the standard track has no failed cue. `AC14` after that.
+**Next mode:** verify — re-run `--levels standard` after 2026-10-20 00:00 PT.
+
+---
+
+## R50 · 2026-10-19 · claude-opus-5-5 (Claude Code) · implement + verify
+**Read:** `src/App.tsx` · `src/screens/PlayerScreen.tsx` · `e2e/capture.ts` · the package's `src/ADControls.tsx` and `test/ADControls.spec.tsx` · `_log.md` through R49
+**Log read through:** R49
+**About to do:** R45-F3 — no visible focus on the title list, and the package's controls unstyled (default text colour on black, no focus state). The Design criterion is the entry's weakest; this is the cheapest thing that moves it.
+
+### Built
+- **Package, `react-native-tv-audio-description` (commit 35d18c9, local, not pushed, not published):** `ADControls` draws what it announces — inverted colours plus a 4 px `#FFD400` outline on the focused control, white text on a translucent panel, the selected level marked `●`, the failure sentences in the same legible colour; `theme` prop and `DEFAULT_THEME`. Package issue #3. 88 tests (3 new, on what is SHOWN).
+- **App:** `TitleItem` in `src/App.tsx` — the title list draws its focus the same way. `PlayerScreen` bounds the controls (`right: 48`) and lifts them to `bottom: 128`: the native video surface paints its letterbox bars OVER React views, and at `bottom: 48` the second line of the missing-track sentence was hidden under the bar (measured on the VVD).
+- **Harness, `e2e/capture.ts`:** the capture found the WRONG DEVICE. With an Android TV emulator (`TV_1080_RELEASE`) also running on the host, the wrapper's defaults (console 5554, gRPC 8554, no `--pid`) addressed it, and a whole release run captured another app's screens while every verdict — decided from beacon trace lines — still passed. That run was deleted unpublished; the 11 shots in `docs/e2e/` were checked one by one and are all the VVD. `findVvd()` now finds the device by its binary, reads its console port from what it listens on, enables gRPC on the matching port and passes `--pid` to every command; no VVD process is a loud failure.
+
+### Verified on the Vega Virtual Device (package installed from a local tarball, `--no-save`)
+- RELEASE `2026-10-19T17-44-24-666Z-release` — S01–S05 pass. VARIANT `2026-10-19T17-46-05-915Z-variant` — S10–S16 pass, S17 blocked by D6. Shots inspected: focused title inverted with outline (S01), the four controls on a panel with the focused level outlined and the selected one marked (S12), both failure sentences whole and legible (S03, S13).
+**Not done:** `npm publish` of the package 0.2.0 waits on the owner (irreversible); until then the app's `package.json` still resolves `^0.1.0`, and `docs/e2e/` is not republished, because its header would name package 0.1.0 for a build that ran 0.2.0 code.
+**Validation:** jest 31 · lint 0 · package jest 88.
+**Edits:** `README.md` (275 lines, blob c922677) and `_facts.yml` (2098 lines, blob 531673f) — both changed in `608eb25` (R49) when the Gemini default moved from 2.5-flash, which answers 404 to new users, to 3.8-flash; recorded here because R49 did not.
+
+---
+
+## R51 · 2026-10-19 · claude-opus-5-5 (Claude Code) · verify
+**Read:** `package.json` · `docs/e2e/index.html` (as regenerated) · `_log.md` through R50
+**Log read through:** R50
+**What this is:** the package release R50 waited on, and the app moved onto it.
+- `react-native-tv-audio-description@0.2.0` published by the owner (npm 2FA), tag `v0.2.0` pushed; the registry's `gitHead` is `8a8c2af`, the tag's commit. Issue #3 closed by the commit.
+- The app depends on `^0.2.0`. Built from the npm package and run on the VVD: RELEASE `2026-10-19T19-05-55-724Z-release` S01–S05 pass; VARIANT `2026-10-19T19-07-42-151Z-variant` S10–S16 pass, S17 blocked by D6. All 11 shots inspected before publishing — every one the VVD (R50's capture fix holding with the Android emulator still running).
+- `docs/e2e/` republished from those two runs: header names package 0.2.0, 12 pass, 1 blocked, 2.2 MB.
+**Found, not fixed:** R51-F1 `POLISH` — on the stall and error states (S15, S16) the centred status line overlaps the controls panel at the left. Readable, not clean.
+**Validation:** jest 31 · vitest 186 · lint 0.

@@ -105,3 +105,18 @@ describe('App — readJson, the loader\'s view of a track file', () => {
     expect(got === null || typeof got === 'object').toBe(false);
   });
 });
+
+// R45-F3: the list showed no focus. Fails if: the focused title stops looking
+// different from the others.
+describe('App — the title list shows where focus is', () => {
+  it('draws the focused title inverted with an outline, and only while focused', () => {
+    const view = render(<App />);
+    const style = () =>
+      Object.assign({}, ...[view.getByTestId('title-Tears of Steel').props.style].flat(Infinity).filter(Boolean));
+    expect(style().borderColor).toBe('transparent');
+    fireEvent(view.getByTestId('title-Tears of Steel'), 'focus');
+    expect(style()).toMatchObject({backgroundColor: '#fff', borderColor: '#FFD400'});
+    fireEvent(view.getByTestId('title-Tears of Steel'), 'blur');
+    expect(style().borderColor).toBe('transparent');
+  });
+});

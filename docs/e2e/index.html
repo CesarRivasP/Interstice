@@ -13,11 +13,11 @@ h1{font-size:28px;margin:0 0 4px}h2{margin:40px 0 12px;font-size:20px}h3{font-si
 a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20px;margin:4px 0}.asserts{list-style:none;padding:0}.cannot{border-top:1px dashed var(--line);padding-top:8px}</style></head><body><main>
 <h1>Interstice — verification report</h1>
 <p class="meta">Every result below was decided by the app's own trace on a device run. Pictures illustrate; they decide nothing.</p>
-<p class="meta"><strong>RELEASE</strong> · 2026-10-18T20:10:13.786Z · Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480) · Release aarch64, SDK 0.24.12112 · clip: 20 s of Tears of Steel, 4 segments, packaged · app 866ccec · package 0.1.0 · capture grpc · keys inputd-cli · selftest 5/5 passing scenarios shown able to fail</p>
-<p class="meta"><strong>VARIANT</strong> · 2026-10-18T20:12:14.975Z · Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480) · Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112 · e2e-fixture: first 60 s of Tears of Steel, host-served · app 866ccec · package 0.1.0 · capture grpc · keys inputd-cli · selftest 7/7 passing scenarios shown able to fail · Release package restored: yes</p>
+<p class="meta"><strong>RELEASE</strong> · 2026-10-19T19:05:55.724Z · Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480) · Release aarch64, SDK 0.24.12112 · clip: 20 s of Tears of Steel, 4 segments, packaged · app 35671e2 · package 0.2.0 · capture grpc · keys inputd-cli · selftest 5/5 passing scenarios shown able to fail</p>
+<p class="meta"><strong>VARIANT</strong> · 2026-10-19T19:07:42.151Z · Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480) · Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112 · e2e-fixture: first 60 s of Tears of Steel, host-served · app 35671e2 · package 0.2.0 · capture grpc · keys inputd-cli · selftest 7/7 passing scenarios shown able to fail · Release package restored: yes</p>
 
 <h2>The app's acceptance criteria</h2>
-<p>22 criteria: 4 automated · 4 fixture · 1 blocked · 9 out of scope · 2 manual · 2 hardware.
+<p>21 criteria: 4 automated · 4 fixture · 1 blocked · 9 out of scope · 2 manual · 2 hardware.
 <strong>RELEASE</strong> results are the submitted binary. <strong>FIXTURE</strong> results ran a test build against a labelled stand-in track that is not the product's and never ships.</p>
 <div class="tablewrap"><table><thead><tr><th>id</th><th>criterion</th><th>class</th><th>evidence</th></tr></thead><tbody>
 <tr class="automated"><th>AC1</th><td>the app runs on the Vega simulator and plays the demo asset end to end</td>
@@ -74,9 +74,6 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
 <tr class="out_of_scope"><th>AC18</th><td>a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch</td>
   <td>out of scope</td>
   <td>—</td></tr>
-<tr class="out_of_scope"><th>AC19</th><td>the submission video visualizes the gap structure (timeline strip with dialogue vs gaps + split-screen before/after with ducking) using data from C7</td>
-  <td>out of scope</td>
-  <td>—</td></tr>
 <tr class="manual"><th>AC20</th><td>at least one blind/low-vision viewer validates the track before Phase 5 (20–30 min, with/without comparison, consent on file); anonymized quote retained for SUBMISSION.md/video</td>
   <td>manual</td>
   <td>—</td></tr>
@@ -104,10 +101,10 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <div class="shots"><figure><img loading="lazy" src="run/release/shots/S01-0.jpg" alt="The title list on launch"><figcaption>The title list on launch</figcaption></figure></div><p class="attribution">(CC) Blender Foundation | mango.blender.org</p>
   
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>No description track was found for this title. Playback continues without description.</li><li>The video paused while it loads more. Press back to return to the list.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.3s</code> wait — asset.segments</li><li><code>2.8s</code> shot — The title list on launch</li><li><code>4.1s</code> keys — ENTER</li><li><code>4.1s</code> wait — app.play</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>5.3s</code> wait — asset.segments</li><li><code>6.4s</code> shot — The title list on launch</li><li><code>8.4s</code> keys — ENTER</li><li><code>8.4s</code> wait — app.play</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>app.mode e2e=false</code></li><li class="ok">✓ <code>asset.segments n=(checked) init=set</code></li><li class="ok">✓ <code>app.play id=tears-of-steel</code></li></ul>
   
-  <p class="trace"><a href="run/release/traces/S01.jsonl">full trace</a> · 5.6 s</p>
+  <p class="trace"><a href="run/release/traces/S01.jsonl">full trace</a> · 10.8 s</p>
 </article>
 <article class="card pass" id="S02">
   <header><span class="verdict">PASS</span><h3>S02 · The viewer plays the demo clip from start to finish.</h3>
@@ -116,10 +113,10 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <div class="shots"><figure><img loading="lazy" src="run/release/shots/S02-0.jpg" alt="The film playing"><figcaption>The film playing</figcaption></figure></div><p class="attribution">(CC) Blender Foundation | mango.blender.org</p>
   
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>No description track was found for this title. Playback continues without description.</li><li>The video paused while it loads more. Press back to return to the list.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.3s</code> wait — asset.segments</li><li><code>3.6s</code> keys — ENTER</li><li><code>3.6s</code> wait — player.play</li><li><code>4.2s</code> shot — The film playing</li><li><code>24.3s</code> wait — player.progress</li><li><code>24.3s</code> wait — buffer.evicted</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>3.2s</code> wait — asset.segments</li><li><code>5.4s</code> keys — ENTER</li><li><code>6.2s</code> wait — player.play</li><li><code>6.8s</code> shot — The film playing</li><li><code>26.9s</code> wait — player.progress</li><li><code>27.6s</code> wait — buffer.evicted</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>buffer.complete → player.opened → player.play → player.progress</code></li><li class="ok">✓ <code>buffer.appended _=/^seg/ ×4 (saw 4)</code></li><li class="ok">✓ <code>player.progress pos_ms=(checked)</code></li><li class="ok">✓ <code>buffer.evicted ×1 (saw 1)</code></li></ul>
   <p class="cannot"><strong>Cannot show:</strong> The full film: this is the 20 s clip.</p>
-  <p class="trace"><a href="run/release/traces/S02.jsonl">full trace</a> · 25.6 s</p>
+  <p class="trace"><a href="run/release/traces/S02.jsonl">full trace</a> · 29.4 s</p>
 </article>
 <article class="card pass" id="S03">
   <header><span class="verdict">PASS</span><h3>S03 · A description cue speaks over the film and the film comes back to full.</h3>
@@ -128,10 +125,10 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <div class="shots"><figure><img loading="lazy" src="run/release/shots/S03-0.jpg" alt="During the cue"><figcaption>During the cue</figcaption></figure><figure><video controls preload="none" src="run/release/clips/S03.mp4"></video><figcaption>The cue, with the film ducked under it</figcaption></figure></div><p class="attribution">(CC) Blender Foundation | mango.blender.org</p>
   
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>No description track was found for this title. Playback continues without description.</li><li>The video paused while it loads more. Press back to return to the list.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.3s</code> wait — asset.segments</li><li><code>3.6s</code> keys — ENTER</li><li><code>5.3s</code> wait — audio.duck</li><li><code>6.3s</code> shot — During the cue</li><li><code>8.0s</code> wait — audio.restored</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>3.0s</code> wait — asset.segments</li><li><code>4.5s</code> keys — ENTER</li><li><code>6.2s</code> wait — audio.duck</li><li><code>6.9s</code> shot — During the cue</li><li><code>9.0s</code> wait — audio.restored</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>cue.fire → audio.duck id=probe to_pct=25 → player.progress → cue.audio state=ended → audio.restored id=probe</code></li></ul>
   <p class="cannot"><strong>Cannot show:</strong> That a listener heard the film get quieter. The volume property was set to 25% and restored; audible ducking closes on hardware.</p>
-  <p class="trace"><a href="run/release/traces/S03.jsonl">full trace</a> · 17.6 s</p>
+  <p class="trace"><a href="run/release/traces/S03.jsonl">full trace</a> · 19.2 s</p>
 </article>
 <article class="card pass" id="S04">
   <header><span class="verdict">PASS</span><h3>S04 · The viewer presses BACK during playback and is on the list again, able to start over.</h3>
@@ -139,11 +136,11 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   
   <div class="shots"><figure><img loading="lazy" src="run/release/shots/S04-0.jpg" alt="Back on the list"><figcaption>Back on the list</figcaption></figure></div><p class="attribution">(CC) Blender Foundation | mango.blender.org</p>
   
-  <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>No description track was found for this title. Playback continues without description.</li><li>The video paused while it loads more. Press back to return to the list.</li><li>Loading title</li><li>No description track was found for this title. Playback continues without description.</li><li>The video paused while it loads more. Press back to return to the list.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.5s</code> wait — asset.segments</li><li><code>3.9s</code> keys — ENTER</li><li><code>6.3s</code> wait — player.progress</li><li><code>7.8s</code> keys — BACK</li><li><code>7.8s</code> wait — player.back</li><li><code>8.2s</code> shot — Back on the list</li><li><code>9.5s</code> keys — ENTER</li><li><code>9.5s</code> wait — player.opened</li></ol>
+  <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>No description track was found for this title. Playback continues without description.</li><li>The video paused while it loads more. Press back to return to the list.</li><li>Loading title</li><li>No description track was found for this title. Playback continues without description.</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>3.1s</code> wait — asset.segments</li><li><code>4.7s</code> keys — ENTER</li><li><code>6.0s</code> wait — player.progress</li><li><code>8.0s</code> keys — BACK</li><li><code>8.0s</code> wait — player.back</li><li><code>8.5s</code> shot — Back on the list</li><li><code>10.1s</code> keys — ENTER</li><li><code>10.1s</code> wait — player.opened</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>player.back from=playing</code></li><li class="ok">✓ <code>app.play id=tears-of-steel ×2 (saw 2)</code></li><li class="ok">✓ <code>player.opened ×2 (saw 2)</code></li></ul>
   
-  <p class="trace"><a href="run/release/traces/S04.jsonl">full trace</a> · 10.9 s</p>
+  <p class="trace"><a href="run/release/traces/S04.jsonl">full trace</a> · 11.9 s</p>
 </article>
 <article class="card pass" id="S05">
   <header><span class="verdict">PASS</span><h3>S05 · The title has no description track; the app says so and the film plays anyway.</h3>
@@ -152,10 +149,10 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <div class="shots"><figure><img loading="lazy" src="run/release/shots/S05-0.jpg" alt="The missing-track state, on screen"><figcaption>The missing-track state, on screen</figcaption></figure></div><p class="attribution">(CC) Blender Foundation | mango.blender.org</p>
   
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>No description track was found for this title. Playback continues without description.</li><li>The video paused while it loads more. Press back to return to the list.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.4s</code> wait — asset.segments</li><li><code>3.7s</code> keys — ENTER</li><li><code>3.7s</code> wait — controls.announce</li><li><code>6.0s</code> wait — player.progress</li><li><code>7.0s</code> shot — The missing-track state, on screen</li><li><code>11.0s</code> wait — player.progress</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>2.9s</code> wait — asset.segments</li><li><code>4.7s</code> keys — ENTER</li><li><code>4.7s</code> wait — controls.announce</li><li><code>5.9s</code> wait — player.progress</li><li><code>7.0s</code> shot — The missing-track state, on screen</li><li><code>11.4s</code> wait — player.progress</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>controls.announce kind=missing</code></li><li class="ok">✓ <code>loader.miss → controls.announce kind=missing</code></li><li class="ok">✓ <code>loader.miss → player.progress → player.progress</code></li><li class="ok">✓ <code>no player.stalled between player.progress and player.progress pos_ms=(checked) [emitter: src/screens/PlayerScreen.tsx onStalled -&gt; player.stalled]</code></li></ul>
   
-  <p class="trace"><a href="run/release/traces/S05.jsonl">full trace</a> · 12.3 s</p>
+  <p class="trace"><a href="run/release/traces/S05.jsonl">full trace</a> · 14.0 s</p>
 </article>
 <h2>The test build, with faults injected</h2>
 <article class="card pass" id="S10">
@@ -166,13 +163,13 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <svg class="strip" viewBox="0 0 1000 46" role="img" aria-label="Cue windows and cues on the playhead">
   <rect x="0" y="20" width="1000" height="6" class="film"/>
   <rect x="133.3" y="8" width="166.7" height="30" class="window"/><rect x="466.7" y="8" width="200.0" height="30" class="window"/><rect x="800.0" y="8" width="133.3" height="30" class="window"/>
-  <rect x="141.2" y="14" width="53.6" height="18" class="cue"/><rect x="467.2" y="14" width="55.4" height="18" class="cue"/><rect x="801.6" y="14" width="54.5" height="18" class="cue"/>
+  <rect x="138.2" y="14" width="52.9" height="18" class="cue"/><rect x="469.5" y="14" width="55.3" height="18" class="cue"/><rect x="803.8" y="14" width="52.7" height="18" class="cue"/>
 </svg><p class="legend">band: the window · block: the film ducked, from duck to restore · 30 s shown</p>
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>Audio description on, standard, 3 descriptions</li><li>The video paused while it loads more. Press back to return to the list.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.2s</code> wait — asset.segments</li><li><code>4.9s</code> keys — DOWN ENTER</li><li><code>4.9s</code> wait — app.play</li><li><code>11.5s</code> wait — audio.restored</li><li><code>12.0s</code> shot — After the first cue</li><li><code>31.3s</code> wait — audio.restored</li></ol>
-  <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>audio.duck id=c1 … audio.restored id=c1 inside [4000, 9000] ms (was 4235 … 5842)</code></li><li class="ok">✓ <code>audio.duck id=c2 … audio.restored id=c2 inside [14000, 20000] ms (was 14017 … 15680)</code></li><li class="ok">✓ <code>audio.duck id=c3 … audio.restored id=c3 inside [24000, 28000] ms (was 24047 … 25681)</code></li></ul>
+  <h4>Steps</h4><ol class="steps"><li><code>2.9s</code> wait — asset.segments</li><li><code>6.6s</code> keys — DOWN ENTER</li><li><code>6.6s</code> wait — app.play</li><li><code>13.1s</code> wait — audio.restored</li><li><code>13.9s</code> shot — After the first cue</li><li><code>33.2s</code> wait — audio.restored</li></ol>
+  <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>audio.duck id=c1 … audio.restored id=c1 inside [4000, 9000] ms (was 4147 … 5735)</code></li><li class="ok">✓ <code>audio.duck id=c2 … audio.restored id=c2 inside [14000, 20000] ms (was 14086 … 15746)</code></li><li class="ok">✓ <code>audio.duck id=c3 … audio.restored id=c3 inside [24000, 28000] ms (was 24115 … 25697)</code></li></ul>
   <p class="cannot"><strong>Cannot show:</strong> That a cue avoids dialogue. These windows are declared by the fixture, not derived from subtitles.</p>
-  <p class="trace"><a href="run/variant/traces/S10.jsonl">full trace</a> · 32.7 s</p>
+  <p class="trace"><a href="run/variant/traces/S10.jsonl">full trace</a> · 35.1 s</p>
 </article>
 <article class="card pass" id="S11">
   <header><span class="verdict">PASS</span><h3>S11 · The viewer switches description off mid-film and back on; the film never stops.</h3>
@@ -182,13 +179,13 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <svg class="strip" viewBox="0 0 1000 46" role="img" aria-label="Cue windows and cues on the playhead">
   <rect x="0" y="20" width="1000" height="6" class="film"/>
   <rect x="133.3" y="8" width="166.7" height="30" class="window"/><rect x="466.7" y="8" width="200.0" height="30" class="window"/><rect x="800.0" y="8" width="133.3" height="30" class="window"/>
-  <rect x="135.5" y="14" width="53.1" height="18" class="cue"/><rect x="803.8" y="14" width="54.8" height="18" class="cue"/>
+  <rect x="139.0" y="14" width="52.4" height="18" class="cue"/><rect x="801.7" y="14" width="54.9" height="18" class="cue"/>
 </svg><p class="legend">band: the window · block: the film ducked, from duck to restore · 30 s shown</p>
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>Audio description on, standard, 3 descriptions</li><li>The video paused while it loads more. Press back to return to the list.</li><li>Audio description off</li><li>Audio description on, standard, 3 descriptions</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.4s</code> wait — asset.segments</li><li><code>4.9s</code> keys — DOWN ENTER</li><li><code>4.9s</code> wait — app.play</li><li><code>13.1s</code> wait — audio.restored</li><li><code>14.8s</code> keys — ENTER</li><li><code>14.8s</code> wait — controls.toggle</li><li><code>15.4s</code> shot — Description off</li><li><code>28.6s</code> wait — player.progress</li><li><code>30.1s</code> keys — ENTER</li><li><code>30.1s</code> wait — controls.toggle</li><li><code>33.2s</code> wait — audio.restored</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>3.2s</code> wait — asset.segments</li><li><code>7.0s</code> keys — DOWN ENTER</li><li><code>7.0s</code> wait — app.play</li><li><code>13.9s</code> wait — audio.restored</li><li><code>15.8s</code> keys — ENTER</li><li><code>15.8s</code> wait — controls.toggle</li><li><code>16.4s</code> shot — Description off</li><li><code>30.5s</code> wait — player.progress</li><li><code>32.8s</code> keys — ENTER</li><li><code>32.8s</code> wait — controls.toggle</li><li><code>34.7s</code> wait — audio.restored</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>no audio.duck id=c2 between controls.toggle to=false and controls.toggle to=true [emitter: the package DescriptionAudio.speak -&gt; audio.duck]</code></li><li class="ok">✓ <code>no player.stalled between controls.toggle to=false and audio.restored id=c3 [emitter: src/screens/PlayerScreen.tsx onStalled -&gt; player.stalled]</code></li><li class="ok">✓ <code>controls.toggle to=false → player.progress → controls.toggle to=true → audio.duck id=c3</code></li><li class="ok">✓ <code>audio.duck id=c2 ×0 (saw 0)</code></li></ul>
   
-  <p class="trace"><a href="run/variant/traces/S11.jsonl">full trace</a> · 34.4 s</p>
+  <p class="trace"><a href="run/variant/traces/S11.jsonl">full trace</a> · 36.3 s</p>
 </article>
 <article class="card pass" id="S12">
   <header><span class="verdict">PASS</span><h3>S12 · The viewer moves between concise, standard and detailed while watching.</h3>
@@ -197,10 +194,10 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <div class="shots"><figure><img loading="lazy" src="run/variant/shots/S12-0.jpg" alt="Concise selected"><figcaption>Concise selected</figcaption></figure></div><p class="attribution">(CC) Blender Foundation | mango.blender.org</p>
   
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>Audio description on, standard, 3 descriptions</li><li>The video paused while it loads more. Press back to return to the list.</li><li>Audio description on, concise, 2 descriptions</li><li>Audio description on, standard, 3 descriptions</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.4s</code> wait — asset.segments</li><li><code>5.0s</code> keys — DOWN ENTER</li><li><code>5.0s</code> wait — app.play</li><li><code>5.0s</code> wait — loader.load</li><li><code>5.9s</code> wait — player.progress</li><li><code>9.0s</code> keys — DOWN ENTER</li><li><code>9.0s</code> wait — loader.load</li><li><code>9.5s</code> shot — Concise selected</li><li><code>13.6s</code> keys — DOWN DOWN ENTER</li><li><code>13.6s</code> wait — loader.miss</li><li><code>18.0s</code> wait — player.progress</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>3.3s</code> wait — asset.segments</li><li><code>6.9s</code> keys — DOWN ENTER</li><li><code>6.9s</code> wait — app.play</li><li><code>6.9s</code> wait — loader.load</li><li><code>8.3s</code> wait — player.progress</li><li><code>12.1s</code> keys — DOWN ENTER</li><li><code>12.1s</code> wait — loader.load</li><li><code>12.8s</code> shot — Concise selected</li><li><code>17.9s</code> keys — DOWN DOWN ENTER</li><li><code>18.4s</code> wait — loader.miss</li><li><code>20.4s</code> wait — player.progress</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>loader.load path=/standard/ ok=true cues=3 → controls.verbosity to=concise → loader.load path=/concise/ ok=true cues=2 → controls.verbosity to=detailed → loader.miss path=/detailed/ → loader.load path=/standard/ ok=true cues=3 → player.progress</code></li><li class="ok">✓ <code>no player.stalled between controls.verbosity to=concise and player.progress pos_ms=(checked) [emitter: src/screens/PlayerScreen.tsx onStalled -&gt; player.stalled]</code></li></ul>
   
-  <p class="trace"><a href="run/variant/traces/S12.jsonl">full trace</a> · 19.2 s</p>
+  <p class="trace"><a href="run/variant/traces/S12.jsonl">full trace</a> · 21.8 s</p>
 </article>
 <article class="card pass" id="S13">
   <header><span class="verdict">PASS</span><h3>S13 · The track file is corrupt; the app says something different from &quot;missing&quot; and the film plays.</h3>
@@ -209,10 +206,10 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <div class="shots"><figure><img loading="lazy" src="run/variant/shots/S13-0.jpg" alt="The unreadable-track state, on screen"><figcaption>The unreadable-track state, on screen</figcaption></figure></div><p class="attribution">(CC) Blender Foundation | mango.blender.org</p>
   
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>The description track for this title could not be read. Playback continues without description.</li><li>The video paused while it loads more. Press back to return to the list.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.3s</code> wait — asset.segments</li><li><code>4.8s</code> keys — DOWN ENTER</li><li><code>4.8s</code> wait — app.play</li><li><code>4.8s</code> wait — ad.state</li><li><code>5.4s</code> shot — The unreadable-track state, on screen</li><li><code>11.0s</code> wait — player.progress</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>3.1s</code> wait — asset.segments</li><li><code>6.3s</code> keys — DOWN ENTER</li><li><code>6.3s</code> wait — app.play</li><li><code>6.3s</code> wait — ad.state</li><li><code>6.9s</code> shot — The unreadable-track state, on screen</li><li><code>14.3s</code> wait — player.progress</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>ad.state kind=malformed</code></li><li class="ok">✓ <code>ad.state kind=missing ×0 (saw 0)</code></li><li class="ok">✓ <code>controls.announce kind=malformed → player.progress → player.progress</code></li></ul>
   
-  <p class="trace"><a href="run/variant/traces/S13.jsonl">full trace</a> · 12.7 s</p>
+  <p class="trace"><a href="run/variant/traces/S13.jsonl">full trace</a> · 16.9 s</p>
 </article>
 <article class="card pass" id="S14">
   <header><span class="verdict">PASS</span><h3>S14 · One cue has no audio; the film must not be left quiet.</h3>
@@ -222,13 +219,13 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <svg class="strip" viewBox="0 0 1000 46" role="img" aria-label="Cue windows and cues on the playhead">
   <rect x="0" y="20" width="1000" height="6" class="film"/>
   <rect x="133.3" y="8" width="166.7" height="30" class="window"/><rect x="466.7" y="8" width="200.0" height="30" class="window"/><rect x="800.0" y="8" width="133.3" height="30" class="window"/>
-  <rect x="139.6" y="14" width="55.5" height="18" class="cue"/><rect x="474.2" y="14" width="15.9" height="18" class="cue"/><rect x="800.6" y="14" width="53.8" height="18" class="cue"/>
+  <rect x="137.6" y="14" width="51.8" height="18" class="cue"/><rect x="472.9" y="14" width="18.5" height="18" class="cue"/><rect x="807.2" y="14" width="55.6" height="18" class="cue"/>
 </svg><p class="legend">band: the window · block: the film ducked, from duck to restore · 30 s shown</p>
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>Audio description on, standard, 3 descriptions</li><li>The video paused while it loads more. Press back to return to the list.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.9s</code> wait — asset.segments</li><li><code>5.8s</code> keys — DOWN ENTER</li><li><code>5.8s</code> wait — app.play</li><li><code>22.9s</code> wait — audio.failed</li><li><code>34.0s</code> wait — audio.restored</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>3.6s</code> wait — asset.segments</li><li><code>6.9s</code> keys — DOWN ENTER</li><li><code>6.9s</code> wait — app.play</li><li><code>24.1s</code> wait — audio.failed</li><li><code>35.5s</code> wait — audio.restored</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>audio.duck id=c2 → audio.failed id=c2 → audio.restored id=c2 → player.progress</code></li><li class="ok">✓ <code>audio.restored id=c2 → audio.duck id=c3 → audio.restored id=c3</code></li></ul>
   <p class="cannot"><strong>Cannot show:</strong> The audible level. The restore is the volume property returning to 100%.</p>
-  <p class="trace"><a href="run/variant/traces/S14.jsonl">full trace</a> · 35.6 s</p>
+  <p class="trace"><a href="run/variant/traces/S14.jsonl">full trace</a> · 37.7 s</p>
 </article>
 <article class="card pass" id="S15">
   <header><span class="verdict">PASS</span><h3>S15 · The bytes run short mid-film; the viewer is told, and playback resumes when they arrive.</h3>
@@ -237,10 +234,10 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <div class="shots"><figure><img loading="lazy" src="run/variant/shots/S15-0.jpg" alt="Stalled: the picture is frozen and the app says so"><figcaption>Stalled: the picture is frozen and the app says so</figcaption></figure></div><p class="attribution">(CC) Blender Foundation | mango.blender.org</p>
   
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>Audio description on, standard, 3 descriptions</li><li>The video paused while it loads more. Press back to return to the list.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.5s</code> wait — asset.segments</li><li><code>5.1s</code> keys — DOWN ENTER</li><li><code>5.1s</code> wait — app.play</li><li><code>36.3s</code> wait — player.progress</li><li><code>42.2s</code> wait — overlay.shown</li><li><code>44.9s</code> shot — Stalled: the picture is frozen and the app says so</li><li><code>44.9s</code> release — held fixture requests answered</li><li><code>45.0s</code> wait — player.resumed</li><li><code>45.1s</code> wait — player.progress</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>3.2s</code> wait — asset.segments</li><li><code>6.4s</code> keys — DOWN ENTER</li><li><code>6.4s</code> wait — app.play</li><li><code>44.3s</code> wait — player.progress</li><li><code>49.5s</code> wait — overlay.shown</li><li><code>50.7s</code> shot — Stalled: the picture is frozen and the app says so</li><li><code>50.7s</code> release — held fixture requests answered</li><li><code>50.7s</code> wait — player.resumed</li><li><code>51.5s</code> wait — player.progress</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>player.progress pos_ms=(checked) → player.stalled → overlay.shown status=stalled → player.resumed from=stalled → overlay.cleared → player.progress</code></li></ul>
   
-  <p class="trace"><a href="run/variant/traces/S15.jsonl">full trace</a> · 47.7 s</p>
+  <p class="trace"><a href="run/variant/traces/S15.jsonl">full trace</a> · 53.4 s</p>
 </article>
 <article class="card pass" id="S16">
   <header><span class="verdict">PASS</span><h3>S16 · The title cannot be opened; the viewer is told and BACK still works.</h3>
@@ -249,10 +246,10 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
   <div class="shots"><figure><img loading="lazy" src="run/variant/shots/S16-0.jpg" alt="The error state"><figcaption>The error state</figcaption></figure></div><p class="attribution">(CC) Blender Foundation | mango.blender.org</p>
   
   <h4>What the viewer is told</h4><ol class="spoken"><li>Loading title</li><li>Audio description on, standard, 3 descriptions</li><li>This title could not be played. Network request failed</li><li>Loading title</li><li>No description track was found for this title. Playback continues without description.</li></ol>
-  <h4>Steps</h4><ol class="steps"><li><code>2.5s</code> wait — asset.segments</li><li><code>5.0s</code> keys — DOWN ENTER</li><li><code>5.0s</code> wait — app.play</li><li><code>5.0s</code> wait — overlay.shown</li><li><code>5.5s</code> shot — The error state</li><li><code>6.8s</code> keys — BACK</li><li><code>6.8s</code> wait — player.back</li><li><code>8.1s</code> keys — ENTER</li><li><code>8.1s</code> wait — app.play</li></ol>
+  <h4>Steps</h4><ol class="steps"><li><code>2.6s</code> wait — asset.segments</li><li><code>5.6s</code> keys — DOWN ENTER</li><li><code>5.6s</code> wait — app.play</li><li><code>5.6s</code> wait — overlay.shown</li><li><code>6.0s</code> shot — The error state</li><li><code>7.5s</code> keys — BACK</li><li><code>7.5s</code> wait — player.back</li><li><code>9.2s</code> keys — ENTER</li><li><code>9.2s</code> wait — app.play</li></ol>
   <h4>Decided by</h4><ul class="asserts"><li class="ok">✓ <code>overlay.shown status=error → player.back from=error → app.play id=tears-of-steel</code></li></ul>
   
-  <p class="trace"><a href="run/variant/traces/S16.jsonl">full trace</a> · 9.5 s</p>
+  <p class="trace"><a href="run/variant/traces/S16.jsonl">full trace</a> · 11.0 s</p>
 </article>
 <article class="card blocked" id="S17">
   <header><span class="verdict">BLOCKED</span><h3>S17 · The viewer holds a direction to seek; the scheduler resyncs once.</h3>

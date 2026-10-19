@@ -211,24 +211,54 @@ export const App = () => {
     <View style={styles.list}>
       <Text style={styles.heading}>Interstice</Text>
       {TITLES.map((title, index) => (
-        <Pressable
+        <TitleItem
           key={title.id}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel={`Play ${title.label}`}
-          hasTVPreferredFocus={index === 0}
-          onPress={() => void start(title.id)}>
-          <Text style={styles.title}>{title.label}</Text>
-        </Pressable>
+          label={title.label}
+          preferred={index === 0}
+          onPress={() => void start(title.id)}
+        />
       ))}
     </View>
   );
 };
 
+/**
+ * One title, drawn by its own focus state. R45-F3: the list had no visible
+ * focus — a sighted or low-vision viewer could not tell which title the remote
+ * was on. Same look as the package's controls: inverted colours plus an outline.
+ */
+function TitleItem(props: {label: string; preferred: boolean; onPress: () => void}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <Pressable
+      testID={`title-${props.label}`}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={`Play ${props.label}`}
+      hasTVPreferredFocus={props.preferred}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onPress={props.onPress}
+      style={[styles.item, focused && styles.itemFocused]}>
+      <Text style={[styles.title, focused && styles.titleFocused]}>{props.label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   list: {flex: 1, backgroundColor: '#000', padding: 48, gap: 24},
   heading: {color: '#fff', fontSize: 48, marginBottom: 24},
   title: {color: '#fff', fontSize: 32},
+  item: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 4,
+    borderColor: 'transparent',
+  },
+  itemFocused: {backgroundColor: '#fff', borderColor: '#FFD400'},
+  titleFocused: {color: '#000'},
 });
 
 export default App;

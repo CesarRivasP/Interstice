@@ -1,14 +1,14 @@
 {
-  "run_id": "2026-10-18T20-12-14-975Z-variant",
-  "started_at": "2026-10-18T20:12:14.975Z",
+  "run_id": "2026-10-19T19-07-42-151Z-variant",
+  "started_at": "2026-10-19T19:07:42.151Z",
   "suite": "variant",
   "conditions": {
     "target_platform": "Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480)",
     "build": "Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112",
     "content_asset": "e2e-fixture: first 60 s of Tears of Steel, host-served"
   },
-  "app_commit": "866ccec",
-  "package_version": "0.1.0",
+  "app_commit": "35671e2",
+  "package_version": "0.2.0",
   "capture_rung": "grpc",
   "input_route": "inputd-cli",
   "selftest": {
@@ -32,32 +32,32 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 2199,
+          "at_ms": 2892,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 4873,
+          "at_ms": 6563,
           "action": "keys",
           "detail": "DOWN ENTER"
         },
         {
-          "at_ms": 4873,
+          "at_ms": 6563,
           "action": "wait",
           "detail": "app.play"
         },
         {
-          "at_ms": 11508,
+          "at_ms": 13142,
           "action": "wait",
           "detail": "audio.restored"
         },
         {
-          "at_ms": 12031,
+          "at_ms": 13864,
           "action": "shot",
           "detail": "After the first cue"
         },
         {
-          "at_ms": 31348,
+          "at_ms": 33221,
           "action": "wait",
           "detail": "audio.restored"
         }
@@ -65,19 +65,19 @@
       "assertions": [
         {
           "kind": "in_window",
-          "expect": "audio.duck id=c1 … audio.restored id=c1 inside [4000, 9000] ms (was 4235 … 5842)",
+          "expect": "audio.duck id=c1 … audio.restored id=c1 inside [4000, 9000] ms (was 4147 … 5735)",
           "ok": true,
           "matched_seq": 37
         },
         {
           "kind": "in_window",
-          "expect": "audio.duck id=c2 … audio.restored id=c2 inside [14000, 20000] ms (was 14017 … 15680)",
+          "expect": "audio.duck id=c2 … audio.restored id=c2 inside [14000, 20000] ms (was 14086 … 15746)",
           "ok": true,
           "matched_seq": 55
         },
         {
           "kind": "in_window",
-          "expect": "audio.duck id=c3 … audio.restored id=c3 inside [24000, 28000] ms (was 24047 … 25681)",
+          "expect": "audio.duck id=c3 … audio.restored id=c3 inside [24000, 28000] ms (was 24115 … 25697)",
           "ok": true,
           "matched_seq": 75
         }
@@ -96,7 +96,7 @@
         }
       ],
       "trace_path": "traces/S10.jsonl",
-      "duration_ms": 32744,
+      "duration_ms": 35098,
       "windows_ms": [
         [
           4000,
@@ -127,57 +127,57 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 2397,
+          "at_ms": 3231,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 4941,
+          "at_ms": 7018,
           "action": "keys",
           "detail": "DOWN ENTER"
         },
         {
-          "at_ms": 4941,
+          "at_ms": 7019,
           "action": "wait",
           "detail": "app.play"
         },
         {
-          "at_ms": 13099,
+          "at_ms": 13897,
           "action": "wait",
           "detail": "audio.restored"
         },
         {
-          "at_ms": 14848,
+          "at_ms": 15787,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 14848,
+          "at_ms": 15787,
           "action": "wait",
           "detail": "controls.toggle"
         },
         {
-          "at_ms": 15363,
+          "at_ms": 16365,
           "action": "shot",
           "detail": "Description off"
         },
         {
-          "at_ms": 28551,
+          "at_ms": 30504,
           "action": "wait",
           "detail": "player.progress"
         },
         {
-          "at_ms": 30134,
+          "at_ms": 32756,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 30134,
+          "at_ms": 32756,
           "action": "wait",
           "detail": "controls.toggle"
         },
         {
-          "at_ms": 33202,
+          "at_ms": 34657,
           "action": "wait",
           "detail": "audio.restored"
         }
@@ -187,19 +187,19 @@
           "kind": "absent",
           "expect": "no audio.duck id=c2 between controls.toggle to=false and controls.toggle to=true [emitter: the package DescriptionAudio.speak -> audio.duck]",
           "ok": true,
-          "matched_seq": 63
+          "matched_seq": 62
         },
         {
           "kind": "absent",
           "expect": "no player.stalled between controls.toggle to=false and audio.restored id=c3 [emitter: src/screens/PlayerScreen.tsx onStalled -> player.stalled]",
           "ok": true,
-          "matched_seq": 77
+          "matched_seq": 76
         },
         {
           "kind": "order",
           "expect": "controls.toggle to=false → player.progress → controls.toggle to=true → audio.duck id=c3",
           "ok": true,
-          "matched_seq": 69
+          "matched_seq": 68
         },
         {
           "kind": "count",
@@ -219,12 +219,12 @@
         {
           "kind": "screenshot",
           "path": "shots/S11-0.jpg",
-          "at_seq": 43,
+          "at_seq": 42,
           "caption": "Description off"
         }
       ],
       "trace_path": "traces/S11.jsonl",
-      "duration_ms": 34426,
+      "duration_ms": 36340,
       "windows_ms": [
         [
           4000,
@@ -254,57 +254,57 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 2350,
+          "at_ms": 3262,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 5007,
+          "at_ms": 6939,
           "action": "keys",
           "detail": "DOWN ENTER"
         },
         {
-          "at_ms": 5007,
+          "at_ms": 6940,
           "action": "wait",
           "detail": "app.play"
         },
         {
-          "at_ms": 5007,
+          "at_ms": 6940,
           "action": "wait",
           "detail": "loader.load"
         },
         {
-          "at_ms": 5916,
+          "at_ms": 8339,
           "action": "wait",
           "detail": "player.progress"
         },
         {
-          "at_ms": 9020,
+          "at_ms": 12093,
           "action": "keys",
           "detail": "DOWN ENTER"
         },
         {
-          "at_ms": 9020,
+          "at_ms": 12093,
           "action": "wait",
           "detail": "loader.load"
         },
         {
-          "at_ms": 9530,
+          "at_ms": 12753,
           "action": "shot",
           "detail": "Concise selected"
         },
         {
-          "at_ms": 13579,
+          "at_ms": 17859,
           "action": "keys",
           "detail": "DOWN DOWN ENTER"
         },
         {
-          "at_ms": 13579,
+          "at_ms": 18398,
           "action": "wait",
           "detail": "loader.miss"
         },
         {
-          "at_ms": 17964,
+          "at_ms": 20400,
           "action": "wait",
           "detail": "player.progress"
         }
@@ -314,7 +314,7 @@
           "kind": "order",
           "expect": "loader.load path=/standard/ ok=true cues=3 → controls.verbosity to=concise → loader.load path=/concise/ ok=true cues=2 → controls.verbosity to=detailed → loader.miss path=/detailed/ → loader.load path=/standard/ ok=true cues=3 → player.progress",
           "ok": true,
-          "matched_seq": 52
+          "matched_seq": 55
         },
         {
           "kind": "absent",
@@ -339,7 +339,7 @@
         }
       ],
       "trace_path": "traces/S12.jsonl",
-      "duration_ms": 19160
+      "duration_ms": 21822
     },
     {
       "id": "S13",
@@ -355,32 +355,32 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 2270,
+          "at_ms": 3137,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 4828,
+          "at_ms": 6252,
           "action": "keys",
           "detail": "DOWN ENTER"
         },
         {
-          "at_ms": 4828,
+          "at_ms": 6253,
           "action": "wait",
           "detail": "app.play"
         },
         {
-          "at_ms": 4828,
+          "at_ms": 6253,
           "action": "wait",
           "detail": "ad.state"
         },
         {
-          "at_ms": 5365,
+          "at_ms": 6946,
           "action": "shot",
           "detail": "The unreadable-track state, on screen"
         },
         {
-          "at_ms": 10965,
+          "at_ms": 14330,
           "action": "wait",
           "detail": "player.progress"
         }
@@ -402,7 +402,7 @@
           "kind": "order",
           "expect": "controls.announce kind=malformed → player.progress → player.progress",
           "ok": true,
-          "matched_seq": 28
+          "matched_seq": 27
         }
       ],
       "spoken": [
@@ -414,12 +414,12 @@
         {
           "kind": "screenshot",
           "path": "shots/S13-0.jpg",
-          "at_seq": 24,
+          "at_seq": 16,
           "caption": "The unreadable-track state, on screen"
         }
       ],
       "trace_path": "traces/S13.jsonl",
-      "duration_ms": 12650
+      "duration_ms": 16932
     },
     {
       "id": "S14",
@@ -435,27 +435,27 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 2915,
+          "at_ms": 3577,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 5787,
+          "at_ms": 6899,
           "action": "keys",
           "detail": "DOWN ENTER"
         },
         {
-          "at_ms": 5787,
+          "at_ms": 6899,
           "action": "wait",
           "detail": "app.play"
         },
         {
-          "at_ms": 22906,
+          "at_ms": 24110,
           "action": "wait",
           "detail": "audio.failed"
         },
         {
-          "at_ms": 34048,
+          "at_ms": 35510,
           "action": "wait",
           "detail": "audio.restored"
         }
@@ -465,13 +465,13 @@
           "kind": "order",
           "expect": "audio.duck id=c2 → audio.failed id=c2 → audio.restored id=c2 → player.progress",
           "ok": true,
-          "matched_seq": 53
+          "matched_seq": 52
         },
         {
           "kind": "order",
           "expect": "audio.restored id=c2 → audio.duck id=c3 → audio.restored id=c3",
           "ok": true,
-          "matched_seq": 74
+          "matched_seq": 73
         }
       ],
       "spoken": [
@@ -481,7 +481,7 @@
       ],
       "artifacts": [],
       "trace_path": "traces/S14.jsonl",
-      "duration_ms": 35586,
+      "duration_ms": 37718,
       "windows_ms": [
         [
           4000,
@@ -512,47 +512,47 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 2450,
+          "at_ms": 3201,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 5137,
+          "at_ms": 6372,
           "action": "keys",
           "detail": "DOWN ENTER"
         },
         {
-          "at_ms": 5137,
+          "at_ms": 6372,
           "action": "wait",
           "detail": "app.play"
         },
         {
-          "at_ms": 36271,
+          "at_ms": 44253,
           "action": "wait",
           "detail": "player.progress"
         },
         {
-          "at_ms": 42166,
+          "at_ms": 49453,
           "action": "wait",
           "detail": "overlay.shown"
         },
         {
-          "at_ms": 44857,
+          "at_ms": 50661,
           "action": "shot",
           "detail": "Stalled: the picture is frozen and the app says so"
         },
         {
-          "at_ms": 44858,
+          "at_ms": 50661,
           "action": "release",
           "detail": "held fixture requests answered"
         },
         {
-          "at_ms": 44982,
+          "at_ms": 50724,
           "action": "wait",
           "detail": "player.resumed"
         },
         {
-          "at_ms": 45139,
+          "at_ms": 51521,
           "action": "wait",
           "detail": "player.progress"
         }
@@ -562,7 +562,7 @@
           "kind": "order",
           "expect": "player.progress pos_ms=(checked) → player.stalled → overlay.shown status=stalled → player.resumed from=stalled → overlay.cleared → player.progress",
           "ok": true,
-          "matched_seq": 85
+          "matched_seq": 93
         }
       ],
       "spoken": [
@@ -579,7 +579,7 @@
         }
       ],
       "trace_path": "traces/S15.jsonl",
-      "duration_ms": 47657
+      "duration_ms": 53388
     },
     {
       "id": "S16",
@@ -595,47 +595,47 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 2461,
+          "at_ms": 2603,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 5017,
+          "at_ms": 5553,
           "action": "keys",
           "detail": "DOWN ENTER"
         },
         {
-          "at_ms": 5017,
+          "at_ms": 5553,
           "action": "wait",
           "detail": "app.play"
         },
         {
-          "at_ms": 5017,
+          "at_ms": 5553,
           "action": "wait",
           "detail": "overlay.shown"
         },
         {
-          "at_ms": 5480,
+          "at_ms": 6020,
           "action": "shot",
           "detail": "The error state"
         },
         {
-          "at_ms": 6806,
+          "at_ms": 7522,
           "action": "keys",
           "detail": "BACK"
         },
         {
-          "at_ms": 6806,
+          "at_ms": 7522,
           "action": "wait",
           "detail": "player.back"
         },
         {
-          "at_ms": 8114,
+          "at_ms": 9212,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 8114,
+          "at_ms": 9212,
           "action": "wait",
           "detail": "app.play"
         }
@@ -664,7 +664,7 @@
         }
       ],
       "trace_path": "traces/S16.jsonl",
-      "duration_ms": 9518
+      "duration_ms": 11017
     },
     {
       "id": "S17",

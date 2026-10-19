@@ -318,5 +318,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {color: '#fff', fontSize: 28},
-  controls: {position: 'absolute', left: 48, bottom: 48, gap: 12},
+  // right: 48 bounds the width so the package's sentence wraps inside the
+  // screen; flex-start keeps the panel as wide as its text, not the screen.
+  // bottom: 128 keeps it above the letterbox: the native video surface paints
+  // its black bars OVER this view (measured on the VVD 2026-10-19 — at
+  // bottom: 48 the second line of the sentence was hidden under the bar).
+  controls: {position: 'absolute', left: 48, right: 48, bottom: 128, gap: 12, alignItems: 'flex-start'},
 });
