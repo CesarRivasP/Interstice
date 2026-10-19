@@ -439,3 +439,19 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 **Validation:** vitest 186+ · lint 0.
 **Still open:** 34 standard cues — the quotas reset at midnight Pacific; the cache makes the re-run pay only for them. `AC7` flips to executed when the standard track has no failed cue. `AC14` after that.
 **Next mode:** verify — re-run `--levels standard` after 2026-10-20 00:00 PT.
+
+---
+
+## R50 · 2026-10-19 · claude-opus-5-5 (Claude Code) · implement + verify
+**Log read through:** R49
+**About to do:** R45-F3 — no visible focus on the title list, and the package's controls unstyled (default text colour on black, no focus state). The Design criterion is the entry's weakest; this is the cheapest thing that moves it.
+
+### Built
+- **Package, `react-native-tv-audio-description` (commit 35d18c9, local, not pushed, not published):** `ADControls` draws what it announces — inverted colours plus a 4 px `#FFD400` outline on the focused control, white text on a translucent panel, the selected level marked `●`, the failure sentences in the same legible colour; `theme` prop and `DEFAULT_THEME`. Package issue #3. 88 tests (3 new, on what is SHOWN).
+- **App:** `TitleItem` in `src/App.tsx` — the title list draws its focus the same way. `PlayerScreen` bounds the controls (`right: 48`) and lifts them to `bottom: 128`: the native video surface paints its letterbox bars OVER React views, and at `bottom: 48` the second line of the missing-track sentence was hidden under the bar (measured on the VVD).
+- **Harness, `e2e/capture.ts`:** the capture found the WRONG DEVICE. With an Android TV emulator (`TV_1080_RELEASE`) also running on the host, the wrapper's defaults (console 5554, gRPC 8554, no `--pid`) addressed it, and a whole release run captured another app's screens while every verdict — decided from beacon trace lines — still passed. That run was deleted unpublished; the 11 shots in `docs/e2e/` were checked one by one and are all the VVD. `findVvd()` now finds the device by its binary, reads its console port from what it listens on, enables gRPC on the matching port and passes `--pid` to every command; no VVD process is a loud failure.
+
+### Verified on the Vega Virtual Device (package installed from a local tarball, `--no-save`)
+- RELEASE `2026-10-19T17-44-24-666Z-release` — S01–S05 pass. VARIANT `2026-10-19T17-46-05-915Z-variant` — S10–S16 pass, S17 blocked by D6. Shots inspected: focused title inverted with outline (S01), the four controls on a panel with the focused level outlined and the selected one marked (S12), both failure sentences whole and legible (S03, S13).
+**Not done:** `npm publish` of the package 0.2.0 waits on the owner (irreversible); until then the app's `package.json` still resolves `^0.1.0`, and `docs/e2e/` is not republished, because its header would name package 0.1.0 for a build that ran 0.2.0 code.
+**Validation:** jest 31 · lint 0 · package jest 88.
