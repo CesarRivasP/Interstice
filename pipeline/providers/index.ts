@@ -51,6 +51,7 @@ export function selectProvider(
     return new GeminiProvider({
       apiKey: env.GEMINI_API_KEY,
       modelId: env.GEMINI_MODEL_ID ?? DEFAULT_GEMINI_MODEL,
+      ...(env.GEMINI_MIN_INTERVAL_MS ? { minIntervalMs: Number(env.GEMINI_MIN_INTERVAL_MS) } : {}),
     });
   }
   if (name === 'ollama') {

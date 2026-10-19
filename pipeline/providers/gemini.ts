@@ -30,12 +30,17 @@ export class GeminiProvider implements DescriptionProvider {
   readonly answeredBy = new Map<string, number>();
   private readonly exhausted = new Set<string>();
   private current = 0;
+  private readonly minIntervalMs: number;
+  private lastCallAt = 0;
   private readonly apiKey: string;
   private readonly fetchImpl: FetchLike;
   private readonly sleep: ((ms: number) => Promise<void>) | undefined;
 
-  constructor(opts: { apiKey: string; modelId?: string; fetch?: FetchLike; sleep?: (ms: number) => Promise<void> }) {
+  constructor(opts: { apiKey: string; modelId?: string; fetch?: FetchLike; sleep?: (ms: number) => Promise<void>; minIntervalMs?: number }) {
     this.apiKey = opts.apiKey;
+    // GEMINI_MIN_INTERVAL_MS: the free tier also limits requests per minute, and
+    // a 429 answered to a burst is a request the daily quota may still count.
+    this.minIntervalMs = opts.minIntervalMs ?? 0;
     this.models = (opts.modelId ?? DEFAULT_GEMINI_MODEL)
       .split(',')
       .map((m) => m.trim())
@@ -119,6 +124,9 @@ export class GeminiProvider implements DescriptionProvider {
     const url = `${GEMINI_ENDPOINT}/models/${model}:generateContent`;
     return withBackoff(
       async () => {
+        const wait = this.lastCallAt + this.minIntervalMs - Date.now();
+        if (wait > 0) await (this.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms))))(wait);
+        this.lastCallAt = Date.now();
         let res: Response;
         try {
           res = await this.fetchImpl(url, {
@@ -187,6 +195,9 @@ export class GeminiProvider implements DescriptionProvider {
       },
       {
         label: 'gemini',
+        // With a model list, an overloaded model is skipped at once for the next
+        // one rather than backed off five times — every retry is a request.
+        ...(this.models.length > 1 ? { maxAttempts: 1 } : {}),
         isRetryable: (e) => e instanceof ProviderError && e.retryable,
         ...(this.sleep ? { sleep: this.sleep } : {}),
       },
