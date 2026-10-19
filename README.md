@@ -42,7 +42,8 @@ it with data that already ships with the film.
 4. **Name the cast once.** A first pass builds a *dramatis personae* from the opening frames
    and subtitle speaker cues, fed into every later prompt so the same character is named the
    same way from the first cue to the last.
-5. **Write to fit.** Each cue goes to a vision model on Amazon Bedrock with its frames, the
+5. **Write to fit.** Each cue goes to a vision model — Amazon Bedrock by default, or any
+   implementation of the provider interface in `pipeline/providers/` — with its frames, the
    surrounding dialogue, the cast list and the previous ten descriptions. The word budget is
    **derived from the gap** at 160 wpm — not requested from the model — and a response that
    exceeds it is rejected.
@@ -84,7 +85,7 @@ To re-run it: a booted Vega Virtual Device (SDK 0.24), Node 20+, `ffmpeg`, then
 
 ## Status
 
-This is a hackathon build. What is true today — **2026-10-18** — and what is not, is
+This is a hackathon build. What is true today — **2026-10-19** — and what is not, is
 tracked here rather than implied. The registry behind every line is
 `docs/features/interstice/_facts.yml`.
 
@@ -100,17 +101,18 @@ tracked here rather than implied. The registry behind every line is
   written by hand
 - ✅ Frame extraction built and tested; **Amazon Polly works** on the entrant account, and
   real Polly audio has been played over the film on the device
-- ⛔ **Description of the frames has never run.** Amazon Bedrock refuses every inference
-  call on this AWS account — `Error 002: Access to Bedrock models is not allowed for this
-  account` — in every region, for every identity, before and after the AWS credit, and
-  five minutes after the use-case form was submitted through `PutUseCaseForModelAccess`
-  on 2026-10-18. AWS documents the next step for a persistent `Error 002` as "contact AWS
-  Sales". The Bedrock stage is built and tested against a mocked `Converse`; **no generated
-  description track exists**, and nothing in this repository claims one does.
-  <!-- FLIP ON 10-22 if a generated track lands: replace this bullet with
-  "✅ Description of the frames generated end to end by the pipeline against <model>; the
-  track in the demo is that one, and no cue text is hand-written" — and drop the
-  "labelled fixture track" clause above. -->
+- ✅ **Description of the frames has run, on Google Gemini.** On 2026-10-19 the pipeline
+  generated its first real standard-level track: **21 of 55 cues** came back within budget
+  before the Gemini free tier's daily quota ran out; the rest run after the reset. No cue
+  text is hand-written, and the track's `model_id` names the models that answered. It has
+  not yet been played on the device — the harness runs above use the fixture track.
+- ⛔ **Amazon Bedrock refuses every inference call on this AWS account** — `Error 002:
+  Access to Bedrock models is not allowed for this account` — in every region, for every
+  identity, before and after the AWS credit, and five minutes after the use-case form was
+  submitted through `PutUseCaseForModelAccess` on 2026-10-18. AWS documents the next step
+  for a persistent `Error 002` as "contact AWS Sales". The Bedrock provider is built, is the
+  default, and is tested against a mocked `Converse`; Gemini is the same interface with a
+  different implementation behind it.
 - ✅ The two defects the harness found on the device on 2026-10-04 — the same title could
   not be reopened after BACK, and a corrupt track file was announced as missing — are fixed
   and re-verified on the device on 2026-10-18; the report above is the run that shows it.
@@ -134,11 +136,13 @@ The track tools first, then the rest.
   **Vega CLI 1.3.4**, run on the **Vega Virtual Device** (OS 1.2)
 - **`@amazon-devices/react-native-w3cmedia`** 2.3.2 — W3C media playback; the film and
   the description clips are delivered through Media Source Extensions
-- **`react-native-tv-audio-description`** 0.1.0 — this project's own open-source
+- **`react-native-tv-audio-description`** 0.2.0 — this project's own open-source
   TV-side description layer, consumed from npm
 - **Amazon Bedrock** — `Converse` API with Amazon Nova (multimodal) as the vision model,
   via `@aws-sdk/client-bedrock-runtime`; built, mocked in tests, **refused at the account
   level** (see Status)
+- **Google Gemini API** — `generateContent` over REST, the provider that generated the
+  track while Bedrock refuses the account
 - **Amazon Polly** — neural `SynthesizeSpeech`, via `@aws-sdk/client-polly`; working
 - **Amazon Devices Builder Tools** — the MCP server and Agent Skills, used while building
   for platform documentation

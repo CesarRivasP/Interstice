@@ -481,3 +481,14 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 - R52-F1 `FUNCTIONAL` for the e2e set: key-driven scenarios S11/S12 are intermittent on the VVD, 1 failure in 3 runs each today — one a focus landing, one a lost line. Not disposed here.
 `docs/e2e/` republished from RELEASE 19-32-40 and VARIANT 19-44-08: 12 pass, 1 blocked.
 **Validation:** jest 32 · lint 0.
+
+## R53 · 2026-10-19 · claude-opus-5-5 (Claude Code) · docs
+**Read:** `SUBMISSION.md` · `README.md` (Status, Built with) · `FRICTION-LOG.md` · `generated/tears-of-steel/tears-of-steel.standard.track.json` (header only) · `_log.md` through R52
+**Log read through:** R52
+**Disposition:** the submission text caught up with R48–R52. `SUBMISSION.md` no longer carries the `[IF GENERATED TRACK LANDS]` / `[IF NOT]` fork: the truth is a third branch — Bedrock still refuses (`defects[D4]`), and the track is generated through the provider seam on Gemini. One placeholder stays, `[N]`, the standard cues `ok` after the final run (21 of 55 today, R49). Also brought current: the package at 0.2.0 and 88 tests, the harness status (12 pass, 1 blocked; R46-F1/F2 fixed), the friction-log count. README Status splits the old ⛔ bullet into "description has run, on Gemini, not yet on the device" and "Bedrock refuses". `FRICTION-LOG.md` gains the R50 capture defect as a dated entry (the Virtual Device takes whatever emulator console port is free; capture photographed another emulator) — High, 16 entries, 14 on Amazon tools.
+- R53-F1 `FUNCTIONAL` for the video: §3's verbosity-switch shot needs concise and detailed tracks, and only standard is generated. Open in `SUBMISSION.md` §5 for the owner: generate them on the remaining free quota or label them fixture on screen.
+
+## R54 · 2026-10-19 · claude-opus-5-5 (Claude Code) · docs
+**Read:** `SUBMISSION.md` §3 and §5 · `_log.md` R49 (the measured yield) through R53
+**Log read through:** R53
+**Disposition:** R53-F1 → **decided by the owner, closed.** The free tier measured 21 ok cues in a day (R49), not the 120 calls its quota names, so concise + detailed (107 cues) cannot land before the video. The quota goes to the standard track and its `AC14` regenerations. `SUBMISSION.md` §3: the app shot grows to 1:35–2:25 on the generated track; the verbosity control gets 2:25–2:30 with the computed window counts (47 / 55 / 60) and the caption that text is generated for standard only — no fixture text is heard anywhere in the video. §5 records the decision.
