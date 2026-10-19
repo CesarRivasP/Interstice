@@ -6,7 +6,7 @@ import { buildTimelineModel, fmtClock } from '../../tools/viz/model.js';
 /**
  * AC19: the renders are drawn from C7 data, and the figures they print are
  * computed, not typed. This pins the model to the real asset so a strip that
- * says "38 gaps" is saying what `findGaps` says.
+ * says "39 gaps" is saying what `findGaps` + `clipToContent` say.
  */
 const SRT = readFileSync('media/tears-of-steel.en.srt', 'utf8');
 const MANIFEST = JSON.parse(readFileSync('media/tears-of-steel.manifest.json', 'utf8'));
@@ -14,13 +14,27 @@ const MANIFEST = JSON.parse(readFileSync('media/tears-of-steel.manifest.json', '
 describe('tools/viz model', () => {
   const m = buildTimelineModel(SRT, MANIFEST, 'standard');
 
-  // Fails if: the figures the README and the strip print drift from the code
-  // that produces them. 76 / 67 / 38 / 18.6% / 78.6% are the R13 measurements.
-  it('reproduces the measured figures from the real subtitles', () => {
+  // Fails if: the figures the strip leads with drift from the registry and the
+  // submission. Canonical, after clipToContent — _facts.yml worst_case:
+  // gaps_detected 39, describable_pct 61.5 (of the asset), describable_pct_note
+  // 451.8 s = 74.2% of the content, cues_by_verbosity.standard 55, dialogue_pct 18.6.
+  it('reproduces the canonical figures from the real subtitles', () => {
     expect(m.figures.subtitle_cues).toBe(76);
     expect(m.figures.speech_spans).toBe(67);
-    expect(m.figures.gaps).toBe(38);
+    expect(m.figures.gaps_in_content).toBe(39);
+    expect(m.figures.silence_in_content_ms).toBe(451_833);
+    expect((m.figures.silence_in_content_ms / 1000).toFixed(1)).toBe('451.8');
+    expect(m.figures.describable_of_content_pct).toBe(74.2);
+    expect(m.figures.silence_in_content_pct).toBe(61.5);
+    expect(m.figures.cue_windows).toBe(55);
     expect(m.figures.dialogue_pct).toBe(18.6);
+  });
+
+  // Fails if: the raw R13 figures (before clipToContent) change. The strip still
+  // prints 38 in a labelled footer note; 78.6% is no longer printed anywhere,
+  // because it counts the credits (_facts.yml: "Was 78.6% until R20").
+  it('keeps the raw pre-clip figures as R13 measured them', () => {
+    expect(m.figures.gaps).toBe(38);
     expect(m.figures.silence_pct).toBe(78.6);
   });
 

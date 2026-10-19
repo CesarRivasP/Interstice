@@ -4,7 +4,7 @@
  * number printed comes from `buildTimelineModel`, which runs pipeline/gaps.ts.
  */
 import { C, group, line, outline, rect, svg, text } from './svg.js';
-import { fmtClock, type TimelineModel } from './model.js';
+import { fmtClock, fmtSeconds, type TimelineModel } from './model.js';
 
 export type Variant = 'video' | 'readme';
 
@@ -51,8 +51,8 @@ export function renderTimeline(m: TimelineModel, opts: TimelineOptions): string 
     text(
       L.margin,
       y,
-      `Dialogue covers ${f.dialogue_pct}% of the runtime. Silence of ${m.limits.min_gap_ms / 1000} s or longer covers ${f.silence_pct}%` +
-        ` — ${f.silence_in_content_pct}% inside the content windows — and that is where Interstice speaks.`,
+      `Dialogue covers ${f.dialogue_pct}% of the runtime. Inside the content windows, ${f.gaps_in_content} silences of ${m.limits.min_gap_ms / 1000} s or longer` +
+        ` add up to ${fmtSeconds(f.silence_in_content_ms)} — ${f.describable_of_content_pct}% of the content — and that is where Interstice speaks.`,
       { size: 22 * s, fill: C.muted },
     ),
   );
@@ -63,10 +63,10 @@ export function renderTimeline(m: TimelineModel, opts: TimelineOptions): string 
     const cards: [string, string][] = [
       ['subtitle cues', String(f.subtitle_cues)],
       ['speech spans', String(f.speech_spans)],
-      [`gaps ≥ ${m.limits.min_gap_ms / 1000} s`, String(f.gaps)],
+      [`gaps ≥ ${m.limits.min_gap_ms / 1000} s in the content`, String(f.gaps_in_content)],
       [`cue windows ≤ ${m.limits.max_cue_ms / 1000} s`, `${f.cue_windows}`],
-      ['dialogue', `${f.dialogue_pct}%`],
-      ['describable silence', `${f.silence_pct}%`],
+      ['dialogue (of the runtime)', `${f.dialogue_pct}%`],
+      [`describable · ${fmtSeconds(f.silence_in_content_ms)} of content`, `${f.describable_of_content_pct}%`],
     ];
     const gapPx = 16 * s;
     const cw = (L.width - 2 * L.margin - gapPx * (cards.length - 1)) / cards.length;
@@ -139,6 +139,15 @@ export function renderTimeline(m: TimelineModel, opts: TimelineOptions): string 
       footY,
       `Rendered from pipeline/gaps.ts (C7) at verbosity ${m.verbosity} · limits.ad: min_gap ${m.limits.min_gap_ms} ms · max_cue ${m.limits.max_cue_ms} ms · min_useful_words ${m.limits.min_useful_words}` +
         ` · ${f.split_gaps} gaps split · ${f.cue_windows_dropped} windows dropped`,
+      { size: 15 * s, fill: C.muted },
+    ),
+  );
+  // the pre-clip figures, kept only as a labelled note: the cards above are the canonical ones
+  out.push(
+    text(
+      L.margin,
+      footY - 24 * s,
+      `Before clipping to the content windows: ${f.gaps} raw gaps, the credits included. Clipping to the windows splits any gap that straddles a window edge: ${f.gaps} → ${f.gaps_in_content}.`,
       { size: 15 * s, fill: C.muted },
     ),
   );
