@@ -9,6 +9,7 @@ import {
   DEFAULT_GEMINI_MODEL,
   FakeProvider,
   GeminiProvider,
+  OllamaProvider,
   ProviderError,
   isAccountBlocked,
   isThrottle,
@@ -238,6 +239,26 @@ describe('GeminiProvider — the third real implementation of the seam', () => {
     expect(calls).toBe(1);
   });
 
+  it('rotates through a model list: a quota-exhausted model is dropped, and model_id names who answered', async () => {
+    const quota = JSON.stringify({ error: { details: [{ quotaId: 'PerDay' }, { retryDelay: '70000s' }] } });
+    const urls: string[] = [];
+    const p = new GeminiProvider({
+      apiKey: 'k', modelId: 'm-a, m-b', sleep: noSleep,
+      fetch: async (url) => { urls.push(url); return url.includes('/m-a:') ? new Response(quota, { status: 429 }) : ok('A door opens.'); },
+    });
+    expect(p.modelId).toBe('m-a');
+    expect(await p.describe({ images: [], text: 't', maxTokens: 10 })).toBe('A door opens.');
+    expect(await p.describe({ images: [], text: 't', maxTokens: 10 })).toBe('A door opens.');
+    expect(urls.filter((u) => u.includes('/m-a:'))).toHaveLength(1); // dropped after its first 429
+    expect(p.modelId).toBe('m-b');
+  });
+
+  it('throws when every model in the list is exhausted', async () => {
+    const quota = JSON.stringify({ error: { details: [{ retryDelay: '70000s' }] } });
+    const p = new GeminiProvider({ apiKey: 'k', modelId: 'm-a,m-b', sleep: noSleep, fetch: async () => new Response(quota, { status: 429 }) });
+    await expect(p.describe({ images: [], text: 't', maxTokens: 10 })).rejects.toMatchObject({ code: 'quota_exhausted' });
+  });
+
   // Fails if: a safety block is turned into a cue. It must come back empty so
   // the validator writes the cue `failed` (AC7), as the Anthropic refusal does.
   it('returns empty text on a safety block', async () => {
@@ -250,5 +271,32 @@ describe('GeminiProvider — the third real implementation of the seam', () => {
     const p = selectProvider({ DESCRIPTION_PROVIDER: 'gemini', GEMINI_API_KEY: 'k', GEMINI_MODEL_ID: 'gemini-x' }, { dryRun: false });
     expect(p.id).toBe('gemini');
     expect(p.modelId).toBe('gemini-x');
+  });
+});
+
+describe('OllamaProvider — a local model, no quota', () => {
+  it('sends base64 frames with the text, JSON format, num_predict as the budget, and records usage', async () => {
+    const seen: { url: string; init: RequestInit }[] = [];
+    const p = new OllamaProvider({ fetch: async (url, init) => { seen.push({ url, init }); return new Response(JSON.stringify({ message: { content: '{"text":"A ship."}' }, prompt_eval_count: 900, eval_count: 12 }), { status: 200 }); } });
+    expect(await p.describe({ images: [Buffer.from('a')], text: 'describe', maxTokens: 30 })).toBe('{"text":"A ship."}');
+    expect(seen[0]!.url).toBe('http://127.0.0.1:11434/api/chat');
+    const body = JSON.parse(seen[0]!.init.body as string);
+    expect(body.format).toBe('json');
+    expect(body.options.num_predict).toBe(30);
+    expect(body.messages[0].images).toEqual([Buffer.from('a').toString('base64')]);
+    expect(p.usage).toEqual({ calls: 1, input_tokens: 900, output_tokens: 12 });
+  });
+
+  it('fails fast, naming ollama serve, when the server is not running', async () => {
+    let calls = 0;
+    const p = new OllamaProvider({ sleep: noSleep, fetch: async () => { calls++; throw new TypeError('fetch failed'); } });
+    await expect(p.describe({ images: [], text: 't', maxTokens: 10 })).rejects.toThrow('ollama serve');
+    expect(calls).toBe(1);
+  });
+
+  it('is selected by DESCRIPTION_PROVIDER=ollama with no key', () => {
+    const p = selectProvider({ DESCRIPTION_PROVIDER: 'ollama', OLLAMA_MODEL_ID: 'gemma3:12b' }, { dryRun: false });
+    expect(p.id).toBe('ollama');
+    expect(p.modelId).toBe('gemma3:12b');
   });
 });

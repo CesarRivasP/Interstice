@@ -23,15 +23,23 @@ interface GeminiResponse {
 
 export class GeminiProvider implements DescriptionProvider {
   readonly id = 'gemini' as const;
-  readonly modelId: string;
   readonly usage = emptyUsage();
+  /** GEMINI_MODEL_ID, comma-separated: tried in order, see describe() */
+  readonly models: string[];
+  /** per-model answer counts, so the track can say exactly what wrote it */
+  readonly answeredBy = new Map<string, number>();
+  private readonly exhausted = new Set<string>();
+  private current = 0;
   private readonly apiKey: string;
   private readonly fetchImpl: FetchLike;
   private readonly sleep: ((ms: number) => Promise<void>) | undefined;
 
   constructor(opts: { apiKey: string; modelId?: string; fetch?: FetchLike; sleep?: (ms: number) => Promise<void> }) {
     this.apiKey = opts.apiKey;
-    this.modelId = opts.modelId ?? DEFAULT_GEMINI_MODEL;
+    this.models = (opts.modelId ?? DEFAULT_GEMINI_MODEL)
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean);
     this.fetchImpl = opts.fetch ?? ((input, init) => fetch(input, init));
     this.sleep = opts.sleep;
   }
@@ -63,8 +71,52 @@ export class GeminiProvider implements DescriptionProvider {
     };
   }
 
+  /**
+   * What `contracts.description_track.model_id` records: every model that
+   * answered, joined with `+`, in the order configured; the configured first
+   * model before any has answered.
+   */
+  get modelId(): string {
+    const used = this.models.filter((m) => this.answeredBy.has(m));
+    return used.length ? used.join('+') : this.models[0]!;
+  }
+
+  /**
+   * The free tier allows 20 requests per model per day (measured 2026-10-18),
+   * and a full standard-level run is 56. With a LIST in GEMINI_MODEL_ID, a model
+   * whose daily quota is gone is dropped for the rest of the run, and one still
+   * overloaded after its five backoff attempts (503) is skipped for this cue;
+   * either way the next model answers. Only when every model has failed the
+   * cue does the error reach describe.ts.
+   */
   async describe(req: VisionRequest): Promise<string> {
-    const url = `${GEMINI_ENDPOINT}/models/${this.modelId}:generateContent`;
+    let lastError: unknown;
+    for (let tried = 0; tried < this.models.length; tried++) {
+      const model = this.models[this.current]!;
+      if (this.exhausted.has(model)) {
+        this.current = (this.current + 1) % this.models.length;
+        continue;
+      }
+      try {
+        const out = await this.describeWith(model, req);
+        this.answeredBy.set(model, (this.answeredBy.get(model) ?? 0) + 1);
+        return out;
+      } catch (err) {
+        lastError = err;
+        if (!(err instanceof ProviderError)) throw err;
+        if (err.code === 'quota_exhausted') this.exhausted.add(model);
+        else if (!err.retryable) throw err;
+        if (this.models.length > 1) {
+          console.log(`INTERSTICE.describe.rotate provider=gemini from=${model} reason=${err.code}`);
+        }
+        this.current = (this.current + 1) % this.models.length;
+      }
+    }
+    throw lastError;
+  }
+
+  private async describeWith(model: string, req: VisionRequest): Promise<string> {
+    const url = `${GEMINI_ENDPOINT}/models/${model}:generateContent`;
     return withBackoff(
       async () => {
         let res: Response;

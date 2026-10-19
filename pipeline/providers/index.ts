@@ -2,6 +2,7 @@ import { AnthropicProvider, DEFAULT_ANTHROPIC_MODEL } from './anthropic.js';
 import { BedrockConverseProvider, DEFAULT_BEDROCK_MODEL } from './bedrock.js';
 import { FakeProvider } from './fake.js';
 import { DEFAULT_GEMINI_MODEL, GeminiProvider } from './gemini.js';
+import { DEFAULT_OLLAMA_MODEL, OllamaProvider } from './ollama.js';
 import type { DescriptionProvider } from './types.js';
 
 export { AnthropicProvider, DEFAULT_ANTHROPIC_MODEL } from './anthropic.js';
@@ -15,14 +16,15 @@ export {
 } from './bedrock.js';
 export { FakeProvider, fakeSynthesize, hasFfmpeg, wordsOf } from './fake.js';
 export { DEFAULT_GEMINI_MODEL, GEMINI_ENDPOINT, GeminiProvider } from './gemini.js';
+export { DEFAULT_OLLAMA_HOST, DEFAULT_OLLAMA_MODEL, OllamaProvider } from './ollama.js';
 export { ProviderError, emptyUsage } from './types.js';
 export type { DescriptionProvider, ProviderUsage, VisionRequest } from './types.js';
 
-export const PROVIDER_NAMES = ['bedrock', 'anthropic', 'gemini'] as const;
+export const PROVIDER_NAMES = ['bedrock', 'anthropic', 'gemini', 'ollama'] as const;
 export type ProviderName = (typeof PROVIDER_NAMES)[number];
 
 /**
- * `DESCRIPTION_PROVIDER=bedrock|anthropic|gemini`, default bedrock. The fallback is
+ * `DESCRIPTION_PROVIDER=bedrock|anthropic|gemini|ollama`, default bedrock. The fallback is
  * chosen by the operator, never by the pipeline: when Bedrock answers with the
  * account-level refusal of `defects[D4]`, `BedrockConverseProvider` fails fast
  * with a message naming this variable, and the run stops.
@@ -49,6 +51,12 @@ export function selectProvider(
     return new GeminiProvider({
       apiKey: env.GEMINI_API_KEY,
       modelId: env.GEMINI_MODEL_ID ?? DEFAULT_GEMINI_MODEL,
+    });
+  }
+  if (name === 'ollama') {
+    return new OllamaProvider({
+      modelId: env.OLLAMA_MODEL_ID ?? DEFAULT_OLLAMA_MODEL,
+      ...(env.OLLAMA_HOST ? { host: env.OLLAMA_HOST } : {}),
     });
   }
   if (name === 'bedrock') {
