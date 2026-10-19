@@ -17,6 +17,10 @@
 
 Same tag + date spine as `01-master-plan.md` (`_facts.yml dates.revisions[]`), showing only what changes the external side.
 
+### 2026-10-18 — R47-W3: what is handed over, as it is
+
+Round R47-W3 closed `changes[C13]` and wrote `changes[C14]`. Three things §A said would be handed over will not be, and the table in §A.2 and the rows in §A.6 now say so rather than leaving the panel to find out: there is **no validation quote**, because `AC20` was dropped at its 2026-10-16 cut-off with nobody confirmed (`decisions.user_validation`); **VoiceView is not shown**, because it cannot be enabled on the Virtual Device and no physical device was available (`AC15` stays unclosed); and unless a generated track lands before 10-22, the track in the demo is a **labelled fixture**, because `defects[D4]` held through the use-case form submitted on 2026-10-18. The friction log gained a severity rating per entry on the rules' own wording, and `SUBMISSION.md` carries the sourced coverage figure for `AC16`.
+
 ### 2026-09-26 — v18: regenerated against what was measured
 
 `implement` round R39. This document had not been touched since R8 and described the system as it was **imagined before the platform was measured**. Five claims were wrong, and §A.6 is the table that says *how each claim is checked* — precisely where a false claim costs credibility with the people scoring it.
@@ -63,7 +67,7 @@ The submission hands over five things. Each is a deliverable in `_facts.yml chan
 | **The pipeline** — turns a film plus its subtitle file into a description track: gaps, frames, model calls, synthesis | the same repository, `pipeline/` | `C7`..`C10` |
 | **The open-source package** — `react-native-tv-audio-description`, the TV-side description layer as a standalone installable project with a runnable example | `github.com/CesarRivasP/react-native-tv-audio-description` | `C12` |
 | **The friction log** — dated entries written while building, covering Vega OS, Bedrock and Polly | `FRICTION-LOG.md` | `C13` |
-| **The submission package** — demo video under 3 minutes, gap visualization, product feedback, validation quote, Devpost fields | `SUBMISSION.md` | `C14` |
+| **The submission package** — demo video under 3 minutes, gap visualization, product feedback per tool, the sourced coverage figure, Devpost fields, and the statement that the validation session was dropped | `SUBMISSION.md` | `C14` |
 
 **Declared entries** (`decisions.hackathon_track`): **Fire TV** as the primary track, on **Vega OS**, with **both** mini challenges stacked on top — **AWS Builder** (Bedrock and Polly) and **Open Source** (`C12`). A submission may win at most one track prize and one mini-challenge prize.
 
@@ -174,10 +178,10 @@ Derived from `_facts.yml acceptance[]` — the criteria that need an external re
 | Descriptions never talk over dialogue (`AC4`) | the split-screen before/after in the video, plus `words` against gap length in any track file |
 | Playback is never interrupted by the controls (`AC3`) | the video: the toggle is pressed mid-scene and the film does not pause |
 | The three levels are a feature, not a checkbox (`AC17`) | the video switches all three mid-playback; the three track files differ |
-| The app works for the people it is for (`AC15`) | the VoiceView segment of the video, recorded on physical hardware — VoiceView cannot be enabled on the simulator |
+| The app works for the people it is for (`AC15`) | **not demonstrated** — VoiceView cannot be enabled on the simulator and no physical hardware was available; the video states it rather than implying it |
 | A stall is not silence (`AC24`) | interrupt the byte delivery: the picture freezes, **no error event fires**, and the app still says what happened, out loud |
 | The memory bound is real, not assumed (`AC23`) | the full asset played end to end on the worst device in the matrix, with `INTERSTICE.buffer.evicted` recurring and no `QuotaExceededError` |
-| It works for a real viewer, not a hypothesis (`AC20`) | the quote from the validation session in §B, in the video and in `SUBMISSION.md` |
+| It works for a real viewer, not a hypothesis (`AC20`) | **not demonstrated** — nobody was confirmed by the 2026-10-16 cut-off and the session was dropped; `SUBMISSION.md` §2.11 and the video say so |
 | The failure modes were designed, not discovered (`AC8`) | rename the track file and launch: the app says what happened, out loud, and the film still plays |
 
 **One criterion is deliberately not demonstrated.** `AC9` covers the live-capture layer, which is `kind: deferred` (`C11`) and does not ship. It is listed here rather than quietly dropped, because a criterion that disappears between the plan and the submission is the thing a careful reader notices. Since R12 it is also **unsatisfiable**: `defects[D1]` is resolved false, so there is no frame for the layer to capture.

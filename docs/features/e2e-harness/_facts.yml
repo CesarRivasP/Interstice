@@ -1,0 +1,881 @@
+# _facts.yml — SINGLE SOURCE OF TRUTH for feature `e2e-harness`
+# Every datum that appears in >1 doc lives HERE and is copied verbatim into prose.
+# Companion file: docs/features/_profile.yml — one per REPO, not per feature.
+# Editing a value here -> run `feature-spec sync e2e-harness` to propagate.
+#
+# STAGE 1. This file + 01-master-plan.md are the decision surface. Docs 02, 02e
+# and 03 are written by `implement`, after `review` runs and `status:` flips to
+# `reviewed`.
+#
+# THIS SET TESTS ANOTHER SET. The app under test is specified in
+# docs/features/interstice/. Its facts are CITED from there, qualified, and never
+# mirrored here: `docs/features/interstice/_facts.yml` acceptance.AC5, not a local
+# copy. Ids in this file (C1, D1, AC1 ...) are this set's own and unrelated to the
+# ids of the same shape over there.
+#
+# BASIS legend (references/evidence.md):
+#   measured -> evidence: { how, cmd, date, value }
+#   asserted -> falsified_by: <the observation that would kill it>
+#   decided  -> a choice, not a claim about the world.
+
+feature: e2e-harness
+profile: docs/features/_profile.yml
+title: 'E2E harness — scripted device runs of Interstice that end in an evidence report a judge can read'
+status: implementing
+
+owners:
+  technical: 'César Rivas (CesarRivasP)'
+  external: 'nobody with an ask. The reader outside the build is the hackathon judging
+             panel, who receive the published report and owe nothing in return'
+
+tracking:
+  issues: []
+  pr: null
+  milestone: null
+  branch: e2e-harness
+  shipped_in: null
+  blocked_by: null
+
+dates:
+  drafted: 2026-10-04
+  revisions:
+    - { tag: v1, date: 2026-10-04, note: 'initial decision draft — scope, capture ladder, two suites, fixture track, published report' }
+    - { tag: v2, date: 2026-10-04, note: 'review R2 dispositions and owner confirmation — a launch id on the wire, fixtures addressed by collector state not by URL, a 60 s fixture asset so a stall can happen, the device restored to the Release package after a VARIANT run, published paths made relative; status draft -> reviewed' }
+    - { tag: v3, date: 2026-10-04, note: 'verify R5 — Phase 0 ran on the Virtual Device: D1, D2, D3 and D5 hold; D4 is dead as written and fixed by keying the Metro cache on the flag (changes C24); the capture rung is grpc, the input route inputd-cli; status reviewed -> implementing' }
+    - { tag: v4, date: 2026-10-04, note: 'build R6 — the harness is built and both suites ran on the Virtual Device: ten scenarios pass, one is blocked, and two fail on defects in the app (D8, D9); the report is generated into docs/e2e; fixture audio falls back to the host voice when Polly is unreachable' }
+
+# =====================================================================
+# DECISIONS
+# =====================================================================
+decisions:
+
+  own_set:
+    date: 2026-10-04
+    basis: decided
+    decided_by: 'owner, intake batch 2026-10-04'
+    what: 'The harness is a spec set of its own, docs/features/e2e-harness/, with its own
+           registry. It cites the app set (docs/features/interstice/) and never copies
+           from it.'
+    why: 'the app registry is 1927 lines and describes a product; this describes a tool
+          that observes it. Folding one into the other would make every harness change
+          an edit to the product registry.'
+    cited_in: ['01 §2', '01 §3.3']
+
+  trace_is_the_oracle:
+    date: 2026-10-04
+    basis: decided
+    what: 'A scenario passes or fails on ASSERTIONS OVER THE BEACON TRACE and on nothing
+           else. Screenshots and video are evidence for a human reader; they never decide
+           a verdict.'
+    why: 'three reasons, each already paid for once in the app set. (1) Focus can be
+          visually right and natively wrong, so a picture does not prove where focus is.
+          (2) The only documented screenshot route on the Virtual Device is reported to
+          return a stale frame on every other call (limits.capture.appium_stale_frames).
+          (3) The app already emits an INTERSTICE.* line at every state change the manual
+          E2E reads, so the oracle exists; the harness reads it instead of inventing a
+          second one from pixels.'
+    cited_in: ['01 §2', '01 §3.1', '01 §8']
+
+  capture_ladder:
+    date: 2026-10-04
+    basis: decided
+    decided_by: 'owner, intake batch 2026-10-04'
+    what: 'Screen capture sits behind one seam (changes C4) with three rungs, tried in
+           order by the Phase 0 spike: (1) the emulator gRPC interface under the Virtual
+           Device — screenshot, video, possibly audio; (2) Appium with the Vega driver;
+           (3) no pixels at all, the report built from traces and rendered timelines.
+           The harness runs on any rung. The rung in use is recorded in every run.'
+    why: 'the Vega CLI has no screenshot command (limits.capture.cli_has_no_screenshot)
+          and the two documented routes are unsupported or unreliable on this image.
+          A ladder means the harness never waits on a tool: rung 3 needs nothing new.'
+    cited_in: ['01 §2', '01 §3.1', '01 §3.2', '01 §8']
+
+  two_suites:
+    date: 2026-10-04
+    basis: decided
+    what: 'Two suites, and the report never mixes them. RELEASE runs against the
+           unmodified Release package — the binary that is submitted — with no fixture
+           and no fault injection. VARIANT runs against a build made with the
+           INTERSTICE_E2E flag, which lets the harness serve track files, cue audio and
+           media segments from the host and therefore break them on purpose.'
+    why: 'a test build is not the shipped build. Saying so per scenario costs one column
+          in the report; not saying so is the kind of claim a careful judge discounts
+          wholesale. The flag is BUILD-TIME so the Release package carries no code path
+          that loads content from localhost (alternatives A3).'
+    cited_in: ['01 §2', '01 §3.1', '01 §5', '01 §7']
+
+  fixture_track:
+    date: 2026-10-04
+    basis: decided
+    decided_by: 'owner, 2026-10-04 — asked for a recommendation at intake, was given this
+                 one with its limit stated, and confirmed it'
+    revised_on: 2026-10-04
+    what: 'While `docs/features/interstice/_facts.yml` defects.D4 keeps the real track
+           from existing, VARIANT scenarios run against a FIXTURE track: asset id
+           `e2e-fixture`, cue windows declared by the fixture itself, cue text of the form
+           "Fixture cue N", audio synthesised by Polly through the pipeline the app set
+           already has. The fixture is served from the host at run time, is never
+           inside any package, never appears in the demo or the submission video, and
+           every result that used it is labelled FIXTURE wherever it is shown.
+           THE VOICE IS POLLY WHEN IT ANSWERS AND THE HOST''S OWN `say` WHEN IT DOES
+           NOT (built R6: the AWS session had expired, and a suite that needs a cloud
+           login to say "Fixture cue one" is a suite a judge cannot run). Same
+           container either way.
+           THE FIXTURE ASSET IS ITS OWN MEDIA TOO (review R2-F5): the first
+           limits.fixture.duration_s seconds of the film, cut and segmented on the host
+           by the pipeline the app set already has, and served like the track. The
+           packaged 20 s clip cannot stall — every segment of it sits inside the buffer
+           window and is fetched before playback starts.'
+    why: 'the scheduler, the toggle, the verbosity switch and the failure states are the
+          app, and they can be shown working today; only the WORDS wait on Bedrock.
+          `docs/features/interstice/_facts.yml` acceptance.AC7 forbids hand-written cue
+          text in the PRODUCT track; a labelled test fixture that never ships is a
+          different object, and the label is what keeps it one. When D4 clears, the
+          same scenarios run against the real track and the label goes.'
+    what_it_does_not_show: 'that a cue avoids DIALOGUE. Fixture windows are declared, not
+          derived from subtitles, so a pass means "the cue stayed inside its window",
+          which is half of `docs/features/interstice/_facts.yml` acceptance.AC4. The
+          report says which half.'
+    cited_in: ['01 §2', '01 §3.1', '01 §7', '01 §8']
+
+  host_served_fixtures:
+    date: 2026-10-04
+    basis: decided
+    what: 'One host process (changes C5) listens on the beacon port and does two jobs:
+           receives trace lines, and serves fixture files under endpoints.fixtures. A
+           fault is a property of what that server returns for one scenario — a 404, a
+           truncated body, a segment withheld for N seconds — not an edit to the app.'
+    why: 'the device already reverse-forwards one port to the host for the beacon, and
+          JavaScript on the device reaches it. Reusing it adds no port, no second
+          forwarding step and no file inside the package.'
+    cited_in: ['01 §3.1', '01 §4', '01 §5']
+
+  ac_text_read_not_copied:
+    date: 2026-10-04
+    basis: decided
+    what: 'The report prints each app acceptance criterion by READING
+           docs/features/interstice/_facts.yml at build time. No criterion text is typed
+           into the harness, a scenario, or this registry. A scenario names the ids it
+           covers and nothing more.'
+    why: 'a copied criterion drifts, and this one would drift in the document handed to
+          the people scoring the project. Same mechanism as the app set contract-parity
+          test.'
+    cited_in: ['01 §3.1', '01 §4']
+
+  verdict_vocabulary:
+    date: 2026-10-04
+    basis: decided
+    what: 'Exactly four verdicts: pass | fail | blocked | skipped. `blocked` requires
+           `blocked_by:` naming a registry id or a missing capability, and is rendered as
+           prominently as a failure. `skipped` is only ever set by the person running the
+           suite, with a filter. A run whose trace has a gap in its sequence numbers, a
+           sequence number twice, or more than one launch inside one scenario is
+           `fail` with reason `trace_incomplete`, whatever its assertions said.'
+    why: 'a scenario that could not run and one that ran green look identical in a list
+          of ticks unless the vocabulary separates them. Three criteria of the app close
+          on hardware only and one scenario has no input path; a report that shows them
+          as anything but blocked overstates what was measured.'
+    cited_in: ['01 §2', '01 §4', '01 §7']
+
+  report_static_pages:
+    date: 2026-10-04
+    basis: decided
+    decided_by: 'owner, intake batch 2026-10-04'
+    what: 'The report is static HTML generated into docs/e2e/, committed, and served by
+           GitHub Pages from the /docs folder of the main branch. One run per suite is published at
+           a time, chosen explicitly with `npm run e2e:publish`, which COPIES the run
+           record, its traces and its captures into docs/e2e/run/<suite>/ — every path in a run
+           record is relative to its run directory, so the copy is the whole run
+           (review R2-F8). e2e/out/ is ignored by git. The report can be rebuilt from its committed run record with no device.
+           Turning Pages on is a repository setting the owner changes by hand.'
+    why: 'judges open a link, not a terminal. A committed report is also dated by git,
+          which is the same argument the friction log rests on.'
+    cited_in: ['01 §2', '01 §3.1', '01 §3.2', '01 §6', '01 §7']
+
+  timebox:
+    date: 2026-10-04
+    basis: decided
+    decided_by: 'owner, 2026-10-04 — proposed by the authoring agent and confirmed'
+    what: 'Four phases inside 2026-10-05 .. 2026-10-12, sized in working sessions rather
+           than hours: Phase 0 spike gate (one session), Phase 1 RELEASE suite plus a
+           first report (two), Phase 2 VARIANT build, fixtures and fault scenarios (two),
+           Phase 3 report finish, publication and the friction-log entries (one).
+           ORDER OF SACRIFICE if it runs long: S18 goes first, then video capture
+           (screenshots stay), then the timeline strip, then Phase 2 as a whole — the
+           RELEASE suite and its report are the floor and never yield.'
+    why: 'the submission closes on 2026-10-23 12:00 PT and the app set still owes the
+          video, the submission text and a validation session due 2026-10-16. A harness
+          that eats that time has cost more than it shows. No hour figure is given
+          because none has been measured.'
+    cited_in: ['01 §3.2', '01 §8']
+
+# =====================================================================
+# DOMAIN FACTS
+# =====================================================================
+limits:
+
+  capture:
+    cli_has_no_screenshot:
+      basis: measured
+      evidence: { how: shell, date: 2026-10-04,
+                  cmd: 'vega --version && vega device --help',
+                  value: 'Active SDK Version: 0.24.12112, Vega CLI Version: 1.3.4; 25 device
+                          subcommands listed, none of them a screenshot, a screen record or
+                          a key press' }
+    gwsi_not_on_virtual_device:
+      basis: asserted
+      source: 'https://community.amazondeveloper.com/t/vega-cli-commands-to-take-a-screenshot-and-press-remote-keys/29258'
+      what: 'gwsi-tool-screenshooter is for a Fire TV Stick; on the Virtual Device it writes
+             a 0-byte file or hangs. Consistent with what the app set measured on
+             2026-09-25, where it failed for a different stated reason.'
+      falsified_by: 'a non-empty PNG written by gwsi-tool-screenshooter on this Virtual Device'
+    appium_stale_frames:
+      basis: asserted
+      source: 'https://community.amazondeveloper.com/t/vega-sdk-0-24-vvd-automation-toolkit-crashes-on-every-takescreenshot-econnreset-then-dies-after-3-calls-until-reboot/29134'
+      what: 'On SDK 0.24.12112 the automation toolkit no longer crashes on takeScreenshot,
+             but inside an app it returns a stale frame on every other call. Reported by a
+             third party on 2026-09-24 with a repro; Amazon acknowledged and is
+             investigating. Also reported: the Vega Appium driver needs Node 22 or earlier.'
+      falsified_by: 'two consecutive Appium screenshots after a key press that both show the
+                     new state, on this machine'
+    host_node:
+      basis: measured
+      evidence: { how: shell, date: 2026-10-04, cmd: 'node -v', value: 'v24.16.0' }
+      note: 'above the Node ceiling reported for the Appium driver, so rung 2 of
+             decisions.capture_ladder would need a second Node install.'
+    emulator_grpc:
+      basis: asserted
+      source: 'same thread as appium_stale_frames, post of 2026-09-28'
+      what: 'The emulator under the Virtual Device exposes a gRPC interface
+             (EmulatorController: sendKey, getScreenshot) once its console is sent
+             `grpc <port>`. A third party polled getScreenshot 168 times in 4 s on SDK
+             0.24.12112 inside an RN 0.83 app and got 8 distinct frames, each at a real
+             change, with no stale alternation. Their wrapper,
+             github.com/fortemate/vega-vvd-driver, is unofficial and also claims video
+             with sound. UNDOCUMENTED BY AMAZON and Virtual Device only.'
+      falsified_by: 'the console refusing `grpc <port>` on this machine, or getScreenshot
+                     returning an empty or unchanged frame after a key press — defects D1'
+    wrapper_license: 'MIT — read from its LICENSE on 2026-10-04, at commit a9ea5d5f9853806c65d2a4c9ad4dc71c632b8d8b, version 0.2.2'
+    wrapper_license_note: 'installed as an exact devDependency, @fortemate/vega-vvd-driver 0.2.2,
+             with --ignore-scripts; the source read was that of commit a9ea5d5, whose
+             package.json carries the same version. Its package name is
+             @fortemate/vega-vvd-driver. Before running it the source was read for what it
+             reaches: the emulator console and gRPC endpoint on 127.0.0.1, and ffmpeg as a
+             child process. Nothing else. Installed with --ignore-scripts.'
+    frame_size:
+      basis: measured
+      evidence: { how: shell, date: 2026-10-04, cmd: 'ls -l on three captures; ffmpeg -vf scale=1280:-1 -q:v 4 on the largest',
+                  value: 'PNG 1920x1080: 26811 bytes (text on black) to 1359373 bytes (a film frame). The same film frame as a 1280-wide JPEG: 76077 bytes.' }
+      note: 'a film frame as PNG is four times limits.report.max_screenshot_kb. Captures are
+             therefore stored as 1280-wide JPEG, converted at capture time.'
+
+  input:
+    inputd_cli:
+      basis: asserted
+      what: 'Remote keys are injected with `vega device run-cmd -c "inputd-cli button_press
+             KEY_*"`. The app set MEASURED this reaching the app on 2026-09-25
+             (`docs/features/interstice/_facts.yml` limits.vega_media.input_injection), and
+             a third party reported on 2026-09-30 that it reports success and never reaches
+             an app. Two observations that disagree, so it is asserted here until it is
+             re-measured on today''s image — defects D2.'
+      falsified_by: 'KEY_ENTER on the title list producing no INTERSTICE.app.play line'
+    fallback: 'EmulatorController.sendKey, if defects D1 holds and defects D2 does not'
+
+  trace:
+    transport: 'one HTTP GET per line from src/diagnostics.ts to the host, fire and forget'
+    ordering:
+      basis: asserted
+      what: 'Arrival order is not emission order: each line is an independent request with
+             no await, and the collector stamps host time on arrival. Two lines emitted
+             2 ms apart can arrive swapped, and a dropped request leaves no trace of itself.'
+      falsified_by: '1000 consecutive lines arriving with strictly increasing seq and no
+                     gap, on three runs'
+    consequence: 'every line carries a launch id, a sequence number within that launch,
+                  and a device clock reading (contracts.beacon_query). The collector
+                  orders by seq within a launch. A gap in seq, or a launch whose first
+                  seq is not 0, makes the run trace_incomplete
+                  (decisions.verdict_vocabulary). The runner opens every run with a CANARY
+                  launch and requires its seq 0 to arrive before any scenario starts, so
+                  a missing seq 0 inside a scenario is never the forwarding not being
+                  up yet. No canary line: every scenario is blocked, naming that.'
+    trailing_loss: 'lines in flight when the app is terminated can be lost with nothing
+                  after them to reveal the gap. Accepted: a lost trailing line can only
+                  turn a pass into a fail, never the reverse, because every scenario
+                  asserts on lines it must SEE.'
+    new_lines:
+      basis: decided
+      app_mode: 'INTERSTICE.app.mode e2e=<true|false> host=<origin|none> — src/App.tsx, at module load, both builds'
+      player_progress: 'INTERSTICE.player.progress pos_ms=<integer> — src/screens/PlayerScreen.tsx, at most one per limits.timing.progress_interval_ms'
+      overlay_shown: 'INTERSTICE.overlay.shown status=<loading|stalled|error> spoken=<the sentence> — src/screens/PlayerScreen.tsx'
+      overlay_cleared: 'INTERSTICE.overlay.cleared — src/screens/PlayerScreen.tsx, when status returns to playing'
+      ad_state: 'INTERSTICE.ad.state kind=<ready|missing|malformed> enabled=<bool> verbosity=<level> cues=<n> — src/screens/PlayerScreen.tsx; enabled, verbosity and cues only when kind=ready'
+      note: 'the package line controls.announce carries the KIND of what was spoken and not
+             the sentence. ad.state carries the whole state, so the report can produce the
+             sentence with the package''s own stateMessage rather than a copy of its text.'
+    no_position_line:
+      basis: measured
+      evidence: { how: shell, date: 2026-10-04,
+                  cmd: 'rg -n "player.progress" src ~/Documents/work/build_future/react-native-tv-audio-description/src',
+                  value: 'no matches' }
+      note: 'nothing in the app or the package emits the playhead periodically. "The film
+             kept playing while X happened" is therefore unassertable today — the absence
+             of a stall line is not evidence of playback. changes C15 adds the emitter.'
+
+  timing:
+    basis: decided
+    wait_for_line_ms: 15000
+    scenario_timeout_ms: 90000
+    stall_wait_ms: 60000
+    window_tolerance_ms: 300
+    key_gap_ms: 300
+    progress_interval_ms: 1000
+    note: 'starting values, tuned against the first real runs and then re-recorded here.
+           The demo clip is 20 s, so 90 s bounds launch, a full play and teardown.'
+
+  report:
+    basis: decided
+    published_dir: docs/e2e
+    max_total_mb: 25
+    max_screenshot_kb: 300
+    max_clip_s: 12
+    max_clip_mb: 3
+    attribution: '(CC) Blender Foundation | mango.blender.org'
+    note: 'the film on screen is Tears of Steel, CC-BY; every page that shows a frame of
+           it carries the attribution. The size bounds exist because the report is
+           committed: an unbounded video per scenario per publish is how a repository a
+           judge must clone reaches a gigabyte.'
+
+  fixture:
+    basis: decided
+    asset_id: e2e-fixture
+    title_label: 'E2E FIXTURE — not a film'
+    duration_s: 60
+    cue_windows_ms: [[4000, 9000], [14000, 20000], [24000, 28000]]
+    withheld_segment_from_ms: 31000
+    note: 'duration_s must exceed the package buffer window of 30 s ahead, or no segment
+           is ever fetched during playback and S15 cannot stall (review R2-F5). The cue
+           windows are DECLARED, not derived from subtitles, and all three end before
+           30 s so cue scenarios finish inside one scenario timeout. The first segment
+           starting at or after withheld_segment_from_ms is the one S15 withholds: it
+           must start more than 30 s in, or it is fetched before playback begins.
+           concise carries the first two windows only; standard and detailed carry all
+           three. So concise and standard load different cue counts, as the real
+           tracks do, and S12 removes the detailed file to show the fallback.'
+
+  suite:
+    basis: decided
+    release: [S01, S02, S03, S04, S05]
+    variant: [S10, S11, S12, S13, S14, S15, S16, S17, S18]
+    note: 'ids are stable and never recycled. Each scenario names the app criteria it
+           covers by id only (decisions.ac_text_read_not_copied); `covers` below refers to
+           `docs/features/interstice/_facts.yml` acceptance[].'
+    scenarios:
+      - { id: S01, name: launch-and-list, suite: release, covers: [AC1, AC2],
+          use_case: 'the viewer opens the app and lands on the title list with a title focused',
+          decisive: 'INTERSTICE.app.mode e2e=false, INTERSTICE.asset.segments with n > 0 and init=set; ENTER then yields INTERSTICE.app.play' }
+      - { id: S02, name: play-to-end, suite: release, covers: [AC1],
+          use_case: 'the viewer plays the demo clip from start to finish',
+          decisive: 'player.opened, one buffer.appended per segment, buffer.complete, player.play resolved, player.progress advancing to the end, and buffer.evicted EXACTLY once' }
+      - { id: S03, name: probe-cue-ducks, suite: release, covers: [AC5],
+          use_case: 'a description cue speaks over the film and the film comes back to full',
+          decisive: 'cue.fire, audio.duck to_pct=25, cue.audio state=ended, audio.restored, in that order, with player.progress advancing between duck and restore' }
+      - { id: S04, name: back-returns-to-list, suite: release, covers: [AC2],
+          use_case: 'the viewer presses BACK during playback and is on the list again, able to start over',
+          decisive: 'player.back from=playing, then a second ENTER yields a second app.play' }
+      - { id: S05, name: no-track-is-stated, suite: release, covers: [AC8],
+          use_case: 'the title has no description track; the app says so and the film plays anyway',
+          decisive: 'loader.miss, controls.announce kind=missing, and player.progress still advancing afterwards' }
+      - { id: S10, name: cues-stay-in-window, suite: variant, covers: [AC4], fixture: true,
+          use_case: 'three cues each start and finish inside their window',
+          decisive: 'per cue: audio.duck at a position inside the window and audio.restored before its end' }
+      - { id: S11, name: toggle-off-and-on, suite: variant, covers: [AC3], fixture: true,
+          use_case: 'the viewer switches description off mid-film and back on; the film never stops',
+          decisive: 'controls.toggle to=false, no audio.duck while off, no player.stalled, controls.toggle to=true, the NEXT cue fires and the missed one does not' }
+      - { id: S12, name: verbosity-switch, suite: variant, covers: [AC17], fixture: true,
+          use_case: 'the viewer moves between concise, standard and detailed while watching',
+          decisive: 'controls.verbosity to=concise then loader.load ok=true with fewer cues than standard loaded; controls.verbosity to=detailed, whose file is absent, yielding loader.miss for it and then loader.load for standard' }
+      - { id: S13, name: malformed-track-is-stated, suite: variant, covers: [AC8], fixture: true,
+          use_case: 'the track file is corrupt; the app says something different from "missing" and the film plays',
+          decisive: 'loader.load ok=false carrying a reason, then controls.announce kind=malformed, and player.progress still advancing' }
+      - { id: S14, name: failed-cue-restores-volume, suite: variant, covers: [AC5], fixture: true,
+          use_case: 'one cue has no audio; the film must not be left quiet',
+          decisive: 'audio.failed for that cue followed by audio.restored for it' }
+      - { id: S15, name: stall-and-recover, suite: variant, covers: [AC24], fixture: true,
+          use_case: 'the bytes run short mid-film; the viewer is told, and playback resumes when they arrive',
+          decisive: 'player.stalled after player.progress has passed 30000, then player.resumed from=stalled once the withheld segment is served',
+          note: 'the collector HOLDS the response until the runner releases it, which it does only after seeing player.stalled. A timed delay would not do: the buffer runs 30 s ahead of the playhead, so a segment delayed by a few seconds arrives long before it is needed' }
+      - { id: S16, name: error-state-has-a-way-out, suite: variant, covers: [AC2], fixture: true,
+          use_case: 'the title cannot be opened; the viewer is told and BACK still works',
+          decisive: 'player.open failed or player.error, then player.back from=error',
+          note: 'the fault is a DROPPED CONNECTION on the init segment. A 404 would not do: the package never checks response.ok, so a 404 body is appended as media (review R2-F6)' }
+      - { id: S17, name: held-seek-coalesces, suite: variant, covers: [AC6], fixture: true,
+          blocked_by: D6,
+          use_case: 'the viewer holds a direction to seek; the scheduler resyncs once',
+          decisive: 'scheduler.coalesced exactly once with events > 1' }
+      - { id: S18, name: long-asset-evicts, suite: variant, covers: [AC23], fixture: false, stretch: true,
+          deferred: true, reopens_when: 'Phases 0 to 3 close before 2026-10-12',
+          use_case: 'a feature-length film plays without the buffer growing',
+          decisive: 'buffer.evicted repeatedly with held= bounded',
+          note: 'Virtual Device only. It supports the criterion and cannot close it: the
+                 criterion names the worst device in the matrix.' }
+
+  coverage:
+    basis: decided
+    note: 'how each criterion of the app is classed by this harness. The report renders
+           this table with the criterion text read from the app registry. Ids refer to
+           `docs/features/interstice/_facts.yml` acceptance[]. Classes: automated (RELEASE
+           suite) | fixture (VARIANT suite) | blocked | hardware | manual | out_of_scope.'
+    classes:
+      AC1: automated
+      AC2: automated
+      AC3: fixture
+      AC4: fixture
+      AC5: automated
+      AC6: blocked
+      AC7: out_of_scope
+      AC8: automated
+      AC9: out_of_scope
+      AC10: out_of_scope
+      AC11: out_of_scope
+      AC12: out_of_scope
+      AC13: out_of_scope
+      AC14: manual
+      AC15: hardware
+      AC16: out_of_scope
+      AC17: fixture
+      AC18: out_of_scope
+      AC19: out_of_scope
+      AC20: manual
+      AC23: hardware
+      AC24: fixture
+    partial:
+      AC1: 'the 20 s clip, not the full film'
+      AC4: 'inside the window; says nothing about dialogue (decisions.fixture_track)'
+      AC5: 'the volume property was applied and restored; AUDIBLE only if defects D3 yields sound'
+      AC23: 'S18 on the Virtual Device supports it and cannot close it'
+    counts: { automated: 4, fixture: 4, blocked: 1, hardware: 2, manual: 2, out_of_scope: 9 }
+    counts_note: 'each number counts criteria of the app in that class; they sum to 22, the
+                  number of entries in the app acceptance list on 2026-10-04.'
+
+# Scope is TWO disjoint lists.
+changes:
+  - { id: C1, built_on: 2026-10-04, file: e2e/run.ts, kind: planned, where: repo,
+      change: 'the runner and its CLI: preflight, per scenario clean start -> steps -> collect -> verdict, writes contracts.run_record, exits non-zero on any fail. Proves the round trip to the collector with a canary launch before the first scenario, and REINSTALLS THE RELEASE PACKAGE when a VARIANT suite ends, pass or fail' }
+  - { id: C2, built_on: 2026-10-04, file: e2e/device.ts, kind: planned, where: repo,
+      change: 'the Vega CLI behind one module: virtual device status, install, launch, terminate, port forwarding. Every command comes from _profile.yml' }
+  - { id: C3, built_on: 2026-10-04, file: e2e/input.ts, kind: planned, where: repo,
+      change: 'remote keys by name, with a hold; inputd-cli first, the gRPC fallback second (limits.input)' }
+  - { id: C4, built_on: 2026-10-04, file: e2e/capture.ts, kind: planned, where: repo,
+      change: 'the capture seam of decisions.capture_ladder: screenshot, start/stop clip, and a null implementation',
+      depends_on: [decisions.capture_ladder], reviewed_on: 2026-10-04 }
+  - { id: C5, built_on: 2026-10-04, file: e2e/collector.ts, kind: planned, where: repo,
+      change: 'the host server: receives beacon lines into contracts.trace_event, serves endpoints.fixtures according to the scenario the runner last armed, with its scripted faults, and detects seq gaps per launch',
+      depends_on: [decisions.host_served_fixtures], reviewed_on: 2026-10-04 }
+  - { id: C6, built_on: 2026-10-04, file: e2e/trace.ts, kind: planned, where: repo,
+      change: 'line parser and the assertion vocabulary: seen, order, count, within, in_window, absent — `absent` refuses to run without naming the emitter it is absent from, and in_window places an event on the playhead by interpolating between player.progress lines' }
+  - { id: C7, built_on: 2026-10-04, file: e2e/scenarios, kind: planned, where: repo,
+      change: 'one file per entry of limits.suite.scenarios: use case, steps, assertions, the app criteria covered by id' }
+  - { id: C8, built_on: 2026-10-04, file: e2e/fixtures.ts, kind: planned, where: repo,
+      change: 'builds the fixture track and its cue audio for asset id e2e-fixture at three verbosity levels',
+      depends_on: [decisions.fixture_track], reviewed_on: 2026-10-04 }
+  - { id: C9, built_on: 2026-10-04, file: e2e/report, kind: planned, where: repo,
+      change: 'run record -> static HTML: use-case gallery, coverage matrix read from the app registry, spoken transcript, timeline strip, run conditions, what this cannot show',
+      depends_on: [decisions.report_static_pages, decisions.ac_text_read_not_copied], reviewed_on: 2026-10-04 }
+  - { id: C10, built_on: 2026-10-04, file: e2e/selftest.ts, kind: planned, where: repo,
+      change: 'the harness proving it can fail: every scenario evaluated against its own recorded passing trace with the decisive line removed must come back fail. The recorded traces are committed under e2e/__tests__/traces/ from the first green run' }
+  - { id: C11, built_on: 2026-10-04, file: docs/e2e, kind: planned, where: repo,
+      change: 'the published report — generated, committed by `npm run e2e:publish`, never edited by hand. Holds the pages plus run/<suite>/: the run record, its traces and its captures. With it, an empty docs/.nojekyll so Pages serves the folder as it is' }
+  - { id: C12, built_on: 2026-10-04, file: src/diagnostics.ts, kind: planned, where: repo,
+      change: 'each line gains a launch id, a sequence number and a device clock reading (contracts.beacon_query). Owned by the app set as its C22; changed here, registered there' }
+  - { id: C13, file: src/e2e.ts, kind: planned, where: repo,
+      change: 'new: the build-time flag resolved to contracts.e2e_config or null. The only place the flag is read',
+      depends_on: [decisions.two_suites], reviewed_on: 2026-10-04, built_on: 2026-10-04 }
+  - { id: C14, file: src/App.tsx, kind: planned, where: repo,
+      change: 'when C13 yields a config: the fixture title joins the list under limits.fixture.title_label and its asset, track directory and cue audio resolve to the host. Emits INTERSTICE.app.mode at module load in BOTH builds. Unchanged otherwise', built_on: 2026-10-04 }
+  - { id: C15, built_on: 2026-10-04, file: src/screens/PlayerScreen.tsx, kind: planned, where: repo,
+      change: 'the three emitters of limits.trace.new_lines that live in the screen: a throttled player.progress, overlay.shown / overlay.cleared carrying what is spoken, and ad.state carrying the description state in full' }
+  - { id: C16, built_on: 2026-10-04, file: tools/beacon-server.mjs, kind: planned, where: repo,
+      change: 'prints seq and device time; stays the zero-dependency reader for manual runs' }
+  - { id: C17, built_on: 2026-10-04, file: package.json, kind: planned, where: repo,
+      change: 'scripts: e2e, e2e:release, e2e:variant, e2e:report, e2e:publish, e2e:selftest, build:e2e' }
+  - { id: C18, built_on: 2026-10-04, file: vitest.config.ts, kind: planned, where: repo,
+      change: 'include e2e/__tests__ so the parser, the assertions and the selftest run under `npm test`' }
+  - { id: C19, built_on: 2026-10-04, file: .gitignore, kind: planned, where: repo,
+      change: 'ignore e2e/out/' }
+  - { id: C20, file: README.md, kind: planned, where: repo,
+      change: 'a Verification section: the report link, the one command, and what a judge needs installed to re-run it' }
+  - { id: C21, built_on: 2026-10-04, file: FRICTION-LOG.md, kind: planned, where: repo,
+      change: 'dated entries for what building this met on the platform: no screenshot command, key injection, anything Phase 0 turns up' }
+  - { id: C22, file: 'GitHub Pages: main branch, /docs folder', kind: planned, where: external,
+      change: 'the repository setting that serves docs/e2e/. Changed by the owner by hand' }
+  - { id: C23, file: babel.config.js, kind: planned, where: repo,
+      change: 'a ten-line inline plugin that replaces the identifier __INTERSTICE_E2E__ with the value of the INTERSTICE_E2E environment variable, or the empty string. The mechanism behind decisions.two_suites, and what defects D4 tests',
+      depends_on: [decisions.two_suites], reviewed_on: 2026-10-04, built_on: 2026-10-04 }
+  - { id: C25, file: e2e/spoken.ts, kind: planned, where: repo, built_on: 2026-10-04,
+      change: 'what the app said, in order, from the trace: overlay sentences as emitted, description-state sentences produced by the package''s own stateMessage' }
+  - { id: C24, file: metro.config.js, kind: planned, where: repo, built_on: 2026-10-04,
+      change: 'cacheVersion carries the value of INTERSTICE_E2E, so a Release build can never be served a transform compiled for the flagged one. Without it defects D4 fails in the dangerous direction',
+      depends_on: [decisions.two_suites], reviewed_on: 2026-10-04 }
+
+source_tree:
+  globs: ['e2e/**/*.ts']
+  exclude:
+    - { glob: 'e2e/__tests__/**', because: 'tests are counted by tests_baseline' }
+    - { glob: 'e2e/out/**', because: 'run output, ignored by git' }
+
+related_docs:
+  - { id: R-APP-SET, file: docs/features/interstice/_facts.yml, where: repo,
+      why: 'the registry of the app under test: its acceptance criteria, its measured platform limits, its log vocabulary' }
+  - { id: R-APP-E2E, file: docs/features/interstice/02e-tests-and-done.md, where: repo,
+      why: 'Part C is the manual E2E this harness automates where it can; C.1, C.3, C.5, C.6 and C.10 map to scenarios, C.2, C.7 and C.9 stay on hardware' }
+  - { id: R-PACKAGE, file: 'https://github.com/CesarRivasP/react-native-tv-audio-description', where: external,
+      why: 'emits most of the lines the harness asserts on: scheduler.*, audio.*, controls.*, loader.*, buffer.*, player.*' }
+  - { id: R-THREAD-CLI, file: 'https://community.amazondeveloper.com/t/vega-cli-commands-to-take-a-screenshot-and-press-remote-keys/29258', where: external,
+      why: 'the state of screenshot and key tooling on the Virtual Device as of 2026-09-30, and Amazon acknowledging the gap as a feature request' }
+  - { id: R-THREAD-TOOLKIT, file: 'https://community.amazondeveloper.com/t/vega-sdk-0-24-vvd-automation-toolkit-crashes-on-every-takescreenshot-econnreset-then-dies-after-3-calls-until-reboot/29134', where: external,
+      why: 'the Appium screenshot path on 0.24: the crash fixed in 0.24.12112, the stale frame that replaced it, and the gRPC observation' }
+  - { id: R-VVD-DRIVER, file: 'https://github.com/fortemate/vega-vvd-driver', where: external,
+      why: 'unofficial wrapper over the emulator gRPC interface; candidate for rung 1 of decisions.capture_ladder' }
+  - { id: R-APPIUM, file: 'https://developer.amazon.com/docs/vega/0.24/appium-inspector.html', where: external,
+      why: 'the documented automation route; rung 2' }
+
+# =====================================================================
+# HYPOTHESES — every one is answered in Phase 0, before anything is built on it
+# =====================================================================
+defects:
+
+  - id: D1
+    role: blocking
+    claim: 'The emulator gRPC interface can be enabled on this Virtual Device and returns
+            a current screenshot after a key press.'
+    basis: measured
+    evidence: { how: device, date: 2026-10-04, n: 2,
+                spread: 'both runs the same: three frames, each showing the current screen',
+                cmd: 'vvd enable-grpc; vvd screenshot 1.png; inputd-cli button_press KEY_ENTER; (5 s) vvd screenshot 2.png; (2 s) vvd screenshot 3.png — R-VVD-DRIVER at commit a9ea5d5',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'clip: 20 s of Tears of Steel, 4 segments' },
+                value: 'gRPC is on at port 8554. Three PNGs of 1920x1080: the title list (26811 bytes), the film playing 5 s after INTERSTICE.app.play (1359373 bytes), a later film frame (54421 bytes). Three different md5. No stale frame. Second run on the flagged build: the two-title list, then the film.' }
+    falsified_by: 'the emulator console refusing `grpc <port>`, or a screenshot taken
+                   after KEY_ENTER on the title list that still shows the list'
+    log_line: 'INTERSTICE.app.play id=<title> — the trace line that says the screen SHOULD have changed, against which the frame is compared'
+    status: fixed
+    outcome: 'holds. capture_rung is grpc.'
+    if_false: 'rung 2 of decisions.capture_ladder, then rung 3. Nothing else changes.'
+
+  - id: D2
+    role: blocking
+    claim: 'inputd-cli button_press reaches the app on the current Virtual Device image.'
+    basis: measured
+    evidence: { how: device, date: 2026-10-04, n: 6,
+                spread: 'six presses, six lines: KEY_ENTER x3, KEY_BACK x2, KEY_DOWN then KEY_ENTER x1',
+                cmd: 'vega device run-cmd -c ''inputd-cli button_press KEY_ENTER'' (and KEY_BACK, KEY_DOWN), reading the beacon',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'clip: 20 s of Tears of Steel, 4 segments' },
+                value: 'KEY_ENTER on the list -> INTERSTICE.app.play id=tears-of-steel; KEY_BACK in the player -> INTERSTICE.player.back from=playing; KEY_DOWN then KEY_ENTER on the flagged build -> INTERSTICE.app.play id=e2e-fixture. The CLI prints "Injecting Button Press As Driver: KEY_ENTER State: short".' }
+    falsified_by: 'KEY_ENTER on the title list producing no INTERSTICE.app.play line within limits.timing.wait_for_line_ms'
+    log_line: 'INTERSTICE.app.play id=<title> — src/App.tsx, the Pressable onPress'
+    status: fixed
+    outcome: 'holds. input_route is inputd-cli. The third-party report that it never reaches an app (R-THREAD-CLI, and the README of R-VVD-DRIVER) does not reproduce here, on the same SDK and OS build; what differs between the two apps was not investigated. inputd-cli also offers repeat and --holdDuration, read from its own usage text and not exercised.'
+    if_false: 'limits.input.fallback. If D1 is false as well, there is no automation on this image and the set stops at Phase 0 with that recorded.'
+
+  - id: D3
+    role: contributing
+    claim: 'The gRPC interface can record a clip of the Virtual Device WITH ITS AUDIO.'
+    basis: measured
+    evidence: { how: device, date: 2026-10-04, n: 1, spread: 'single run',
+                cmd: 'vvd record s03.mp4 --seconds 12 (started 1.5 s before KEY_ENTER); ffprobe -show_streams; ffmpeg -af volumedetect; ffmpeg -af astats per 0.5 s',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'clip: 20 s of Tears of Steel, 4 segments' },
+                value: 'h264 1920x1080 + aac 44100 Hz, 12.0 s, 1541995 bytes; "360 frames, 10.3 s of audio"; mean_volume -14.4 dB, max_volume -0.4 dB; digital silence before playback starts, then signal from 4.5 s to 11.5 s. The trace of the same run: audio.duck at 16:02:26.574, cue.audio state=ended at 16:02:28.973, audio.restored at 16:02:29.202.' }
+    falsified_by: 'a recorded clip of S03 with a silent audio stream, or no audio stream'
+    log_line: 'INTERSTICE.audio.duck id=<cue> to_pct=25 and INTERSTICE.audio.restored id=<cue> — the two instants between which the recorded level must drop'
+    status: fixed
+    outcome: 'holds: the clip carries the device audio. WHAT THIS DOES NOT YET SHOW is the duck itself. In this one recording the cue speaks over the film''s opening, which is itself rising in level, so the mix cannot be read as "the film got quieter". That needs a controlled pair — the same seconds of film recorded once with the cue and once without — and is a scenario to add, not a conclusion to draw from this run.'
+    note: 'worth a hypothesis of its own because of what it would overturn: the app set
+           records that there is NO audio capture path off the Virtual Device
+           (`docs/features/interstice/_facts.yml` limits.vega_media.concurrent_streams),
+           and that is why audible ducking closes on hardware only. Sound in a recording
+           would not be a listener, but a measured drop in level between two trace
+           instants is evidence that set does not have.'
+    if_false: 'no change. Audible ducking stays hardware-only, as it is today.'
+
+  - id: D4
+    role: blocking
+    claim: 'An environment variable set for `react-native build-vega` can be made visible
+            to the bundle as a constant, so one source tree yields both packages.'
+    basis: measured
+    evidence: { how: device, date: 2026-10-04, n: 9,
+                spread: 'WITHOUT changes C24: 4 alternating builds (flagged, release, flagged, release), all four launched as e2e=true. WITH it: 5 alternating builds (release, flagged, release, flagged, release), all five correct.',
+                cmd: 'INTERSTICE_E2E=http://localhost:8099 npx react-native build-vega --build-type Release | npm run build, alternated with nothing cleaned; install; launch; read INTERSTICE.app.mode',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'clip: 20 s of Tears of Steel, 4 segments' },
+                value: 'with the babel plugin alone, a Release build made after a flagged one launched as INTERSTICE.app.mode e2e=true host=http://localhost:8099 — the transform cache does not key on the environment, so the SUBMITTED package would have carried the test host. With cacheVersion in metro.config.js set from the same variable: e2e=false, true, false, true, false.' }
+    falsified_by: 'a build made with INTERSTICE_E2E set whose trace opens with INTERSTICE.app.mode e2e=false'
+    log_line: 'INTERSTICE.app.mode e2e=<bool> host=<host|none> — src/App.tsx at module load; must be built (changes C14)'
+    status: fixed
+    outcome: 'the claim holds ONLY with changes C24. The babel plugin alone compiles the constant correctly once and then the cache serves it to every later build, in whichever direction is wrong. This is the failure 02 Phase 0.4 step 3 was written to catch, and it caught it on the first try.'
+    if_false: 'the flag becomes a generated module written before the build and restored after, which works on any bundler and is uglier.'
+
+  - id: D5
+    role: blocking
+    claim: 'JavaScript on the device can fetch a track file, a cue clip and a media segment
+            from the host over the reverse-forwarded beacon port, and the bytes play through
+            MediaSource exactly as packaged ones do.'
+    basis: measured
+    evidence: { how: device, date: 2026-10-04, n: 1, spread: 'single run',
+                cmd: 'flagged build; a host server on 8099 answering both the beacon and /fx/; KEY_DOWN, KEY_ENTER; read both logs',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'the 20 s clip''s own init + 4 segments, served from the host' },
+                value: 'FX 200 /fx/asset.json; FX 200 /fx/seg/init.mp4 and each of seg0000..seg0003.m4s, each followed by INTERSTICE.buffer.appended with the same byte counts as the packaged run (1343, 649534, 1037183, 856989, 83877); buffer.complete segments=4; player.play resolved; resumed from=stalled; a screenshot shows the film. FX 404 /fx/e2e-fixture.standard.track.json -> INTERSTICE.loader.miss with that path.' }
+    falsified_by: 'INTERSTICE.loader.miss for a fixture path the server logged as served, or INTERSTICE.buffer.failed on a host-served segment'
+    log_line: 'INTERSTICE.loader.miss path=<path> — the package TrackLoader; INTERSTICE.buffer.appended <label> bytes=<n> — the package SegmentBuffer'
+    status: fixed
+    outcome: 'holds for the track path, media segments and — seen in the first VARIANT run — cue audio: three host-served clips played, each inside its window (S10).'
+    note: 'half of this is already measured by the app set: on 2026-09-22 device
+           JavaScript fetched a 200 from the host over reverse forwarding
+           (`docs/features/interstice/_facts.yml` limits.vega_media.media_process_is_separate).
+           What is new is feeding those bytes to MediaSource, which is how the app plays
+           everything since URL mode was found broken.'
+    if_false: 'fixtures travel inside the VARIANT package instead; fault scenarios that need a live server (S15) are blocked.'
+
+  - id: D6
+    role: blocking
+    claim: 'The app has no input path that seeks. No key handler changes the playhead, in
+            the app or in the package it consumes.'
+    basis: measured
+    evidence: { how: shell, date: 2026-10-04,
+                cmd: 'rg -n "currentTime = " src ~/Documents/work/build_future/react-native-tv-audio-description/src -g "*.ts" -g "*.tsx"',
+                value: 'no matches. Run the same way for seekTo, useTVEventHandler and onKey, one symbol per command: no matches each. The adapter in the package LISTENS for the seeked event (its vega entry, onSeek) and nothing causes one.' }
+    log_line: 'INTERSTICE.scheduler.coalesced events=<n> settled_ms=<ms> — the package CueScheduler; it cannot fire without a seek'
+    status: open
+    owned_by: 'docs/features/interstice/ — the fix is a seek control in the app, not anything in this set'
+    note_ownership: 'open here because it blocks S17. It also means the manual step C.4 of
+           `docs/features/interstice/02e-tests-and-done.md` ("hold right for five
+           seconds") cannot be walked as written, and
+           `docs/features/interstice/_facts.yml` acceptance.AC6 has no way to be shown on
+           a device. Found while deriving scenarios from the code; reported to the owner
+           with this set.'
+    outcome: 'S17 is rendered blocked, naming this entry, until the app gains a seek control.'
+
+  - id: D8
+    role: symptom
+    claim: 'After BACK, the same title cannot be opened again: the second open never
+            completes and the screen stays in loading, with no error.'
+    basis: measured
+    evidence: { how: device, date: 2026-10-04, n: 5,
+                spread: 'five of five: once by hand in Phase 0, four times as S04',
+                cmd: 'the e2e:release script, scenario S04 — ENTER, wait for player.progress, BACK, ENTER',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'clip: 20 s of Tears of Steel, 4 segments' },
+                value: 'second launch of the title: app.play, loader.miss, scheduler.load, "player.surface created handle=2" twice — then nothing for 20 s. No buffer.appended, no player.opened, no player.error. The first open in the same launch is normal.' }
+    log_line: 'INTERSTICE.player.opened segments=<n> init=<yes|none> — the package vega adapter, at the end of open()'
+    status: fixed
+    fixed_on: 2026-10-18
+    fixed_by: 'docs/features/interstice/ commit 866ccec — src/App.tsx creates one adapter PER OPEN and hands it to PlayerScreen with the title, instead of one at module scope reused after destroy(). The package contract (README: one adapter per screen) was being violated by the app; the package is unchanged.'
+    fixed_evidence: { how: device, date: 2026-10-18, n: 1,
+                      cmd: 'npm run e2e:release — run 2026-10-18T20-10-13-786Z-release, app commit 866ccec, scenario S04',
+                      conditions: { target_platform: 'Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'clip: 20 s of Tears of Steel, 4 segments, packaged' },
+                      value: 'S04 pass. In one launch: app.play, player.surface created handle=1, player.opened segments=4 init=yes, player.back from=playing, app.play, player.surface created handle=2, player.opened segments=4 init=yes — player.opened twice, app.play twice, the second open 2.0 s after BACK. Five of five scenarios pass; selftest 5 of 5.' }
+    owned_by: 'docs/features/interstice/ and the package it consumes — one adapter instance was created at module scope in src/App.tsx and reused after destroy()'
+    note_ownership: 'found by S04 on its first run and never seen by hand because no manual procedure plays a title twice. It was why S04 was FAIL in the published report until 2026-10-18. The root cause in the PACKAGE still stands and is for its repository: VegaVideo.destroy() deinitializes the player but leaves `initialised` resolved, so a later open() on the same adapter attaches a MediaSource to a player that is gone and sourceopen never fires. Either destroy() resets `initialised` or the README states the adapter is single-use.'
+    outcome: 'S04 passes since 2026-10-18 (run 2026-10-18T20-10-13-786Z-release). AC2 of the app — BACK has a stated destination, and the viewer can start over — holds on the device.'
+
+  - id: D9
+    role: symptom
+    claim: 'A track file that is not valid JSON is reported as MISSING, not as unreadable.'
+    basis: measured
+    evidence: { how: device, date: 2026-10-04, n: 2, spread: 'both runs the same',
+                cmd: 'the e2e:variant script, scenario S13 — the standard track served cut in half',
+                conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'e2e-fixture: first 60 s of Tears of Steel, host-served' },
+                value: 'INTERSTICE.loader.miss path=http://localhost:8099/fx/e2e-fixture.standard.track.json, then ad.state kind=missing. No loader.load, no kind=malformed.' }
+    log_line: 'INTERSTICE.loader.load path=<path> ok=false reason=malformed — the package TrackLoader; until 2026-10-18 it was never reached, because readJson threw first'
+    status: fixed
+    fixed_on: 2026-10-18
+    fixed_by: 'docs/features/interstice/ commit 866ccec — readJson in src/App.tsx throws only on a non-2xx status; on a parse failure it logs INTERSTICE.app.unparseable and returns the raw text, which the package validator rejects as malformed ("not an object"). The package is unchanged.'
+    fixed_evidence: { how: device, date: 2026-10-18, n: 1,
+                      cmd: 'npm run e2e:variant — run 2026-10-18T20-12-14-975Z-variant, app commit 866ccec, scenario S13 (the standard track served cut in half)',
+                      conditions: { target_platform: 'Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'e2e-fixture: first 60 s of Tears of Steel, host-served' },
+                      value: 'S13 pass. INTERSTICE.app.unparseable path=http://localhost:8099/fx/e2e-fixture.standard.track.json err=JSON Parse error: Expect a string key in JSON object, then INTERSTICE.loader.load path=… ok=false reason=malformed, controls.announce kind=malformed, ad.state kind=malformed, and player.progress advancing past 5000 ms. ad.state kind=missing: zero occurrences. Spoken: "The description track for this title could not be read. Playback continues without description." Seven of seven runnable scenarios pass, S17 blocked by D6; selftest 7 of 7; restored_release true.' }
+    owned_by: 'docs/features/interstice/ — readJson in src/App.tsx threw on a parse failure exactly as it did on a 404, and the loader treats every throw as absence'
+    note_ownership: 'the app''s own manual step C.6 expects "a DIFFERENT stated message" for a truncated file. The malformed branch was reachable only by valid JSON of the wrong shape until readJson stopped throwing on a parse failure.'
+    outcome: 'S13 passes since 2026-10-18 (run 2026-10-18T20-12-14-975Z-variant). The viewer is told the track could not be read, not that there is none.'
+
+  - id: D7
+    role: contributing
+    claim: 'The beacon loses or reorders lines often enough to matter.'
+    basis: asserted
+    falsified_by: 'limits.trace.ordering falsified_by, which is the same observation'
+    log_line: 'every line, through its seq field (contracts.beacon_query)'
+    status: open
+    note: 'the design does not wait on the answer: seq is added either way, because a
+           harness that cannot tell a missing line from a line that was never emitted
+           cannot make an absence assertion at all.'
+
+alternatives:
+
+  - id: A1
+    name: appium-as-the-only-route
+    outcome: discarded
+    because: 'it is the documented route and stays as rung 2, but it is not rung 1: it
+              needs an Appium server, the Vega driver, the device toolkit and a second
+              Node install, and its screenshots are reported stale on this exact SDK.'
+    basis: asserted
+    depends_on: [D1]
+    falsified_by: 'defects D1 false while limits.capture.appium_stale_frames is also falsified — then Appium is rung 1'
+
+  - id: A2
+    name: trace-only-report
+    outcome: discarded
+    because: 'kept as the floor (rung 3), not chosen as the design: the owner asked to SEE
+              the use cases, and a judge reads a picture before a log.'
+    basis: decided
+
+  - id: A3
+    name: runtime-e2e-switch-in-the-release-build
+    outcome: discarded
+    because: 'the Release package would ask localhost for a configuration at start and load
+              its track from wherever the answer said. On a real device localhost is the
+              device, so any process listening there could redirect what a blind viewer
+              is told about the picture. A build-time flag leaves no such path in the
+              submitted binary.'
+    basis: decided
+
+  - id: A4
+    name: host-screen-recording
+    outcome: discarded
+    because: 'the app set measured on 2026-09-25 that the host cannot capture the emulator
+              window without Screen Recording permission, and what it would capture is a
+              window with chrome, not the device framebuffer.'
+    basis: asserted
+    depends_on: [D1]
+    falsified_by: 'defects D1 and limits.capture.appium_stale_frames both leaving no working rung — then a permissioned window capture is better than no pixels'
+
+  - id: A5
+    name: more-component-tests-instead
+    outcome: discarded
+    because: 'the app set already has them and already wrote down their limit: a fake
+              written alongside its subject encodes the subject''s assumptions. Six
+              playback defects reached the device on 2026-09-27 through suites that were
+              green. This set exists to run the device.'
+    basis: decided
+
+worst_case:
+  basis: measured
+  evidence: { how: device, date: 2026-10-04, n: 1, spread: 'single published run per suite',
+              cmd: 'the e2e:release and e2e:variant scripts with --no-build; du -sk docs/e2e',
+              conditions: { target_platform: 'Vega Virtual Device, vvrp-tv-arm64, aarch64, OS 1.2 (TV Ship/102282480), simulated', build: 'Release aarch64, SDK 0.24.12112, Vega CLI 1.3.4', content_asset: 'clip: 20 s of Tears of Steel, 4 segments' },
+              value: 'RELEASE: 88.9 s of scenario time for five scenarios. VARIANT: 181.7 s for seven run and one blocked. docs/e2e: 2412 KB with ten screenshots and one 12 s clip.' }
+  release_suite_wall_clock: '88.9 s of scenario time, plus about 20 s per package build'
+  published_report_size: '2.4 MB'
+  note: 'the longest scenario is S15 at 45 s, half of limits.timing.scenario_timeout_ms.
+         The report is a tenth of limits.report.max_total_mb.'
+
+# =====================================================================
+# CONTRACTS
+# =====================================================================
+contracts:
+
+  beacon_query:
+    m: 'string — the line, e.g. INTERSTICE.player.stalled'
+    b: 'string — launch id, random, fixed at module load'
+    s: 'integer — sequence number within the launch, starting at 0, +1 per line'
+    t: 'integer — Date.now() on the device, milliseconds'
+
+  trace_event:
+    boot: 'string — the launch id'
+    seq: integer
+    t_dev_ms: integer
+    t_host: 'ISO 8601 string, stamped on arrival'
+    line: string
+    name: 'string — the line up to the first space, without the INTERSTICE. prefix'
+    fields: 'object — the key=value pairs after it'
+
+  e2e_config:
+    host: 'string — origin of the collector as the device sees it'
+    asset_id: 'string — limits.fixture.asset_id'
+    asset_dir: 'string — where track files resolve'
+    segment_base: 'string — where init and media segments resolve'
+
+  fixture_asset:
+    init: 'string — path of the init segment, relative to endpoints.fixtures'
+    segments: 'array of { index, start_ms, end_ms, uri } — uri relative to endpoints.fixtures'
+
+  scenario_result:
+    id: string
+    name: string
+    suite: 'release | variant'
+    use_case: string
+    covers: 'string[] — ids in the app acceptance list'
+    fixture: boolean
+    verdict: 'pass | fail | blocked | skipped'
+    reason: 'string | null — required unless pass'
+    blocked_by: 'string | null — required when blocked'
+    steps: 'array of { at_ms, action, detail }'
+    assertions: 'array of { kind, expect, ok, matched_seq }'
+    spoken: 'string[] — what the app announced, in order'
+    artifacts: 'array of { kind: screenshot | clip, path, at_seq, caption } — path relative to the run directory'
+    trace_path: 'string — relative to the run directory'
+    duration_ms: integer
+
+  run_record:
+    run_id: string
+    started_at: 'ISO 8601 string'
+    suite: 'release | variant'
+    conditions: '{ target_platform, build, content_asset } — the keys of _profile.yml conditions_required'
+    app_commit: string
+    package_version: string
+    capture_rung: 'grpc | appium | none'
+    input_route: 'inputd-cli | grpc'
+    selftest: '{ ran: boolean, scenarios_that_can_fail: integer, of: integer }'
+    restored_release: 'boolean | null — after a VARIANT suite, whether the Release package was reinstalled and said e2e=false; null for a RELEASE suite'
+    results: 'scenario_result[]'
+
+endpoints:
+  beacon: 'GET http://localhost:8099/?m=<line>&b=<launch id>&s=<seq>&t=<device ms>'
+  fixtures: 'GET http://localhost:8099/fx/<path>'
+  emulator_grpc: 'localhost:8554 — the wrapper''s default port; off after every start of the device until enabled'
+
+env_vars: [INTERSTICE_E2E, BEACON_PORT, E2E_CAPTURE]
+
+tests_baseline:
+  basis: measured
+  evidence: { how: shell, cmd: 'npm test', date: 2026-10-04, n: 1, exit_code: 0,
+              value: 'jest: Tests 24 passed, 24 total · vitest: Test Files 15 passed (15), Tests 122 passed (122)',
+              note: 'before this set: jest 24, vitest 10 files and 70 tests. This set adds
+                     five files and 52 tests under e2e/__tests__ — trace, collector,
+                     scenarios, selftest, report. `_profile.yml` commands.tests_expect was
+                     re-measured the same day and now reads "24 passed, 24 total", the
+                     jest line; exit 0 remains the authoritative signal.
+                     e2e/__tests__/fixtures.test.ts, named in 02e §B.2, is NOT written.' }
+
+acceptance:
+  - { id: AC1, item: 'the Phase 0 spike answers D1, D2, D3, D4 and D5 on the Virtual Device, and each answer is in this registry as measured before any Phase 1 code is written', status: approved, verified_on: 2026-10-04,
+      evidence: 'defects D1..D5 each carry basis: measured with n, conditions and the decisive lines. Four hold; D4 was dead as written and holds with changes C24. Three files of Phases 4-5 (babel.config.js, src/e2e.ts, the flag half of src/App.tsx) were written DURING the spike because D4 and D5 cannot be asked without them; no file under e2e/ exists yet.' }
+  - { id: AC2, item: 'one command runs the RELEASE suite against the Release package from a stopped app and exits non-zero if any scenario fails', status: approved, verified_on: 2026-10-04,
+      evidence: 'npm run e2e:release: five verdicts, S04 FAIL on defects D8, exit code 1. Four runs.' }
+  - { id: AC3, item: 'every verdict comes from assertions over the trace; no screenshot or clip decides one', status: written }
+  - { id: AC4, item: 'the selftest shows every scenario can fail: with its decisive line removed from a recorded trace, each one returns fail', status: approved, verified_on: 2026-10-04,
+      evidence: 'run records: selftest 4 of 4 (RELEASE) and 6 of 6 (VARIANT) passing scenarios shown able to fail; e2e/__tests__/selftest.test.ts over ten recorded traces.' }
+  - { id: AC5, item: 'a trace with a gap in its sequence numbers yields fail with reason trace_incomplete, never pass', status: written }
+  - { id: AC6, item: 'a blocked scenario names what blocks it and is never rendered as a pass or left out of the report', status: executed, verified_on: 2026-10-04,
+      evidence: 'S17 is BLOCKED naming D6 in the run record and in the report. The other blocked path — no line from the device — has not been exercised on the device (02e §C.5 step 3).' }
+  - { id: AC7, item: 'every result that used the fixture track is labelled FIXTURE wherever it appears, and no fixture file is inside the Release package', status: written }
+  - { id: AC8, item: 'the report shows, per scenario: the use case in a sentence, the steps taken, what was captured, what the app spoke, the decisive trace lines, the app criteria covered, the verdict and the run conditions', status: written }
+  - { id: AC9, item: 'the report carries a coverage matrix with one row per criterion of the app, its text read from the app registry at build time, its class, and the scenarios behind it; no criterion is missing', status: written }
+  - { id: AC10, item: 'the report states what it cannot show — audible ducking, VoiceView, the memory bound on hardware, cue placement against dialogue — on the same page as what it does', status: written }
+  - { id: AC11, item: 'the report rebuilds from its committed run record with no device attached', status: approved, verified_on: 2026-10-04,
+      evidence: 'e2e/__tests__/report.test.ts builds it from a run record in a temp directory; npm run e2e:report rebuilds docs/e2e/index.html from docs/e2e/run/.' }
+  - { id: AC12, item: 'the published report is within limits.report.max_total_mb, carries limits.report.attribution on every page showing the film, and is linked from README.md', status: written }
+  - { id: AC13, item: 'a timeline strip per cue scenario shows windows, cue starts and ends, and the duck and restore instants, drawn from the trace', status: written }
+  - { id: AC15, item: 'when a VARIANT suite ends, pass or fail, the device holds the Release package again, and the next launch emits INTERSTICE.app.mode e2e=false', status: approved, verified_on: 2026-10-04,
+      evidence: 'restored_release: true in both VARIANT runs, each of which ended with a failing scenario; the RELEASE run made afterwards asserted app.mode e2e=false in S01.' }
+  - { id: AC14, item: 'FRICTION-LOG.md gains a dated entry for each platform obstacle met while building this, written the day it is met', status: written }
+
+docs:
+  - { id: "01", file: 01-master-plan.md, role: master-plan, stage: draft, regenerated_on: 2026-10-04 }
+  - { id: "02", file: 02-implementation.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,
+      note: 'preamble (governs 02b and 02e too) + Phases 0-6: the spike gate and the app-side changes' }
+  - { id: 02b, file: 02b-harness.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,
+      note: 'Phases 7-10: trace, collector, device, input' }
+  - { id: 02b2, file: 02b2-scenarios.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,
+      note: 'Phases 11-12: capture, the scenarios' }
+  - { id: 02b3, file: 02b3-runner.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,
+      note: 'Phase 13: the runner' }
+  - { id: 02c, file: 02c-report-and-delivery.md, role: implementation, stage: reviewed, regenerated_on: 2026-10-04,
+      note: 'Phases 14-18: selftest, fixtures, report, publication, friction log' }
+  - { id: "02e", file: 02e-tests-and-e2e.md, role: tests, stage: reviewed, regenerated_on: 2026-10-04 }
+  - { id: "03", file: 03-stakeholder-requirements.md, role: stakeholder, stage: reviewed, regenerated_on: 2026-10-04 }

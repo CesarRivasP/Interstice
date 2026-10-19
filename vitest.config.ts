@@ -6,6 +6,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['pipeline/__tests__/**/*.test.ts'],
+    include: ['pipeline/__tests__/**/*.test.ts', 'e2e/__tests__/**/*.test.ts'],
   },
 });

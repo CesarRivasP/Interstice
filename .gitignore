@@ -12,6 +12,8 @@
 # derived media — regenerate per README, never committed
 # eslint plugin state
 # machine-local agent config (symlinked skills)
+# e2e harness run output — the published run lives in docs/e2e/, by e2e:publish
+e2e/out/
 # vega build output
 # Source media lives in media/, NOT in assets/. The Vega build copies the whole
 # project-root assets/ directory into the package verbatim, so a 117 MB film

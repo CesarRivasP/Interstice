@@ -63,7 +63,13 @@ export function PlayerScreen({
 }: PlayerScreenProps) {
   const [status, setStatus] = useState<Status>('loading');
   const [detail, setDetail] = useState<string>('');
-  const [ad, setAd] = useState<ADState>({kind: 'missing', detail: 'not loaded yet'});
+  // null until the loader has ANSWERED. The package has no "loading" state and
+  // announces whatever state it is given on mount, so a screen that starts in
+  // `missing` says "No description track was found" before anybody has looked
+  // — 2 to 16 ms ahead of `loader.miss` on the device (R45-F2), and on a title
+  // that has a track it would say that and then the opposite. Nothing is said
+  // about the description until there is something true to say.
+  const [ad, setAd] = useState<ADState | null>(null);
   const [verbosity, setVerbosity] = useState<Verbosity>('standard');
   const audio = useRef<DescriptionAudio | null>(null);
   const scheduler = useRef<CueScheduler | null>(null);
@@ -79,7 +85,16 @@ export function PlayerScreen({
       },
     });
 
-    const offPosition = media.video.onPosition(ms => scheduler.current?.tick(ms));
+    // At most one line per second. A stall stops positions arriving, so the
+    // line stops too — which is exactly what makes "still playing" assertable.
+    let lastProgress = -Infinity;
+    const offPosition = media.video.onPosition(ms => {
+      scheduler.current?.tick(ms);
+      if (ms - lastProgress >= 1000 || ms < lastProgress) {
+        lastProgress = ms;
+        log(`INTERSTICE.player.progress pos_ms=${Math.round(ms)}`);
+      }
+    });
     // AC6: act on the SETTLED position. A held direction emits a stream of key
     // events, and one resync per event is a resync storm through every seek.
     const offSeek = media.video.onSeek(coalesce(ms => scheduler.current?.resync(ms)));
@@ -194,11 +209,35 @@ export function PlayerScreen({
     return () => sub.remove();
   }, [status, onExit]);
 
+  // What the viewer is told, as it is told. The overlay's spoken sentence is an
+  // accessibilityLabel and reaches no log on its own.
+  useEffect(() => {
+    const shown = overlayFor(status, detail);
+    log(
+      shown
+        ? `INTERSTICE.overlay.shown status=${status} spoken=${shown.spoken}`
+        : 'INTERSTICE.overlay.cleared',
+    );
+  }, [status, detail]);
+
+  // The package logs the KIND it announced; the sentence depends on the rest.
+  // No line while the loader is still looking: `loader.miss` / `loader.load`
+  // already say when it answered, and an `ad.state` before them would be the
+  // very announcement R45-F2 is about.
+  useEffect(() => {
+    if (!ad) return;
+    log(
+      ad.kind === 'ready'
+        ? `INTERSTICE.ad.state kind=ready enabled=${ad.enabled} verbosity=${ad.verbosity} cues=${ad.cues}`
+        : `INTERSTICE.ad.state kind=${ad.kind}`,
+    );
+  }, [ad]);
+
   const onToggle = useCallback(
     (enabled: boolean) => {
       scheduler.current?.setEnabled(enabled); // AC3: the video is untouched
       if (!enabled) void audio.current?.stop();
-      setAd(s => (s.kind === 'ready' ? {...s, enabled} : s));
+      setAd(s => (s?.kind === 'ready' ? {...s, enabled} : s));
     },
     [],
   );
@@ -209,9 +248,11 @@ export function PlayerScreen({
   return (
     <View style={styles.root}>
       <Surface style={StyleSheet.absoluteFill} />
-      <View style={styles.controls}>
-        <ADControls state={ad} onToggle={onToggle} onVerbosity={setVerbosity} />
-      </View>
+      {ad && (
+        <View style={styles.controls}>
+          <ADControls state={ad} onToggle={onToggle} onVerbosity={setVerbosity} />
+        </View>
+      )}
       {overlay && (
         <View
           style={styles.overlay}
