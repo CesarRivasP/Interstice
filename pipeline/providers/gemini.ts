@@ -6,9 +6,11 @@ import { emptyUsage, ProviderError, type DescriptionProvider, type VisionRequest
  * Node's own `fetch`. Added 2026-10-18 as the third real implementation of the
  * seam: `defects[D4]` keeps Bedrock closed, and this was the key the owner had.
  * Overridden by GEMINI_MODEL_ID; the pipeline writes whichever ran into the
- * track's `model_id`, so a track always says what produced it.
+ * track's `model_id`, so a track always says what produced it. Measured
+ * 2026-10-18: `gemini-2.5-flash` answers 404 "no longer available to new
+ * users" and names 3.8 Flash as the replacement, hence the default.
  */
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 export const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta';
 
 type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
@@ -48,7 +50,16 @@ export class GeminiProvider implements DescriptionProvider {
           ],
         },
       ],
-      generationConfig: { maxOutputTokens: req.maxTokens },
+      // Gemini 3.x models think by default and the thoughts are billed against
+      // maxOutputTokens: measured 2026-10-18 on gemini-3.7-flash, 57 of 60 tokens
+      // went to thoughtsTokenCount and the answer came back empty (MAX_TOKENS).
+      // The cue budget is a few dozen tokens, so thinking is off; the JSON mime
+      // type keeps fences and prose out of the answer the validator parses.
+      generationConfig: {
+        maxOutputTokens: req.maxTokens,
+        thinkingConfig: { thinkingBudget: 0 },
+        responseMimeType: 'application/json',
+      },
     };
   }
 

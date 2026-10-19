@@ -1076,7 +1076,7 @@ changes:
                as covering every source file beneath it. R48 (2026-10-18) added a FOURTH
                implementation, GeminiProvider (pipeline/providers/gemini.ts): the public
                generateContent REST endpoint over Node fetch, no SDK, GEMINI_API_KEY in a
-               header, GEMINI_MODEL_ID defaulting to gemini-2.5-flash, 429/500/503 retried
+               header, GEMINI_MODEL_ID defaulting to gemini-3.8-flash (2.5 answers 404 to new users), 429/500/503 retried
                per limits.bedrock.on_throttle, any other non-2xx fatal on the first try, a
                safety block returned as an empty answer so validation fails the cue (AC7).
                DESCRIPTION_PROVIDER=gemini. Chosen because the owner holds a Gemini key and

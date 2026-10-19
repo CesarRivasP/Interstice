@@ -214,6 +214,8 @@ describe('GeminiProvider — the third real implementation of the seam', () => {
     expect(parts[0].inline_data.data).toBe(Buffer.from('a').toString('base64'));
     expect(parts[2]).toEqual({ text: 'describe' });
     expect(body.generationConfig.maxOutputTokens).toBe(40);
+    expect(body.generationConfig.thinkingConfig).toEqual({ thinkingBudget: 0 }); // thoughts would eat the cue budget
+    expect(body.generationConfig.responseMimeType).toBe('application/json');
     expect(p.usage).toEqual({ calls: 1, input_tokens: 700, output_tokens: 20 });
   });
 

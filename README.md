@@ -210,7 +210,7 @@ npm run pipeline
 
 # Google Gemini for the descriptions, Polly for the voice (no SDK: the REST endpoint)
 export DESCRIPTION_PROVIDER=gemini
-export GEMINI_API_KEY=...               # GEMINI_MODEL_ID defaults to gemini-2.5-flash
+export GEMINI_API_KEY=...               # GEMINI_MODEL_ID defaults to gemini-3.8-flash
 npm run pipeline
 
 # Optional flags: --levels standard,concise  --limit 5  --out <dir>  --frames stub
