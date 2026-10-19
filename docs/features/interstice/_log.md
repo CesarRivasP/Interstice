@@ -403,3 +403,23 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 **Edits:** `_facts.yml` (2089 lines, blob 76cc081) · `README.md` (269 lines, blob 9b6ec93) · `_log.md` (this entry).
 **Still open:** `D4` Bedrock — AWS Sales / support, owner's clock · `AC7` needs a key or an unblocked account (`DESCRIPTION_PROVIDER=anthropic npm run pipeline -- --levels standard --limit 5` first) · `AC12`/`AC13` the video and the Devpost form on 10-22 · `AC14` the quality watch once a track exists · the findings above.
 **Next mode:** the owner pushes `e2e-harness`, merges to `main`, enables GitHub Pages (`/docs`); then a real pipeline run, `AC14`, the video.
+
+
+---
+
+## R48 · 2026-10-18 · claude-fable-5-1 (Claude Code) · implement
+**Read:** `_log.md` through R47-M · `pipeline/providers/{types,anthropic,index,backoff}.ts` · `pipeline/run.ts` entry point · `README.md` §Run the pipeline · `_facts.yml changes[C30]`, `env_vars`.
+**Log read through:** R47-M
+**About to do:** the owner holds a Google Gemini API key and no Anthropic key, and `defects[D4]` still closes Bedrock (re-measured today). Add Gemini as a third real implementation of the `changes[C30]` seam so `changes[C9]` can run for real before the deadline, and let `run.ts` read a gitignored `.env` so the key never has to live in a shell profile. Price checked on the official page 2026-10-18: Flash models at 0.30–0.75 USD per 1M input tokens with a free tier; the 163-call run is under one dollar.
+
+### Built
+- `pipeline/providers/gemini.ts` — `GeminiProvider`: `generateContent` over Node `fetch`, no SDK; frames as `inline_data` jpeg parts before the text; `x-goog-api-key` header; `usageMetadata` into `usage`; 429/500/503 → `ProviderError retryable` under `withBackoff` (`limits.bedrock.on_throttle`), any other non-2xx fatal on the first attempt; a safety block (HTTP 200, no candidate text) returned empty so validation writes the cue `failed`, never hand-written (`AC7`). `DEFAULT_GEMINI_MODEL = gemini-2.5-flash`, `GEMINI_MODEL_ID` overrides, and the track's `model_id` records whichever ran.
+- `pipeline/providers/index.ts` — `DESCRIPTION_PROVIDER=gemini`, needs `GEMINI_API_KEY`; `PROVIDER_NAMES` gains it; `types.ts` id union gains `'gemini'`.
+- `pipeline/run.ts` — `loadDotEnv`: a `.env` in the working directory fills variables the shell did not set, never overrides one.
+- `README.md` §Run the pipeline: the Gemini block and the `.env` line; the fail-fast sentence names both fallbacks.
+- Tests: `providers.test.ts` +4 (parts order and header, 429 retried to `MAX_ATTEMPTS` then 400 fatal on the first try, safety block → empty, selection only with a key).
+**Not done:** no real call was made — `GEMINI_API_KEY` was not visible in this session (not in `.zshrc`/`.zprofile`/`.zshenv`, no `.env`). The first real run is `DESCRIPTION_PROVIDER=gemini npm run pipeline -- --levels standard --limit 5`, then `AC7`.
+**Edits:** `pipeline/providers/gemini.ts` (new) · `pipeline/providers/{index,types}.ts` · `pipeline/run.ts` · `pipeline/__tests__/providers.test.ts` · `README.md` (275 lines, blob f3ccc8c) · `_facts.yml` (2098 lines, blob a8419c4 — `changes[C30]` appended, `env_vars` +2).
+**Validation:** `npm run lint` exit 0 · vitest **178** (was 174) · jest unchanged (30).
+**Still open:** as R47-M, plus the first real Gemini run.
+**Next mode:** verify — run `--limit 5`, read the five cues against the frames, then the full run and `AC14`.

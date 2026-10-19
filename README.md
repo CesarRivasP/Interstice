@@ -208,11 +208,17 @@ export DESCRIPTION_PROVIDER=anthropic
 export ANTHROPIC_API_KEY=...           # ANTHROPIC_MODEL_ID defaults to claude-sonnet-5-5
 npm run pipeline
 
+# Google Gemini for the descriptions, Polly for the voice (no SDK: the REST endpoint)
+export DESCRIPTION_PROVIDER=gemini
+export GEMINI_API_KEY=...               # GEMINI_MODEL_ID defaults to gemini-2.5-flash
+npm run pipeline
+
 # Optional flags: --levels standard,concise  --limit 5  --out <dir>  --frames stub
+# A .env file in the repository root fills in any variable the shell did not set.
 ```
 
 If Bedrock answers with the account-level `Error 002` the run stops on its first call with
-a message naming `DESCRIPTION_PROVIDER=anthropic`. The pipeline never switches providers on
+a message naming `DESCRIPTION_PROVIDER=anthropic|gemini`. The pipeline never switches providers on
 its own. A throttle is retried with exponential backoff, five attempts, then that one cue is
 written `status: failed` and the track still emits.
 

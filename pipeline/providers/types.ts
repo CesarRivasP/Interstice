@@ -20,7 +20,7 @@ export interface ProviderUsage {
 }
 
 export interface DescriptionProvider {
-  readonly id: 'bedrock' | 'anthropic' | 'fake';
+  readonly id: 'bedrock' | 'anthropic' | 'gemini' | 'fake';
   /** what `contracts.description_track.model_id` records */
   readonly modelId: string;
   /** running totals, so a run can state what it cost */

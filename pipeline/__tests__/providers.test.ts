@@ -6,7 +6,9 @@ import {
   BedrockConverseProvider,
   DEFAULT_ANTHROPIC_MODEL,
   DEFAULT_BEDROCK_MODEL,
+  DEFAULT_GEMINI_MODEL,
   FakeProvider,
+  GeminiProvider,
   ProviderError,
   isAccountBlocked,
   isThrottle,
@@ -191,5 +193,52 @@ describe('FakeProvider', () => {
     expect(cast.split('\n').length).toBeGreaterThan(1);
     expect(p.usage.calls).toBe(2);
     expect(wordsOf(3)).toBe('a figure crosses');
+  });
+});
+
+describe('GeminiProvider — the third real implementation of the seam', () => {
+  const ok = (text: string, usage = { promptTokenCount: 700, candidatesTokenCount: 20 }) =>
+    new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text }] }, finishReason: 'STOP' }], usageMetadata: usage }), { status: 200 });
+
+  it('sends the frames as inline jpeg parts before the text, with the key in a header, and records usage', async () => {
+    const seen: { url: string; init: RequestInit }[] = [];
+    const p = new GeminiProvider({ apiKey: 'k', fetch: async (url, init) => { seen.push({ url, init }); return ok('A man enters.'); } });
+    const out = await p.describe({ images: [Buffer.from('a'), Buffer.from('b')], text: 'describe', maxTokens: 40 });
+    expect(out).toBe('A man enters.');
+    expect(seen[0]!.url).toContain(`/models/${DEFAULT_GEMINI_MODEL}:generateContent`);
+    expect((seen[0]!.init.headers as Record<string, string>)['x-goog-api-key']).toBe('k');
+    const body = JSON.parse(seen[0]!.init.body as string);
+    const parts = body.contents[0].parts;
+    expect(parts).toHaveLength(3);
+    expect(parts[0].inline_data.mime_type).toBe('image/jpeg');
+    expect(parts[0].inline_data.data).toBe(Buffer.from('a').toString('base64'));
+    expect(parts[2]).toEqual({ text: 'describe' });
+    expect(body.generationConfig.maxOutputTokens).toBe(40);
+    expect(p.usage).toEqual({ calls: 1, input_tokens: 700, output_tokens: 20 });
+  });
+
+  it('retries 429 up to MAX_ATTEMPTS then throws retryable, and fails fast on 400', async () => {
+    let calls = 0;
+    const p = new GeminiProvider({ apiKey: 'k', sleep: noSleep, fetch: async () => { calls++; return new Response('slow down', { status: 429 }); } });
+    await expect(p.describe({ images: [], text: 't', maxTokens: 10 })).rejects.toMatchObject({ retryable: true });
+    expect(calls).toBe(MAX_ATTEMPTS);
+    let bad = 0;
+    const q = new GeminiProvider({ apiKey: 'k', sleep: noSleep, fetch: async () => { bad++; return new Response('{"error":"bad key"}', { status: 400 }); } });
+    await expect(q.describe({ images: [], text: 't', maxTokens: 10 })).rejects.toMatchObject({ retryable: false, code: 'http_400' });
+    expect(bad).toBe(1);
+  });
+
+  // Fails if: a safety block is turned into a cue. It must come back empty so
+  // the validator writes the cue `failed` (AC7), as the Anthropic refusal does.
+  it('returns empty text on a safety block', async () => {
+    const p = new GeminiProvider({ apiKey: 'k', fetch: async () => new Response(JSON.stringify({ promptFeedback: { blockReason: 'SAFETY' }, usageMetadata: { promptTokenCount: 5 } }), { status: 200 }) });
+    expect(await p.describe({ images: [], text: 't', maxTokens: 10 })).toBe('');
+  });
+
+  it('is selected only when asked, and only with a key', () => {
+    expect(() => selectProvider({ DESCRIPTION_PROVIDER: 'gemini' }, { dryRun: false })).toThrow('GEMINI_API_KEY');
+    const p = selectProvider({ DESCRIPTION_PROVIDER: 'gemini', GEMINI_API_KEY: 'k', GEMINI_MODEL_ID: 'gemini-x' }, { dryRun: false });
+    expect(p.id).toBe('gemini');
+    expect(p.modelId).toBe('gemini-x');
   });
 });
