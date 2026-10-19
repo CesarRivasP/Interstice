@@ -423,3 +423,19 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 **Validation:** `npm run lint` exit 0 · vitest **178** (was 174) · jest unchanged (30).
 **Still open:** as R47-M, plus the first real Gemini run.
 **Next mode:** verify — run `--limit 5`, read the five cues against the frames, then the full run and `AC14`.
+
+---
+
+## R49 · 2026-10-19 · claude-opus-5-5 (Claude Code) · verify
+**Log read through:** R48
+**About to do:** the first real run of `changes[C9]`, free of cost: Bedrock still `Error 002` (re-measured 2026-10-19 as the account ROOT, us-east-1 and us-west-2, nova-lite and nova-pro, `authorizationStatus AUTHORIZED` beside it), and the owner chose no paid tier anywhere.
+
+### Measured
+- **Gemini free tier is 20 requests per model per day** (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, `quotaValue 20`), and 3.x Flash models answer 503 under load. `gemini-2.5-flash` answers 404 to new users. Gemini 3.x thinks by default and the thoughts are billed against `maxOutputTokens` — 57 of 60 tokens on a probe, empty answer — so thinking is off (`608eb25`). The provider now rotates through a model list, drops a model whose daily quota is gone, skips an overloaded one at once, and paces calls (`7c28f27`, `4195664`).
+- **Ollama, `qwen2.5vl:7b`, on the build machine (M1 Pro, 16 GB):** 13.8 GiB resident, the cast pass 3 min 45 s and empty, the second cue past the 5 min fetch timeout. Built (`OllamaProvider`) and unit-tested; not usable on this machine for a full run.
+- **Standard level, Gemini rotating six models at 7 s spacing:** **21 of 55 cues ok**, 34 failed when every model's daily quota was spent. Every ok cue within its budget at the first attempt. Track emitted at `generated/tears-of-steel/tears-of-steel.standard.track.json` (gitignored) with the 34 marked `failed`. Polly synthesized every ok cue.
+- Sample, `0-11500`: *A title card reads, "the Mango Open Movie project." Next, huge rocket thruster cones loom above a massive industrial launch complex shrouded in mist.* · `73800-84600`: *A sniper in a bell tower aims at a ship. Below him, a newspaper covering Thom's face reads, 'ROBOTICIST CREATES KILLER ROBOTS'.*
+
+**Validation:** vitest 186+ · lint 0.
+**Still open:** 34 standard cues — the quotas reset at midnight Pacific; the cache makes the re-run pay only for them. `AC7` flips to executed when the standard track has no failed cue. `AC14` after that.
+**Next mode:** verify — re-run `--levels standard` after 2026-10-20 00:00 PT.
