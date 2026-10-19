@@ -184,6 +184,17 @@ Amazon feedback is not diluted by things Amazon cannot act on.
 - **severity** *(added 2026-10-18)*: **Low**
 - **what would have helped:** `vega device screenshot`, `vega device record` and `vega device press`, documented, for the Virtual Device and for devices in developer mode. The capability is already in the product; it is the command that is missing. Amazon staff have this as a feature request (community thread 29258).
 
+### 2026-10-19 — the Virtual Device is an Android emulator, and answers on whatever port was left over
+
+- **tool:** Vega Virtual Device (SDK 0.24.12112), its emulator gRPC interface, through the [fortemate/vega-vvd-driver](https://github.com/fortemate/vega-vvd-driver) wrapper of the 2026-10-04 entry
+- **steps:** ran the release e2e suite with capture on; reviewed the screenshots before publishing; found them to be another app; listed the emulator processes and their listening ports with `pgrep` and `lsof`; re-ran with the device addressed by pid.
+- **expected:** "the Virtual Device" is one addressable thing. `vega device list` names it; a screenshot of it is a screenshot of the Vega app under test.
+- **happened:** the VVD binary (`vega-virtual-device -avd-arch arm64`, under `vvd/images/tv/vmtools/agent/qemu/`) is the Android emulator, and it takes the next free console port. With an Android TV emulator (`TV_1080_RELEASE`, a client project) started first, that emulator held console `5554` and gRPC `8554`, and the VVD came up on `5556`. Every capture tool that assumes the first emulator — the wrapper's defaults included — then talks to the Android one. A whole release run captured another app's screens, and every scenario still passed, because verdicts come from the app's trace lines, not from pixels. Nothing in the Vega CLI reports which console or gRPC port the Virtual Device holds.
+- **workaround:** `e2e/capture.ts` finds the device by its own process (`pgrep -f 'vega-virtual-device -avd-arch'`), reads its console port from `lsof`, enables gRPC on the matching port and passes `--pid` to every capture command; no VVD process fails loudly. The wrong run was deleted unpublished, and the 11 published shots were checked one by one.
+- **time_lost:** about 40 min, estimated — and only because the shots were looked at before publishing. Unlooked-at, this is a public test report illustrated with a different product.
+- **severity:** **High**
+- **what would have helped:** `vega device info` printing the Virtual Device's console and gRPC ports, or the `vega device screenshot` asked for in the 2026-10-04 entry, which would address the device by name and make the question disappear.
+
 ---
 
 ## Toolchain
