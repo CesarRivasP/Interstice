@@ -470,3 +470,14 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 - `docs/e2e/` republished from those two runs: header names package 0.2.0, 12 pass, 1 blocked, 2.2 MB.
 **Found, not fixed:** R51-F1 `POLISH` — on the stall and error states (S15, S16) the centred status line overlaps the controls panel at the left. Readable, not clean.
 **Validation:** jest 31 · vitest 186 · lint 0.
+
+---
+
+## R52 · 2026-10-19 · claude-opus-5-5 (Claude Code) · implement + verify
+**Read:** `src/screens/PlayerScreen.tsx` · `test/PlayerScreen.spec.tsx` · `e2e/scenarios/variant.ts` (S11, S12) · `_log.md` through R51
+**Log read through:** R51
+**Disposition:** R51-F1 `POLISH` → **confirmed, fixed.** With the description controls on screen, the status line (stall, error) is centred in the space to their right (`left: 360`) on its own translucent panel; with no controls it stays centred on the screen. One jest test pins both cases.
+**Verified on the VVD:** RELEASE `2026-10-19T19-32-40-097Z-release` S01–S05 pass. VARIANT run three times: `19-34-15` S12 failed (the D-pad landed one control lower — `controls.verbosity to=standard` where the scenario pressed for concise), `19-39-02` S11 failed (`no audio.duck id=c2`, a missing trace line, the shape of open `defects[D7]` in the e2e set), `19-44-08-264Z` all pass. Neither failure touches what this round changed, and each passed on the other two runs; recorded as R52-F1 below rather than retried until green. Shots of the published pair inspected: S15/S16 status line clear of the panel.
+- R52-F1 `FUNCTIONAL` for the e2e set: key-driven scenarios S11/S12 are intermittent on the VVD, 1 failure in 3 runs each today — one a focus landing, one a lost line. Not disposed here.
+`docs/e2e/` republished from RELEASE 19-32-40 and VARIANT 19-44-08: 12 pass, 1 blocked.
+**Validation:** jest 32 · lint 0.

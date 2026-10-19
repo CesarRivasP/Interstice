@@ -326,3 +326,38 @@ describe('PlayerScreen — the track, and the state when there is none (AC8)', (
     view.unmount();
   });
 });
+
+// R51-F1. Fails if: the status line is centred across the whole screen while
+// the description controls are on it — on the VVD it ran over their panel.
+describe('PlayerScreen — the status line keeps clear of the controls', () => {
+  const TRACK = {
+    version: '1',
+    asset_id: 'tears-of-steel',
+    generated_at: '2026-10-19T00:00:00.000Z',
+    source_subtitles: 'media/tears-of-steel.en.srt',
+    verbosity: 'standard',
+    model_id: 'test',
+    cues: [
+      {id: 'c1', start_ms: 60_000, end_ms: 65_000, words: 5, text: 'A ship drifts overhead slowly.',
+        audio_uri: 'audio/c1.m4a', source_frames_ms: [62_000], status: 'ok'},
+    ],
+  };
+  const flat = (style: unknown) => Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
+
+  it('moves beside the controls when they are shown, and stays centred when they are not', async () => {
+    readJson = jest.fn(async () => TRACK);
+    const view = renderPlayer();
+    await waitFor(() => expect(view.getByLabelText('Audio description')).toBeTruthy());
+    await waitFor(() => expect(media.video.isPlaying()).toBe(true));
+    await act(async () => media.video.emitStalled());
+    expect(flat(view.getByTestId('status-overlay').props.style).left).toBe(360);
+
+    readJson = jest.fn(async () => {
+      throw new Error('ENOENT');
+    });
+    const bare = renderPlayer();
+    await waitFor(() => expect(bare.getByLabelText(/No description track was found/)).toBeTruthy());
+    await act(async () => media.video.emitStalled());
+    expect(flat(bare.getAllByTestId('status-overlay')[0]!.props.style).left).not.toBe(360);
+  });
+});

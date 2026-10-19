@@ -255,11 +255,14 @@ export function PlayerScreen({
       )}
       {overlay && (
         <View
-          style={styles.overlay}
+          testID="status-overlay"
+          style={[styles.overlay, ad?.kind === 'ready' && styles.overlayBesideControls]}
           accessible
           accessibilityRole={overlay.role}
           accessibilityLabel={overlay.spoken}>
-          <Text style={styles.text}>{overlay.shown}</Text>
+          <View style={styles.overlayPanel}>
+            <Text style={styles.text}>{overlay.shown}</Text>
+          </View>
         </View>
       )}
     </View>
@@ -316,7 +319,14 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 48,
   },
+  // R51-F1: with the four controls on screen, a status line centred on the
+  // whole screen ran across their panel (stall and error, S15/S16 on the VVD).
+  // It is centred in the space to their right instead. 360 clears the panel's
+  // widest row ("Description: off" at the package's 28 pt) with a margin.
+  overlayBesideControls: {left: 360},
+  overlayPanel: {backgroundColor: 'rgba(0, 0, 0, 0.72)', borderRadius: 12, padding: 16},
   text: {color: '#fff', fontSize: 28},
   // right: 48 bounds the width so the package's sentence wraps inside the
   // screen; flex-start keeps the panel as wide as its text, not the screen.
