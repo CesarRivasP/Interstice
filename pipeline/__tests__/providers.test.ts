@@ -230,6 +230,14 @@ describe('GeminiProvider — the third real implementation of the seam', () => {
     expect(bad).toBe(1);
   });
 
+  it('treats a per-day quota 429 as fatal on the first try, naming the quota', async () => {
+    let calls = 0;
+    const body = JSON.stringify({ error: { details: [{ quotaId: 'GenerateRequestsPerDayPerProjectPerModel-FreeTier' }, { retryDelay: '73447s' }] } });
+    const p = new GeminiProvider({ apiKey: 'k', sleep: noSleep, fetch: async () => { calls++; return new Response(body, { status: 429 }); } });
+    await expect(p.describe({ images: [], text: 't', maxTokens: 10 })).rejects.toMatchObject({ retryable: false, code: 'quota_exhausted' });
+    expect(calls).toBe(1);
+  });
+
   // Fails if: a safety block is turned into a cue. It must come back empty so
   // the validator writes the cue `failed` (AC7), as the Anthropic refusal does.
   it('returns empty text on a safety block', async () => {

@@ -82,7 +82,24 @@ export class GeminiProvider implements DescriptionProvider {
           });
         }
 
-        if (res.status === 429 || res.status === 503 || res.status === 500) {
+        if (res.status === 429) {
+          // A per-day quota (the free tier: 20 requests per model per day,
+          // measured 2026-10-18) answers 429 with a retryDelay of hours.
+          // Backing that off five times is 15 s spent on a certain failure, so
+          // a long delay is fatal and says why.
+          const text = await res.text().catch(() => '');
+          const delay = Number(/"retryDelay":\s*"(\d+)s"/.exec(text)?.[1] ?? 0);
+          if (delay > 60) {
+            throw new ProviderError(
+              `Gemini quota exhausted (retry in ${Math.round(delay / 3600)} h): ` +
+                `${/"quotaId":\s*"([^"]+)"/.exec(text)?.[1] ?? 'unknown quota'} — ` +
+                'enable billing on the key\'s Google project or set GEMINI_MODEL_ID to another model',
+              { retryable: false, code: 'quota_exhausted' },
+            );
+          }
+          throw new ProviderError('Gemini transient HTTP 429', { retryable: true, code: 'throttled' });
+        }
+        if (res.status === 503 || res.status === 500) {
           throw new ProviderError(`Gemini transient HTTP ${res.status}`, {
             retryable: true,
             code: 'throttled',
