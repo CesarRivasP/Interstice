@@ -458,3 +458,15 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 **Not done:** `npm publish` of the package 0.2.0 waits on the owner (irreversible); until then the app's `package.json` still resolves `^0.1.0`, and `docs/e2e/` is not republished, because its header would name package 0.1.0 for a build that ran 0.2.0 code.
 **Validation:** jest 31 · lint 0 · package jest 88.
 **Edits:** `README.md` (275 lines, blob c922677) and `_facts.yml` (2098 lines, blob 531673f) — both changed in `608eb25` (R49) when the Gemini default moved from 2.5-flash, which answers 404 to new users, to 3.8-flash; recorded here because R49 did not.
+
+---
+
+## R51 · 2026-10-19 · claude-opus-5-5 (Claude Code) · verify
+**Read:** `package.json` · `docs/e2e/index.html` (as regenerated) · `_log.md` through R50
+**Log read through:** R50
+**What this is:** the package release R50 waited on, and the app moved onto it.
+- `react-native-tv-audio-description@0.2.0` published by the owner (npm 2FA), tag `v0.2.0` pushed; the registry's `gitHead` is `8a8c2af`, the tag's commit. Issue #3 closed by the commit.
+- The app depends on `^0.2.0`. Built from the npm package and run on the VVD: RELEASE `2026-10-19T19-05-55-724Z-release` S01–S05 pass; VARIANT `2026-10-19T19-07-42-151Z-variant` S10–S16 pass, S17 blocked by D6. All 11 shots inspected before publishing — every one the VVD (R50's capture fix holding with the Android emulator still running).
+- `docs/e2e/` republished from those two runs: header names package 0.2.0, 12 pass, 1 blocked, 2.2 MB.
+**Found, not fixed:** R51-F1 `POLISH` — on the stall and error states (S15, S16) the centred status line overlaps the controls panel at the left. Readable, not clean.
+**Validation:** jest 31 · vitest 186 · lint 0.

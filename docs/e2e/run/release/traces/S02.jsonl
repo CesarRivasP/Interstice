@@ -1,51 +1,52 @@
-{"boot":"mi0hzt","seq":0,"t_dev_ms":1792354243292,"t_host":"2026-10-18T20:10:44.308Z","line":"INTERSTICE.asset.segments n=4 init=set","name":"asset.segments","fields":{"n":"4","init":"set"}}
-{"boot":"mi0hzt","seq":1,"t_dev_ms":1792354243294,"t_host":"2026-10-18T20:10:45.328Z","line":"INTERSTICE.asset.resolved uri=file:///pkg/bundle/assets/src/assets/clip.mp4","name":"asset.resolved","fields":{"uri":"file:///pkg/bundle/assets/src/assets/clip.mp4"}}
-{"boot":"mi0hzt","seq":2,"t_dev_ms":1792354243295,"t_host":"2026-10-18T20:10:45.328Z","line":"INTERSTICE.asset.cue uri=file:///pkg/bundle/assets/src/assets/cue.m4a","name":"asset.cue","fields":{"uri":"file:///pkg/bundle/assets/src/assets/cue.m4a"}}
-{"boot":"mi0hzt","seq":3,"t_dev_ms":1792354243295,"t_host":"2026-10-18T20:10:45.328Z","line":"INTERSTICE.app.mode e2e=false host=none","name":"app.mode","fields":{"e2e":"false","host":"none"}}
-{"boot":"mi0hzt","seq":4,"t_dev_ms":1792354244585,"t_host":"2026-10-18T20:10:45.328Z","line":"INTERSTICE.app.play id=tears-of-steel","name":"app.play","fields":{"id":"tears-of-steel"}}
-{"boot":"mi0hzt","seq":5,"t_dev_ms":1792354244628,"t_host":"2026-10-18T20:10:45.329Z","line":"INTERSTICE.overlay.shown status=loading spoken=Loading title","name":"overlay.shown","fields":{"status":"loading","spoken":"Loading title"}}
-{"boot":"mi0hzt","seq":6,"t_dev_ms":1792354244631,"t_host":"2026-10-18T20:10:45.329Z","line":"INTERSTICE.loader.miss path=/pkg/bundle/assets/src/assets/tears-of-steel.standard.track.json","name":"loader.miss","fields":{"path":"/pkg/bundle/assets/src/assets/tears-of-steel.standard.track.json"}}
-{"boot":"mi0hzt","seq":7,"t_dev_ms":1792354244632,"t_host":"2026-10-18T20:10:45.329Z","line":"INTERSTICE.scheduler.load cues=0","name":"scheduler.load","fields":{"cues":"0"}}
-{"boot":"mi0hzt","seq":8,"t_dev_ms":1792354244635,"t_host":"2026-10-18T20:10:45.329Z","line":"INTERSTICE.controls.announce kind=missing","name":"controls.announce","fields":{"kind":"missing"}}
-{"boot":"mi0hzt","seq":9,"t_dev_ms":1792354244636,"t_host":"2026-10-18T20:10:45.329Z","line":"INTERSTICE.ad.state kind=missing","name":"ad.state","fields":{"kind":"missing"}}
-{"boot":"mi0hzt","seq":10,"t_dev_ms":1792354244682,"t_host":"2026-10-18T20:10:45.329Z","line":"INTERSTICE.player.surface created handle=1","name":"player.surface","fields":{"_":"created","handle":"1"}}
-{"boot":"mi0hzt","seq":11,"t_dev_ms":1792354244682,"t_host":"2026-10-18T20:10:45.329Z","line":"INTERSTICE.player.surface created handle=1","name":"player.surface","fields":{"_":"created","handle":"1"}}
-{"boot":"mi0hzt","seq":12,"t_dev_ms":1792354244689,"t_host":"2026-10-18T20:10:45.329Z","line":"INTERSTICE.buffer.appended init bytes=1343 held=0","name":"buffer.appended","fields":{"_":"init","bytes":"1343","held":"0"}}
-{"boot":"mi0hzt","seq":13,"t_dev_ms":1792354244704,"t_host":"2026-10-18T20:10:45.330Z","line":"INTERSTICE.buffer.appended seg0 bytes=649534 held=0","name":"buffer.appended","fields":{"_":"seg0","bytes":"649534","held":"0"}}
-{"boot":"mi0hzt","seq":14,"t_dev_ms":1792354244717,"t_host":"2026-10-18T20:10:45.330Z","line":"INTERSTICE.buffer.appended seg1 bytes=1037183 held=1","name":"buffer.appended","fields":{"_":"seg1","bytes":"1037183","held":"1"}}
-{"boot":"mi0hzt","seq":15,"t_dev_ms":1792354244728,"t_host":"2026-10-18T20:10:45.330Z","line":"INTERSTICE.buffer.appended seg2 bytes=856989 held=2","name":"buffer.appended","fields":{"_":"seg2","bytes":"856989","held":"2"}}
-{"boot":"mi0hzt","seq":16,"t_dev_ms":1792354244737,"t_host":"2026-10-18T20:10:45.330Z","line":"INTERSTICE.buffer.appended seg3 bytes=83877 held=3","name":"buffer.appended","fields":{"_":"seg3","bytes":"83877","held":"3"}}
-{"boot":"mi0hzt","seq":17,"t_dev_ms":1792354244738,"t_host":"2026-10-18T20:10:45.332Z","line":"INTERSTICE.buffer.complete segments=4","name":"buffer.complete","fields":{"segments":"4"}}
-{"boot":"mi0hzt","seq":18,"t_dev_ms":1792354244738,"t_host":"2026-10-18T20:10:45.332Z","line":"INTERSTICE.player.opened segments=4 init=yes","name":"player.opened","fields":{"segments":"4","init":"yes"}}
-{"boot":"mi0hzt","seq":19,"t_dev_ms":1792354244739,"t_host":"2026-10-18T20:10:45.334Z","line":"INTERSTICE.player.play resolved","name":"player.play","fields":{"_":"resolved"}}
-{"boot":"mi0hzt","seq":20,"t_dev_ms":1792354244741,"t_host":"2026-10-18T20:10:45.334Z","line":"INTERSTICE.player.stalled","name":"player.stalled","fields":{}}
-{"boot":"mi0hzt","seq":21,"t_dev_ms":1792354244744,"t_host":"2026-10-18T20:10:45.335Z","line":"INTERSTICE.overlay.shown status=stalled spoken=The video paused while it loads more. Press back to return to the list.","name":"overlay.shown","fields":{"status":"stalled","spoken":"The video paused while it loads more. Press back to return to the list."}}
-{"boot":"mi0hzt","seq":22,"t_dev_ms":1792354245669,"t_host":"2026-10-18T20:10:46.268Z","line":"INTERSTICE.player.resumed from=stalled","name":"player.resumed","fields":{"from":"stalled"}}
-{"boot":"mi0hzt","seq":23,"t_dev_ms":1792354245686,"t_host":"2026-10-18T20:10:46.269Z","line":"INTERSTICE.overlay.cleared","name":"overlay.cleared","fields":{}}
-{"boot":"mi0hzt","seq":24,"t_dev_ms":1792354245914,"t_host":"2026-10-18T20:10:46.480Z","line":"INTERSTICE.player.progress pos_ms=173","name":"player.progress","fields":{"pos_ms":"173"}}
-{"boot":"mi0hzt","seq":25,"t_dev_ms":1792354246743,"t_host":"2026-10-18T20:10:47.310Z","line":"INTERSTICE.cue.fire","name":"cue.fire","fields":{}}
-{"boot":"mi0hzt","seq":26,"t_dev_ms":1792354246744,"t_host":"2026-10-18T20:10:47.310Z","line":"INTERSTICE.audio.duck id=probe to_pct=25","name":"audio.duck","fields":{"id":"probe","to_pct":"25"}}
-{"boot":"mi0hzt","seq":27,"t_dev_ms":1792354247025,"t_host":"2026-10-18T20:10:47.592Z","line":"INTERSTICE.cue.audio bytes=25674","name":"cue.audio","fields":{"bytes":"25674"}}
-{"boot":"mi0hzt","seq":28,"t_dev_ms":1792354247166,"t_host":"2026-10-18T20:10:47.733Z","line":"INTERSTICE.player.progress pos_ms=1419","name":"player.progress","fields":{"pos_ms":"1419"}}
-{"boot":"mi0hzt","seq":29,"t_dev_ms":1792354248169,"t_host":"2026-10-18T20:10:48.736Z","line":"INTERSTICE.player.progress pos_ms=2422","name":"player.progress","fields":{"pos_ms":"2422"}}
-{"boot":"mi0hzt","seq":30,"t_dev_ms":1792354249170,"t_host":"2026-10-18T20:10:49.737Z","line":"INTERSTICE.cue.audio state=ended t=2.02","name":"cue.audio","fields":{"state":"ended","t":"2.02"}}
-{"boot":"mi0hzt","seq":31,"t_dev_ms":1792354249172,"t_host":"2026-10-18T20:10:49.739Z","line":"INTERSTICE.audio.spoke id=probe words=0","name":"audio.spoke","fields":{"id":"probe","words":"0"}}
-{"boot":"mi0hzt","seq":32,"t_dev_ms":1792354249260,"t_host":"2026-10-18T20:10:49.826Z","line":"INTERSTICE.player.progress pos_ms=3513","name":"player.progress","fields":{"pos_ms":"3513"}}
-{"boot":"mi0hzt","seq":33,"t_dev_ms":1792354249399,"t_host":"2026-10-18T20:10:49.965Z","line":"INTERSTICE.audio.restored id=probe","name":"audio.restored","fields":{"id":"probe"}}
-{"boot":"mi0hzt","seq":34,"t_dev_ms":1792354250425,"t_host":"2026-10-18T20:10:50.991Z","line":"INTERSTICE.player.progress pos_ms=4677","name":"player.progress","fields":{"pos_ms":"4677"}}
-{"boot":"mi0hzt","seq":35,"t_dev_ms":1792354251427,"t_host":"2026-10-18T20:10:51.994Z","line":"INTERSTICE.player.progress pos_ms=5680","name":"player.progress","fields":{"pos_ms":"5680"}}
-{"boot":"mi0hzt","seq":36,"t_dev_ms":1792354252429,"t_host":"2026-10-18T20:10:52.996Z","line":"INTERSTICE.player.progress pos_ms=6681","name":"player.progress","fields":{"pos_ms":"6681"}}
-{"boot":"mi0hzt","seq":37,"t_dev_ms":1792354253696,"t_host":"2026-10-18T20:10:54.263Z","line":"INTERSTICE.player.progress pos_ms=7907","name":"player.progress","fields":{"pos_ms":"7907"}}
-{"boot":"mi0hzt","seq":38,"t_dev_ms":1792354254702,"t_host":"2026-10-18T20:10:55.268Z","line":"INTERSTICE.player.progress pos_ms=8913","name":"player.progress","fields":{"pos_ms":"8913"}}
-{"boot":"mi0hzt","seq":39,"t_dev_ms":1792354255704,"t_host":"2026-10-18T20:10:56.271Z","line":"INTERSTICE.player.progress pos_ms=9915","name":"player.progress","fields":{"pos_ms":"9915"}}
-{"boot":"mi0hzt","seq":40,"t_dev_ms":1792354256708,"t_host":"2026-10-18T20:10:57.275Z","line":"INTERSTICE.player.progress pos_ms=10918","name":"player.progress","fields":{"pos_ms":"10918"}}
-{"boot":"mi0hzt","seq":41,"t_dev_ms":1792354257710,"t_host":"2026-10-18T20:10:58.276Z","line":"INTERSTICE.player.progress pos_ms=11921","name":"player.progress","fields":{"pos_ms":"11921"}}
-{"boot":"mi0hzt","seq":42,"t_dev_ms":1792354258711,"t_host":"2026-10-18T20:10:59.277Z","line":"INTERSTICE.player.progress pos_ms=12922","name":"player.progress","fields":{"pos_ms":"12922"}}
-{"boot":"mi0hzt","seq":43,"t_dev_ms":1792354259714,"t_host":"2026-10-18T20:11:00.281Z","line":"INTERSTICE.player.progress pos_ms=13925","name":"player.progress","fields":{"pos_ms":"13925"}}
-{"boot":"mi0hzt","seq":44,"t_dev_ms":1792354260715,"t_host":"2026-10-18T20:11:01.282Z","line":"INTERSTICE.player.progress pos_ms=14926","name":"player.progress","fields":{"pos_ms":"14926"}}
-{"boot":"mi0hzt","seq":45,"t_dev_ms":1792354261718,"t_host":"2026-10-18T20:11:02.284Z","line":"INTERSTICE.player.progress pos_ms=15929","name":"player.progress","fields":{"pos_ms":"15929"}}
-{"boot":"mi0hzt","seq":46,"t_dev_ms":1792354262720,"t_host":"2026-10-18T20:11:03.286Z","line":"INTERSTICE.player.progress pos_ms=16931","name":"player.progress","fields":{"pos_ms":"16931"}}
-{"boot":"mi0hzt","seq":47,"t_dev_ms":1792354263723,"t_host":"2026-10-18T20:11:04.290Z","line":"INTERSTICE.player.progress pos_ms=17934","name":"player.progress","fields":{"pos_ms":"17934"}}
-{"boot":"mi0hzt","seq":48,"t_dev_ms":1792354264729,"t_host":"2026-10-18T20:11:05.295Z","line":"INTERSTICE.player.progress pos_ms=18940","name":"player.progress","fields":{"pos_ms":"18940"}}
-{"boot":"mi0hzt","seq":49,"t_dev_ms":1792354265728,"t_host":"2026-10-18T20:11:06.294Z","line":"INTERSTICE.player.progress pos_ms=20022","name":"player.progress","fields":{"pos_ms":"20022"}}
-{"boot":"mi0hzt","seq":50,"t_dev_ms":1792354265733,"t_host":"2026-10-18T20:11:06.299Z","line":"INTERSTICE.buffer.evicted n=1 up_to_ms=9940 held=3","name":"buffer.evicted","fields":{"n":"1","up_to_ms":"9940","held":"3"}}
+{"boot":"olkmvg","seq":0,"t_dev_ms":1792436788157,"t_host":"2026-10-19T19:06:28.684Z","line":"INTERSTICE.asset.segments n=4 init=set","name":"asset.segments","fields":{"n":"4","init":"set"}}
+{"boot":"olkmvg","seq":1,"t_dev_ms":1792436788160,"t_host":"2026-10-19T19:06:30.618Z","line":"INTERSTICE.asset.resolved uri=file:///pkg/bundle/assets/src/assets/clip.mp4","name":"asset.resolved","fields":{"uri":"file:///pkg/bundle/assets/src/assets/clip.mp4"}}
+{"boot":"olkmvg","seq":2,"t_dev_ms":1792436788160,"t_host":"2026-10-19T19:06:30.618Z","line":"INTERSTICE.asset.cue uri=file:///pkg/bundle/assets/src/assets/cue.m4a","name":"asset.cue","fields":{"uri":"file:///pkg/bundle/assets/src/assets/cue.m4a"}}
+{"boot":"olkmvg","seq":3,"t_dev_ms":1792436788160,"t_host":"2026-10-19T19:06:30.618Z","line":"INTERSTICE.app.mode e2e=false host=none","name":"app.mode","fields":{"e2e":"false","host":"none"}}
+{"boot":"olkmvg","seq":4,"t_dev_ms":1792436790317,"t_host":"2026-10-19T19:06:30.618Z","line":"INTERSTICE.app.play id=tears-of-steel","name":"app.play","fields":{"id":"tears-of-steel"}}
+{"boot":"olkmvg","seq":5,"t_dev_ms":1792436790403,"t_host":"2026-10-19T19:06:30.618Z","line":"INTERSTICE.overlay.shown status=loading spoken=Loading title","name":"overlay.shown","fields":{"status":"loading","spoken":"Loading title"}}
+{"boot":"olkmvg","seq":6,"t_dev_ms":1792436790416,"t_host":"2026-10-19T19:06:30.619Z","line":"INTERSTICE.loader.miss path=/pkg/bundle/assets/src/assets/tears-of-steel.standard.track.json","name":"loader.miss","fields":{"path":"/pkg/bundle/assets/src/assets/tears-of-steel.standard.track.json"}}
+{"boot":"olkmvg","seq":7,"t_dev_ms":1792436790416,"t_host":"2026-10-19T19:06:30.619Z","line":"INTERSTICE.scheduler.load cues=0","name":"scheduler.load","fields":{"cues":"0"}}
+{"boot":"olkmvg","seq":8,"t_dev_ms":1792436790455,"t_host":"2026-10-19T19:06:30.619Z","line":"INTERSTICE.controls.announce kind=missing","name":"controls.announce","fields":{"kind":"missing"}}
+{"boot":"olkmvg","seq":9,"t_dev_ms":1792436790455,"t_host":"2026-10-19T19:06:30.619Z","line":"INTERSTICE.ad.state kind=missing","name":"ad.state","fields":{"kind":"missing"}}
+{"boot":"olkmvg","seq":10,"t_dev_ms":1792436790479,"t_host":"2026-10-19T19:06:30.619Z","line":"INTERSTICE.player.surface created handle=1","name":"player.surface","fields":{"_":"created","handle":"1"}}
+{"boot":"olkmvg","seq":11,"t_dev_ms":1792436790480,"t_host":"2026-10-19T19:06:30.619Z","line":"INTERSTICE.player.surface created handle=1","name":"player.surface","fields":{"_":"created","handle":"1"}}
+{"boot":"olkmvg","seq":12,"t_dev_ms":1792436790584,"t_host":"2026-10-19T19:06:30.619Z","line":"INTERSTICE.buffer.appended init bytes=1343 held=0","name":"buffer.appended","fields":{"_":"init","bytes":"1343","held":"0"}}
+{"boot":"olkmvg","seq":13,"t_dev_ms":1792436790605,"t_host":"2026-10-19T19:06:30.619Z","line":"INTERSTICE.buffer.appended seg0 bytes=649534 held=0","name":"buffer.appended","fields":{"_":"seg0","bytes":"649534","held":"0"}}
+{"boot":"olkmvg","seq":14,"t_dev_ms":1792436790618,"t_host":"2026-10-19T19:06:30.620Z","line":"INTERSTICE.buffer.appended seg1 bytes=1037183 held=1","name":"buffer.appended","fields":{"_":"seg1","bytes":"1037183","held":"1"}}
+{"boot":"olkmvg","seq":15,"t_dev_ms":1792436790639,"t_host":"2026-10-19T19:06:30.620Z","line":"INTERSTICE.buffer.appended seg2 bytes=856989 held=2","name":"buffer.appended","fields":{"_":"seg2","bytes":"856989","held":"2"}}
+{"boot":"olkmvg","seq":16,"t_dev_ms":1792436790649,"t_host":"2026-10-19T19:06:30.620Z","line":"INTERSTICE.buffer.appended seg3 bytes=83877 held=3","name":"buffer.appended","fields":{"_":"seg3","bytes":"83877","held":"3"}}
+{"boot":"olkmvg","seq":17,"t_dev_ms":1792436790650,"t_host":"2026-10-19T19:06:31.637Z","line":"INTERSTICE.buffer.complete segments=4","name":"buffer.complete","fields":{"segments":"4"}}
+{"boot":"olkmvg","seq":18,"t_dev_ms":1792436790650,"t_host":"2026-10-19T19:06:31.637Z","line":"INTERSTICE.player.opened segments=4 init=yes","name":"player.opened","fields":{"segments":"4","init":"yes"}}
+{"boot":"olkmvg","seq":19,"t_dev_ms":1792436790651,"t_host":"2026-10-19T19:06:31.638Z","line":"INTERSTICE.player.play resolved","name":"player.play","fields":{"_":"resolved"}}
+{"boot":"olkmvg","seq":20,"t_dev_ms":1792436790653,"t_host":"2026-10-19T19:06:32.270Z","line":"INTERSTICE.player.stalled","name":"player.stalled","fields":{}}
+{"boot":"olkmvg","seq":21,"t_dev_ms":1792436790653,"t_host":"2026-10-19T19:06:32.270Z","line":"INTERSTICE.overlay.cleared","name":"overlay.cleared","fields":{}}
+{"boot":"olkmvg","seq":22,"t_dev_ms":1792436790654,"t_host":"2026-10-19T19:06:32.271Z","line":"INTERSTICE.overlay.shown status=stalled spoken=The video paused while it loads more. Press back to return to the list.","name":"overlay.shown","fields":{"status":"stalled","spoken":"The video paused while it loads more. Press back to return to the list."}}
+{"boot":"olkmvg","seq":23,"t_dev_ms":1792436792651,"t_host":"2026-10-19T19:06:32.597Z","line":"INTERSTICE.cue.fire","name":"cue.fire","fields":{}}
+{"boot":"olkmvg","seq":24,"t_dev_ms":1792436792652,"t_host":"2026-10-19T19:06:32.598Z","line":"INTERSTICE.audio.duck id=probe to_pct=25","name":"audio.duck","fields":{"id":"probe","to_pct":"25"}}
+{"boot":"olkmvg","seq":25,"t_dev_ms":1792436792911,"t_host":"2026-10-19T19:06:32.859Z","line":"INTERSTICE.cue.audio bytes=25674","name":"cue.audio","fields":{"bytes":"25674"}}
+{"boot":"olkmvg","seq":26,"t_dev_ms":1792436793112,"t_host":"2026-10-19T19:06:33.063Z","line":"INTERSTICE.player.resumed from=stalled","name":"player.resumed","fields":{"from":"stalled"}}
+{"boot":"olkmvg","seq":27,"t_dev_ms":1792436793129,"t_host":"2026-10-19T19:06:33.093Z","line":"INTERSTICE.overlay.cleared","name":"overlay.cleared","fields":{}}
+{"boot":"olkmvg","seq":28,"t_dev_ms":1792436793352,"t_host":"2026-10-19T19:06:33.298Z","line":"INTERSTICE.player.progress pos_ms=182","name":"player.progress","fields":{"pos_ms":"182"}}
+{"boot":"olkmvg","seq":29,"t_dev_ms":1792436794356,"t_host":"2026-10-19T19:06:34.306Z","line":"INTERSTICE.player.progress pos_ms=1186","name":"player.progress","fields":{"pos_ms":"1186"}}
+{"boot":"olkmvg","seq":30,"t_dev_ms":1792436795059,"t_host":"2026-10-19T19:06:35.007Z","line":"INTERSTICE.cue.audio state=ended t=2.02","name":"cue.audio","fields":{"state":"ended","t":"2.02"}}
+{"boot":"olkmvg","seq":31,"t_dev_ms":1792436795061,"t_host":"2026-10-19T19:06:35.008Z","line":"INTERSTICE.audio.spoke id=probe words=0","name":"audio.spoke","fields":{"id":"probe","words":"0"}}
+{"boot":"olkmvg","seq":32,"t_dev_ms":1792436795267,"t_host":"2026-10-19T19:06:35.214Z","line":"INTERSTICE.audio.restored id=probe","name":"audio.restored","fields":{"id":"probe"}}
+{"boot":"olkmvg","seq":33,"t_dev_ms":1792436795360,"t_host":"2026-10-19T19:06:35.306Z","line":"INTERSTICE.player.progress pos_ms=2191","name":"player.progress","fields":{"pos_ms":"2191"}}
+{"boot":"olkmvg","seq":34,"t_dev_ms":1792436796362,"t_host":"2026-10-19T19:06:36.310Z","line":"INTERSTICE.player.progress pos_ms=3192","name":"player.progress","fields":{"pos_ms":"3192"}}
+{"boot":"olkmvg","seq":35,"t_dev_ms":1792436797364,"t_host":"2026-10-19T19:06:37.310Z","line":"INTERSTICE.player.progress pos_ms=4195","name":"player.progress","fields":{"pos_ms":"4195"}}
+{"boot":"olkmvg","seq":36,"t_dev_ms":1792436798366,"t_host":"2026-10-19T19:06:38.317Z","line":"INTERSTICE.player.progress pos_ms=5196","name":"player.progress","fields":{"pos_ms":"5196"}}
+{"boot":"olkmvg","seq":37,"t_dev_ms":1792436799370,"t_host":"2026-10-19T19:06:39.317Z","line":"INTERSTICE.player.progress pos_ms=6200","name":"player.progress","fields":{"pos_ms":"6200"}}
+{"boot":"olkmvg","seq":38,"t_dev_ms":1792436800373,"t_host":"2026-10-19T19:06:40.319Z","line":"INTERSTICE.player.progress pos_ms=7204","name":"player.progress","fields":{"pos_ms":"7204"}}
+{"boot":"olkmvg","seq":39,"t_dev_ms":1792436801376,"t_host":"2026-10-19T19:06:41.324Z","line":"INTERSTICE.player.progress pos_ms=8206","name":"player.progress","fields":{"pos_ms":"8206"}}
+{"boot":"olkmvg","seq":40,"t_dev_ms":1792436802380,"t_host":"2026-10-19T19:06:42.326Z","line":"INTERSTICE.player.progress pos_ms=9210","name":"player.progress","fields":{"pos_ms":"9210"}}
+{"boot":"olkmvg","seq":41,"t_dev_ms":1792436803382,"t_host":"2026-10-19T19:06:43.328Z","line":"INTERSTICE.player.progress pos_ms=10212","name":"player.progress","fields":{"pos_ms":"10212"}}
+{"boot":"olkmvg","seq":42,"t_dev_ms":1792436804383,"t_host":"2026-10-19T19:06:44.329Z","line":"INTERSTICE.player.progress pos_ms=11213","name":"player.progress","fields":{"pos_ms":"11213"}}
+{"boot":"olkmvg","seq":43,"t_dev_ms":1792436805385,"t_host":"2026-10-19T19:06:45.331Z","line":"INTERSTICE.player.progress pos_ms=12215","name":"player.progress","fields":{"pos_ms":"12215"}}
+{"boot":"olkmvg","seq":44,"t_dev_ms":1792436806387,"t_host":"2026-10-19T19:06:46.333Z","line":"INTERSTICE.player.progress pos_ms=13217","name":"player.progress","fields":{"pos_ms":"13217"}}
+{"boot":"olkmvg","seq":45,"t_dev_ms":1792436807389,"t_host":"2026-10-19T19:06:47.335Z","line":"INTERSTICE.player.progress pos_ms=14219","name":"player.progress","fields":{"pos_ms":"14219"}}
+{"boot":"olkmvg","seq":46,"t_dev_ms":1792436808390,"t_host":"2026-10-19T19:06:48.337Z","line":"INTERSTICE.player.progress pos_ms=15221","name":"player.progress","fields":{"pos_ms":"15221"}}
+{"boot":"olkmvg","seq":47,"t_dev_ms":1792436809391,"t_host":"2026-10-19T19:06:49.338Z","line":"INTERSTICE.player.progress pos_ms=16222","name":"player.progress","fields":{"pos_ms":"16222"}}
+{"boot":"olkmvg","seq":48,"t_dev_ms":1792436810394,"t_host":"2026-10-19T19:06:50.342Z","line":"INTERSTICE.player.progress pos_ms=17224","name":"player.progress","fields":{"pos_ms":"17224"}}
+{"boot":"olkmvg","seq":49,"t_dev_ms":1792436811397,"t_host":"2026-10-19T19:06:51.346Z","line":"INTERSTICE.player.progress pos_ms=18227","name":"player.progress","fields":{"pos_ms":"18227"}}
+{"boot":"olkmvg","seq":50,"t_dev_ms":1792436812401,"t_host":"2026-10-19T19:06:52.347Z","line":"INTERSTICE.player.progress pos_ms=19231","name":"player.progress","fields":{"pos_ms":"19231"}}
+{"boot":"olkmvg","seq":51,"t_dev_ms":1792436813154,"t_host":"2026-10-19T19:06:53.100Z","line":"INTERSTICE.buffer.evicted n=1 up_to_ms=9940 held=3","name":"buffer.evicted","fields":{"n":"1","up_to_ms":"9940","held":"3"}}
