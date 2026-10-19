@@ -427,6 +427,7 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 ---
 
 ## R49 · 2026-10-19 · claude-opus-5-5 (Claude Code) · verify
+**Read:** `pipeline/providers/gemini.ts` · `pipeline/describe.ts` (the provider-error branch) · `_log.md` through R48
 **Log read through:** R48
 **About to do:** the first real run of `changes[C9]`, free of cost: Bedrock still `Error 002` (re-measured 2026-10-19 as the account ROOT, us-east-1 and us-west-2, nova-lite and nova-pro, `authorizationStatus AUTHORIZED` beside it), and the owner chose no paid tier anywhere.
 
@@ -443,6 +444,7 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 ---
 
 ## R50 · 2026-10-19 · claude-opus-5-5 (Claude Code) · implement + verify
+**Read:** `src/App.tsx` · `src/screens/PlayerScreen.tsx` · `e2e/capture.ts` · the package's `src/ADControls.tsx` and `test/ADControls.spec.tsx` · `_log.md` through R49
 **Log read through:** R49
 **About to do:** R45-F3 — no visible focus on the title list, and the package's controls unstyled (default text colour on black, no focus state). The Design criterion is the entry's weakest; this is the cheapest thing that moves it.
 
@@ -455,3 +457,4 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 - RELEASE `2026-10-19T17-44-24-666Z-release` — S01–S05 pass. VARIANT `2026-10-19T17-46-05-915Z-variant` — S10–S16 pass, S17 blocked by D6. Shots inspected: focused title inverted with outline (S01), the four controls on a panel with the focused level outlined and the selected one marked (S12), both failure sentences whole and legible (S03, S13).
 **Not done:** `npm publish` of the package 0.2.0 waits on the owner (irreversible); until then the app's `package.json` still resolves `^0.1.0`, and `docs/e2e/` is not republished, because its header would name package 0.1.0 for a build that ran 0.2.0 code.
 **Validation:** jest 31 · lint 0 · package jest 88.
+**Edits:** `README.md` (275 lines, blob c922677) and `_facts.yml` (2098 lines, blob 531673f) — both changed in `608eb25` (R49) when the Gemini default moved from 2.5-flash, which answers 404 to new users, to 3.8-flash; recorded here because R49 did not.
