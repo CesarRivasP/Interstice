@@ -44,7 +44,7 @@ by hand, on the form.
 | 11 | Product feedback — five questions per tool, API or SDK used (**required**) | ready | §2.8 |
 | 12 | Feature requests with priority (optional) | ready | §2.9 |
 | 13 | Friction log (optional, up to 10% bonus) | ready — `FRICTION-LOG.md`, 16 entries with severity | §2.10 |
-| 14 | Image / thumbnail | **not drafted** — take a frame from the video on 10-22 | — |
+| 14 | Image / thumbnail | ready — `docs/video/devpost-thumbnail.jpg`, 1500×1000 (3:2): the film frame at 3:40.0 with the generated cue `217000-223000` quoted verbatim, the tagline and the CC BY attribution | — |
 | 15 | Team / Representative | the technical owner, solo entry (`owners.technical`) | — |
 
 **Rules facts that shape the above** (`limits.hackathon`, re-read 2026-10-18):
