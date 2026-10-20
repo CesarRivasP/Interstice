@@ -2000,8 +2000,12 @@ acceptance:
         { date: 2026-10-18, outcome: passed, env: 'Vega Virtual Device, OS 1.2, Release aarch64, SDK 0.24.12112 — e2e-harness S04 and S01, run 2026-10-18T20-10-13-786Z-release, app commit 866ccec',
           note: 'the BACK half: player.back from=playing, then a second app.play and a second player.opened, 2.0 s apart. The "focusable element in every state" half is not what a trace can show — a focus indicator visible on screen is R45-F3 and still open — so status stays written; the flip is the owner''s.' } ] }
   - { id: AC3, item: 'description can be toggled on and off from the remote without interrupting playback', status: written }
-  - { id: AC4, item: 'description cues play inside real dialogue gaps and never overlap dialogue', status: written }
-  - { id: AC5, item: 'the main track ducks to limits.ad.duck_target_pct during a cue and returns to full afterwards', status: written }
+  - { id: AC4, item: 'description cues play inside real dialogue gaps and never overlap dialogue', status: written,
+      attempts: [ { date: 2026-10-20, round: R57, outcome: passed, env: 'Vega Virtual Device, OS 1.2, Release aarch64, SDK 0.24.12112 — e2e-harness S07, run 2026-10-20T17-24-25-693Z-release, app commit e0567b5',
+                    note: 'ONE cue, the first: cue_0-11500 of the generated standard track fired at pos_ms=142, ducked and restored inside [0, 11500]. The other 54, and the never-overlaps half, wait on an end-to-end watch (AC14)' } ] }
+  - { id: AC5, item: 'the main track ducks to limits.ad.duck_target_pct during a cue and returns to full afterwards', status: written,
+      attempts: [ { date: 2026-10-20, round: R57, outcome: passed, env: 'Vega Virtual Device, OS 1.2, Release aarch64, SDK 0.24.12112 — e2e-harness S07, run 2026-10-20T17-24-25-693Z-release, app commit e0567b5',
+                    note: 'on a GENERATED cue for the first time (S03 used a probe): scheduler.fire, audio.duck to_pct=25, player.progress, cue.audio state=ended, audio.restored. The property was set; that it was heard closes on hardware' } ] }
   - { id: AC6, item: 'seeking and held-direction key repeat resync the scheduler without firing a cue per key event', status: written }
   - { id: AC7, item: 'the description track is produced end to end by the pipeline from asset plus subtitles — no cue text is hand-written', status: written,
       attempts: [{ date: 2026-10-18, round: R47-W2, outcome: aborted_no_conditions,
