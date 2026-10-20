@@ -44,7 +44,7 @@ by hand, on the form.
 | 11 | Product feedback — five questions per tool, API or SDK used (**required**) | ready | §2.8 |
 | 12 | Feature requests with priority (optional) | ready | §2.9 |
 | 13 | Friction log (optional, up to 10% bonus) | ready — `FRICTION-LOG.md`, 16 entries with severity | §2.10 |
-| 14 | Image / thumbnail | **not drafted** — take a frame from the video on 10-22 | — |
+| 14 | Image / thumbnail | ready — `docs/video/devpost-thumbnail.jpg`, 1500×1000 (3:2): the film frame at 3:40.0 with the generated cue `217000-223000` quoted verbatim, the tagline and the CC BY attribution | — |
 | 15 | Team / Representative | the technical owner, solo entry (`owners.technical`) | — |
 
 **Rules facts that shape the above** (`limits.hackathon`, re-read 2026-10-18):
@@ -500,5 +500,5 @@ Short form for the on-screen card: **Tears of Steel (CC BY 3.0) — Blender Foun
 | Load the generated standard track on the Virtual Device, re-run both harness suites on it, republish the report | coordinator | 10-20 |
 | Only the standard level is generated: the free tier yields about 21 cues a day (`_log.md` R49), and concise + detailed are 107 more. Decided 2026-10-19 (R54): the quota goes to standard and its AC14 regenerations; §3 shows the verbosity control for 5 s with the computed window counts and spends the time saved on the generated track playing. Generate concise/detailed only if standard is complete with quota to spare | owner | — |
 | Record, edit and upload the video; fill `[VIDEO URL]` in §2.4 and the registry `acceptance[AC12]` | owner | 10-22 |
-| Ask at office hours #2 (10-19, 9:00 PT) whether an in-app CC BY asset needs anything beyond attribution — the FAQ says "check with us" | owner | 10-19 |
+| ~~Ask at office hours #2 (10-19, 9:00 PT) whether an in-app CC BY asset needs anything beyond attribution~~ — **not asked; closed 2026-10-19.** CC BY 3.0 grants any use on attribution, and the rule asks for rights plus attribution: the attribution is in the video (§4 card), its description and the thumbnail | owner | closed |
 | Submit every field; declare Fire TV, AWS Builder, Open Source; mark `acceptance[AC13]` executed with the confirmation | owner | 10-22, deadline 10-23 12:00 PT |
