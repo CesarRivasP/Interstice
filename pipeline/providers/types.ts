@@ -23,6 +23,12 @@ export interface DescriptionProvider {
   readonly id: 'bedrock' | 'anthropic' | 'gemini' | 'ollama' | 'fake';
   /** what `contracts.description_track.model_id` records */
   readonly modelId: string;
+  /**
+   * The model that answered the most recent successful describe(), for a
+   * provider that rotates between several. Single-model providers leave it
+   * unset and `modelId` stands in.
+   */
+  readonly lastModelId?: string;
   /** running totals, so a run can state what it cost */
   readonly usage: ProviderUsage;
   describe(req: VisionRequest): Promise<string>;

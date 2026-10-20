@@ -251,6 +251,7 @@ describe('GeminiProvider — the third real implementation of the seam', () => {
     expect(await p.describe({ images: [], text: 't', maxTokens: 10 })).toBe('A door opens.');
     expect(urls.filter((u) => u.includes('/m-a:'))).toHaveLength(1); // dropped after its first 429
     expect(p.modelId).toBe('m-b');
+    expect(p.lastModelId).toBe('m-b'); // the model that wrote the last cue (R56)
   });
 
   it('throws when every model in the list is exhausted', async () => {
