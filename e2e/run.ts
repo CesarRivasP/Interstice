@@ -1,7 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createCapture } from './capture.js';
+import { appCommit } from './commit.js';
 import { createCollector, type Collector } from './collector.js';
 import * as device from './device.js';
 import { INPUT_ROUTE, pressAll } from './input.js';
@@ -190,7 +190,7 @@ async function main(): Promise<void> {
       build: `Release aarch64${suite === 'variant' ? ' + INTERSTICE_E2E' : ''}, SDK ${device.sdkVersion()}`,
       content_asset: suite === 'variant' ? 'e2e-fixture: first 60 s of Tears of Steel, host-served' : 'clip: 20 s of Tears of Steel, 4 segments, packaged',
     },
-    app_commit: execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim(),
+    app_commit: appCommit(),
     package_version: pkg.version,
     capture_rung: capture.rung,
     input_route: INPUT_ROUTE,
