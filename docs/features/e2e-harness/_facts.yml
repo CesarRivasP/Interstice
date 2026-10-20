@@ -816,7 +816,7 @@ contracts:
     started_at: 'ISO 8601 string'
     suite: 'release | variant'
     conditions: '{ target_platform, build, content_asset } — the keys of _profile.yml conditions_required'
-    app_commit: string
+    app_commit: 'string — short HEAD, with `+dirty` when the tree held changes outside docs/ at build time (e2e/commit.ts, R10)'
     package_version: string
     capture_rung: 'grpc | appium | none'
     input_route: 'inputd-cli | grpc'
