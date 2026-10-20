@@ -78,14 +78,14 @@ dropped the trailing gap would have deleted it.
 
 To re-run it: a booted Vega Virtual Device (SDK 0.24), Node 20+, `ffmpeg`, then
 
-    npm run e2e:release     # the submitted build — five scenarios, no fixtures
+    npm run e2e:release     # the submitted build — four scenarios on the packaged film and its generated track
     npm run e2e:report      # rebuilds the page from the committed run; needs no device
 
 `npm run e2e:variant` runs a test build against a labelled fixture and injects faults; it additionally needs `media/tears-of-steel.mp4` and `npm run e2e:fixtures` once. How it is built, and what it cannot show: `docs/features/e2e-harness/`.
 
 ## Status
 
-This is a hackathon build. What is true today — **2026-10-19** — and what is not, is
+This is a hackathon build. What is true today — **2026-10-20** — and what is not, is
 tracked here rather than implied. The registry behind every line is
 `docs/features/interstice/_facts.yml`.
 
@@ -104,8 +104,10 @@ tracked here rather than implied. The registry behind every line is
 - ✅ **Description of the frames has run, on Google Gemini.** The pipeline generated the
   standard-level track on Gemini's free tier over two days (2026-10-19 and 10-20): **55 of
   55 cues**, none failed, each within its word budget and voiced by Amazon Polly. No cue
-  text is hand-written, and the track's `model_id` names the models that wrote it. It has
-  not yet been played on the device — the harness runs above use the fixture track.
+  text is hand-written, and the track's `model_id` names the models that wrote it. Since
+  2026-10-20 the track ships **inside the app package with the whole film** (128 MB) and
+  plays on the Virtual Device: the harness hears the first generated cue duck the film
+  inside its gap and restore it, and watches the buffer let go behind the playhead.
 - ⛔ **Amazon Bedrock refuses every inference call on this AWS account** — `Error 002:
   Access to Bedrock models is not allowed for this account` — in every region, for every
   identity, before and after the AWS credit, and five minutes after the use-case form was
@@ -163,13 +165,13 @@ the attribution — is drafted in [`SUBMISSION.md`](SUBMISSION.md).
 - AWS credentials with `bedrock:InvokeModel` and `polly:SynthesizeSpeech` (pipeline only —
   the app calls no AWS service at runtime; on the entrant account Bedrock is refused, see Status)
 
-**Two generated inputs the app imports, not in git.** `src/App.tsx` imports
-`src/assets/seg/segments.ts`, written by `pipeline/prepare.ts` next to the fragmented
-segments it emits for the 20 s excerpt `src/assets/clip.mp4` (`media/clip.manifest.json`).
-Both are gitignored build output, so a fresh clone fails `npm test` and the Vega build with
-`Cannot find module './assets/seg/segments'` until they exist. Regenerating them is not yet
-a single command: cut the excerpt with ffmpeg per the manifest and run `prepare.ts` over it
-(see `pipeline/__tests__/prepare.test.ts` for the call). Tracked as a known gap.
+**Generated inputs the app imports.** `src/App.tsx` imports `src/assets/seg/segments.ts`
+(the film's fragmented segments) and `src/assets/ad/tracks.ts` (the generated tracks and
+their audio). `npm run package:film` writes both, from `media/tears-of-steel.mp4` and the
+pipeline's output in `generated/tears-of-steel/`. The track and `tracks.ts` are committed;
+the segments, `segments.ts` and the cue audio are gitignored, so a fresh clone fails
+`npm test` and the Vega build with `Cannot find module './assets/seg/segments'` until the
+film is downloaded and that command has run.
 
 **Install and verify**
 

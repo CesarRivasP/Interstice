@@ -2,6 +2,8 @@ import type { Scenario } from './types.js';
 
 const progress = { name: 'player.progress' };
 const play = { name: 'app.play', where: { id: 'tears-of-steel' } };
+// the first cue of the packaged standard track — its gap opens the film
+const FIRST_CUE = 'cue_0-11500';
 
 export const RELEASE: Scenario[] = [
   {
@@ -20,52 +22,6 @@ export const RELEASE: Scenario[] = [
       // ENTER with nothing else pressed reached the title: it had focus on entry.
       { kind: 'seen', expect: play },
     ],
-  },
-  {
-    id: 'S02', name: 'play-to-end', suite: 'release', fixture: false,
-    use_case: 'The viewer plays the demo clip from start to finish.',
-    covers: ['AC1'],
-    steps: [
-      { do: 'wait', for: { name: 'asset.segments' } },
-      { do: 'keys', keys: ['ENTER'] },
-      { do: 'wait', for: { name: 'player.play' } },
-      { do: 'shot', caption: 'The film playing' },
-      { do: 'wait', for: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 19_000 } }, timeout_ms: 40_000 },
-      { do: 'wait', for: { name: 'buffer.evicted' }, timeout_ms: 10_000 },
-    ],
-    assertions: [
-      { kind: 'order', expect: [{ name: 'buffer.complete' }, { name: 'player.opened' }, { name: 'player.play' }, progress] },
-      { kind: 'count', expect: { name: 'buffer.appended', where: { _: /^seg/ } }, exactly: 4 },
-      { kind: 'seen', expect: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 19_000 } } },
-      // Exactly one. Two is the loop of 2026-09-27, where evicting after
-      // endOfStream reopened the source and re-appended the asset.
-      { kind: 'count', expect: { name: 'buffer.evicted' }, exactly: 1 },
-    ],
-    cannot_show: 'The full film: this is the 20 s clip.',
-  },
-  {
-    id: 'S03', name: 'probe-cue-ducks', suite: 'release', fixture: false,
-    use_case: 'A description cue speaks over the film and the film comes back to full.',
-    covers: ['AC5'],
-    steps: [
-      { do: 'wait', for: { name: 'asset.segments' } },
-      { do: 'keys', keys: ['ENTER'] },
-      { do: 'clip_start', seconds: 12 },
-      { do: 'wait', for: { name: 'audio.duck' } },
-      { do: 'shot', caption: 'During the cue' },
-      { do: 'wait', for: { name: 'audio.restored', where: { id: 'probe' } }, timeout_ms: 20_000 },
-      { do: 'clip_stop', caption: 'The cue, with the film ducked under it' },
-    ],
-    assertions: [
-      { kind: 'order', expect: [
-        { name: 'cue.fire' },
-        { name: 'audio.duck', where: { id: 'probe', to_pct: '25' } },
-        progress, // the film kept decoding under the cue
-        { name: 'cue.audio', where: { state: 'ended' } },
-        { name: 'audio.restored', where: { id: 'probe' } },
-      ] },
-    ],
-    cannot_show: 'That a listener heard the film get quieter. The volume property was set to 25% and restored; audible ducking closes on hardware.',
   },
   {
     id: 'S04', name: 'back-returns-to-list', suite: 'release', fixture: false,
@@ -88,32 +44,68 @@ export const RELEASE: Scenario[] = [
       { kind: 'count', expect: { name: 'player.opened' }, exactly: 2 },
     ],
   },
+  // S02 (play-to-end), S03 (probe-cue-ducks) and S05 (no-track-is-stated) are
+  // RETIRED in e2e-harness R11: they were written for the 20-second excerpt and
+  // its probe cue, and since app R57 the package carries the film and its
+  // generated track instead. Their ids are not reused. S06 and S07 replace the
+  // first two; S19 (variant) carries the missing-track state, which no title in
+  // the Release build can reach any more.
   {
-    id: 'S05', name: 'no-track-is-stated', suite: 'release', fixture: false,
-    use_case: 'The title has no description track; the app says so and the film plays anyway.',
-    covers: ['AC8'],
+    id: 'S06', name: 'film-plays-and-windows', suite: 'release', fixture: false,
+    use_case: 'The viewer plays the film; the buffer runs ahead of the picture and lets go behind it.',
+    covers: ['AC1'],
     steps: [
       { do: 'wait', for: { name: 'asset.segments' } },
       { do: 'keys', keys: ['ENTER'] },
-      { do: 'wait', for: { name: 'controls.announce' } },
-      { do: 'wait', for: progress, timeout_ms: 20_000 },
-      { do: 'shot', caption: 'The missing-track state, on screen' },
-      { do: 'wait', for: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 5_000 } }, timeout_ms: 20_000 },
+      { do: 'wait', for: { name: 'player.play' } },
+      { do: 'shot', caption: 'The film playing' },
+      { do: 'wait', for: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 45_000 } }, timeout_ms: 75_000 },
+      { do: 'wait', for: { name: 'buffer.evicted' }, timeout_ms: 15_000 },
     ],
     assertions: [
-      { kind: 'seen', expect: { name: 'controls.announce', where: { kind: 'missing' } } },
-      // The announcement comes AFTER the loader looked, never before. Until
-      // R47-W1 it was asserted as `seen` only, because the app announced
-      // `missing` on mount, 2–16 ms ahead of loader.miss (R45-F2).
-      { kind: 'order', expect: [{ name: 'loader.miss' }, { name: 'controls.announce', where: { kind: 'missing' } }] },
-      // the film is still moving AFTER the loader gave up
-      { kind: 'order', expect: [{ name: 'loader.miss' }, progress, progress] },
-      // Not "no stall at all": MSE emits `waiting` at the start of every normal
-      // playback on this device. No stall once the film is moving.
-      { kind: 'absent', expect: { name: 'player.stalled' },
-        after: progress,
-        before: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 5_000 } },
-        emitter: 'src/screens/PlayerScreen.tsx onStalled -> player.stalled' },
+      { kind: 'seen', expect: { name: 'asset.segments', where: { n: (v) => Number(v) > 100 } } },
+      { kind: 'order', expect: [{ name: 'player.opened' }, { name: 'player.play' }, progress] },
+      { kind: 'seen', expect: { name: 'player.progress', where: { pos_ms: (v) => Number(v) >= 45_000 } } },
+      // limits.mse_buffer: 30 s ahead + 10 s behind is at most nine 6 s segments
+      { kind: 'seen', expect: { name: 'buffer.evicted', where: { held: (v) => Number(v) <= 9 } } },
+      { kind: 'count', expect: { name: 'buffer.evicted', where: { held: (v) => Number(v) > 9 } }, exactly: 0 },
+      // the film never reached its end, so the source was never closed
+      { kind: 'count', expect: { name: 'buffer.complete' }, exactly: 0 },
+      { kind: 'count', expect: { name: 'buffer.failed' }, exactly: 0 },
     ],
+    cannot_show: 'The whole film, and memory: this run watches 45 s of 12 min on the Virtual Device. AC23 names the worst device in the matrix and an end-to-end watch.',
   },
+  {
+    id: 'S07', name: 'generated-cue-ducks', suite: 'release', fixture: false,
+    use_case: 'The film\'s first generated cue speaks inside its gap, over the film, and the film comes back to full.',
+    covers: ['AC4', 'AC5'], windows_ms: [[0, 11_500]],
+    steps: [
+      { do: 'wait', for: { name: 'asset.segments' } },
+      { do: 'keys', keys: ['ENTER'] },
+      { do: 'clip_start', seconds: 14 },
+      { do: 'wait', for: { name: 'audio.duck', where: { id: FIRST_CUE } }, timeout_ms: 20_000 },
+      { do: 'shot', caption: 'During the first generated cue' },
+      { do: 'wait', for: { name: 'audio.restored', where: { id: FIRST_CUE } }, timeout_ms: 20_000 },
+      { do: 'clip_stop', caption: 'The first generated cue, with the film ducked under it' },
+    ],
+    assertions: [
+      // the packaged track, not a fixture: every standard cue loaded
+      { kind: 'seen', expect: { name: 'loader.load', where: { ok: 'true', cues: '55' } } },
+      { kind: 'order', expect: [
+        { name: 'loader.load', where: { ok: 'true' } },
+        { name: 'controls.announce', where: { kind: 'ready' } },
+      ] },
+      { kind: 'order', expect: [
+        { name: 'scheduler.fire', where: { id: FIRST_CUE } },
+        { name: 'audio.duck', where: { id: FIRST_CUE, to_pct: '25' } },
+        progress, // the film kept decoding under the cue
+        { name: 'cue.audio', where: { state: 'ended' } },
+        { name: 'audio.restored', where: { id: FIRST_CUE } },
+      ] },
+      { kind: 'in_window', start: { name: 'audio.duck', where: { id: FIRST_CUE } }, end: { name: 'audio.restored', where: { id: FIRST_CUE } },
+        window_ms: [0, 11_500], tolerance_ms: 300 },
+    ],
+    cannot_show: 'That a listener heard the film get quieter (closes on hardware), and that the cue avoids dialogue beyond this first gap.',
+  },
+
 ];

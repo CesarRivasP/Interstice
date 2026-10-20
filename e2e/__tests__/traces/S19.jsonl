@@ -1,0 +1,31 @@
+{"boot":"expkzh","seq":0,"t_dev_ms":1792516925547,"t_host":"2026-10-20T17:22:06.460Z","line":"INTERSTICE.asset.segments n=123 init=set","name":"asset.segments","fields":{"n":"123","init":"set"}}
+{"boot":"expkzh","seq":1,"t_dev_ms":1792516925563,"t_host":"2026-10-20T17:22:08.143Z","line":"INTERSTICE.asset.tracks n=1","name":"asset.tracks","fields":{"n":"1"}}
+{"boot":"expkzh","seq":2,"t_dev_ms":1792516925563,"t_host":"2026-10-20T17:22:08.143Z","line":"INTERSTICE.app.mode e2e=true host=http://localhost:8099","name":"app.mode","fields":{"e2e":"true","host":"http://localhost:8099"}}
+{"boot":"expkzh","seq":3,"t_dev_ms":1792516929249,"t_host":"2026-10-20T17:22:09.907Z","line":"INTERSTICE.app.play id=e2e-fixture","name":"app.play","fields":{"id":"e2e-fixture"}}
+{"boot":"expkzh","seq":4,"t_dev_ms":1792516929511,"t_host":"2026-10-20T17:22:09.960Z","line":"INTERSTICE.overlay.shown status=loading spoken=Loading title","name":"overlay.shown","fields":{"status":"loading","spoken":"Loading title"}}
+{"boot":"expkzh","seq":5,"t_dev_ms":1792516929513,"t_host":"2026-10-20T17:22:09.963Z","line":"INTERSTICE.player.surface created handle=1","name":"player.surface","fields":{"_":"created","handle":"1"}}
+{"boot":"expkzh","seq":6,"t_dev_ms":1792516929514,"t_host":"2026-10-20T17:22:09.973Z","line":"INTERSTICE.player.surface created handle=1","name":"player.surface","fields":{"_":"created","handle":"1"}}
+{"boot":"expkzh","seq":7,"t_dev_ms":1792516929525,"t_host":"2026-10-20T17:22:09.980Z","line":"INTERSTICE.loader.miss path=http://localhost:8099/fx/e2e-fixture.standard.track.json","name":"loader.miss","fields":{"path":"http://localhost:8099/fx/e2e-fixture.standard.track.json"}}
+{"boot":"expkzh","seq":8,"t_dev_ms":1792516929531,"t_host":"2026-10-20T17:22:09.982Z","line":"INTERSTICE.scheduler.load cues=0","name":"scheduler.load","fields":{"cues":"0"}}
+{"boot":"expkzh","seq":9,"t_dev_ms":1792516929578,"t_host":"2026-10-20T17:22:10.028Z","line":"INTERSTICE.controls.announce kind=missing","name":"controls.announce","fields":{"kind":"missing"}}
+{"boot":"expkzh","seq":10,"t_dev_ms":1792516929579,"t_host":"2026-10-20T17:22:10.028Z","line":"INTERSTICE.ad.state kind=missing","name":"ad.state","fields":{"kind":"missing"}}
+{"boot":"expkzh","seq":11,"t_dev_ms":1792516929591,"t_host":"2026-10-20T17:22:10.040Z","line":"INTERSTICE.buffer.appended init bytes=1346 held=0","name":"buffer.appended","fields":{"_":"init","bytes":"1346","held":"0"}}
+{"boot":"expkzh","seq":12,"t_dev_ms":1792516929607,"t_host":"2026-10-20T17:22:10.059Z","line":"INTERSTICE.buffer.appended seg0 bytes=142525 held=0","name":"buffer.appended","fields":{"_":"seg0","bytes":"142525","held":"0"}}
+{"boot":"expkzh","seq":13,"t_dev_ms":1792516929649,"t_host":"2026-10-20T17:22:10.099Z","line":"INTERSTICE.buffer.appended seg1 bytes=1705047 held=1","name":"buffer.appended","fields":{"_":"seg1","bytes":"1705047","held":"1"}}
+{"boot":"expkzh","seq":14,"t_dev_ms":1792516929682,"t_host":"2026-10-20T17:22:10.132Z","line":"INTERSTICE.buffer.appended seg2 bytes=1167968 held=2","name":"buffer.appended","fields":{"_":"seg2","bytes":"1167968","held":"2"}}
+{"boot":"expkzh","seq":15,"t_dev_ms":1792516929704,"t_host":"2026-10-20T17:22:10.155Z","line":"INTERSTICE.buffer.appended seg3 bytes=1030224 held=3","name":"buffer.appended","fields":{"_":"seg3","bytes":"1030224","held":"3"}}
+{"boot":"expkzh","seq":16,"t_dev_ms":1792516929726,"t_host":"2026-10-20T17:22:10.175Z","line":"INTERSTICE.buffer.appended seg4 bytes=1059274 held=4","name":"buffer.appended","fields":{"_":"seg4","bytes":"1059274","held":"4"}}
+{"boot":"expkzh","seq":17,"t_dev_ms":1792516929751,"t_host":"2026-10-20T17:22:10.203Z","line":"INTERSTICE.buffer.appended seg5 bytes=965727 held=5","name":"buffer.appended","fields":{"_":"seg5","bytes":"965727","held":"5"}}
+{"boot":"expkzh","seq":18,"t_dev_ms":1792516929752,"t_host":"2026-10-20T17:22:10.203Z","line":"INTERSTICE.player.opened segments=10 init=yes","name":"player.opened","fields":{"segments":"10","init":"yes"}}
+{"boot":"expkzh","seq":19,"t_dev_ms":1792516929752,"t_host":"2026-10-20T17:22:10.203Z","line":"INTERSTICE.player.play resolved","name":"player.play","fields":{"_":"resolved"}}
+{"boot":"expkzh","seq":20,"t_dev_ms":1792516929753,"t_host":"2026-10-20T17:22:10.210Z","line":"INTERSTICE.overlay.cleared","name":"overlay.cleared","fields":{}}
+{"boot":"expkzh","seq":21,"t_dev_ms":1792516929754,"t_host":"2026-10-20T17:22:10.210Z","line":"INTERSTICE.player.stalled","name":"player.stalled","fields":{}}
+{"boot":"expkzh","seq":22,"t_dev_ms":1792516929758,"t_host":"2026-10-20T17:22:10.213Z","line":"INTERSTICE.overlay.shown status=stalled spoken=The video paused while it loads more. Press back to return to the list.","name":"overlay.shown","fields":{"status":"stalled","spoken":"The video paused while it loads more. Press back to return to the list."}}
+{"boot":"expkzh","seq":23,"t_dev_ms":1792516930852,"t_host":"2026-10-20T17:22:11.311Z","line":"INTERSTICE.player.resumed from=stalled","name":"player.resumed","fields":{"from":"stalled"}}
+{"boot":"expkzh","seq":24,"t_dev_ms":1792516930875,"t_host":"2026-10-20T17:22:11.334Z","line":"INTERSTICE.overlay.cleared","name":"overlay.cleared","fields":{}}
+{"boot":"expkzh","seq":25,"t_dev_ms":1792516931105,"t_host":"2026-10-20T17:22:11.556Z","line":"INTERSTICE.player.progress pos_ms=145","name":"player.progress","fields":{"pos_ms":"145"}}
+{"boot":"expkzh","seq":26,"t_dev_ms":1792516932111,"t_host":"2026-10-20T17:22:12.563Z","line":"INTERSTICE.player.progress pos_ms=1162","name":"player.progress","fields":{"pos_ms":"1162"}}
+{"boot":"expkzh","seq":27,"t_dev_ms":1792516933117,"t_host":"2026-10-20T17:22:13.567Z","line":"INTERSTICE.player.progress pos_ms=2168","name":"player.progress","fields":{"pos_ms":"2168"}}
+{"boot":"expkzh","seq":28,"t_dev_ms":1792516934118,"t_host":"2026-10-20T17:22:14.568Z","line":"INTERSTICE.player.progress pos_ms=3169","name":"player.progress","fields":{"pos_ms":"3169"}}
+{"boot":"expkzh","seq":29,"t_dev_ms":1792516935120,"t_host":"2026-10-20T17:22:15.569Z","line":"INTERSTICE.player.progress pos_ms=4171","name":"player.progress","fields":{"pos_ms":"4171"}}
+{"boot":"expkzh","seq":30,"t_dev_ms":1792516936122,"t_host":"2026-10-20T17:22:16.572Z","line":"INTERSTICE.player.progress pos_ms=5173","name":"player.progress","fields":{"pos_ms":"5173"}}

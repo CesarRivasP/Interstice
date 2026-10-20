@@ -1,0 +1,727 @@
+{
+  "version": "1",
+  "asset_id": "tears-of-steel",
+  "generated_at": "2026-10-20T12:37:50.546Z",
+  "source_subtitles": "media/tears-of-steel.en.srt",
+  "verbosity": "standard",
+  "model_id": "gemini-3-flash-preview+gemini-3.1-flash-lite+gemini-3.6-flash+gemini-3.8-flash+gemini-3.7-flash+gemini-3.5-flash",
+  "cues": [
+    {
+      "id": "cue_0-11500",
+      "start_ms": 0,
+      "end_ms": 11500,
+      "words": 24,
+      "text": "A title card reads, \"the Mango Open Movie project.\" Next, huge rocket thruster cones loom above a massive industrial launch complex shrouded in mist.",
+      "audio_uri": "audio/cue_0-11500.standard.m4a",
+      "source_frames_ms": [
+        5750,
+        8997
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_11500-23000",
+      "start_ms": 11500,
+      "end_ms": 23000,
+      "words": 21,
+      "text": "One by one, the thrusters ignite, blasting blazing white fire downwards, lighting up the cityscape as the rocket prepares for launch.",
+      "audio_uri": "audio/cue_11500-23000.standard.m4a",
+      "source_frames_ms": [
+        13538,
+        17250,
+        18497
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_45000-50000",
+      "start_ms": 45000,
+      "end_ms": 50000,
+      "words": 9,
+      "text": "A blue wireframe figure dances beside an orange one.",
+      "audio_uri": "audio/cue_45000-50000.standard.m4a",
+      "source_frames_ms": [
+        47500,
+        49872
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_53500-61000",
+      "start_ms": 53500,
+      "end_ms": 61000,
+      "words": 15,
+      "text": "A man with dreadlocks works at a laboratory console. Later, a pink holographic brain floats.",
+      "audio_uri": "audio/cue_53500-61000.standard.m4a",
+      "source_frames_ms": [
+        53747,
+        56747,
+        57250
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_63000-73800",
+      "start_ms": 63000,
+      "end_ms": 73800,
+      "words": 23,
+      "text": "On a black screen, silver text reads, \"TEARS OF STEEL.\" Next, a futuristic city unfolds with traditional buildings beneath a floating mechanical craft.",
+      "audio_uri": "audio/cue_63000-73800.standard.m4a",
+      "source_frames_ms": [
+        64538,
+        68400,
+        69997
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_73800-84600",
+      "start_ms": 73800,
+      "end_ms": 84600,
+      "words": 22,
+      "text": "A sniper in a bell tower aims at a ship. Below him, a newspaper covering Thom's face reads, 'ROBOTICIST CREATES KILLER ROBOTS'.",
+      "audio_uri": "audio/cue_73800-84600.standard.m4a",
+      "source_frames_ms": [
+        74163,
+        79200,
+        79455
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_84600-95400",
+      "start_ms": 84600,
+      "end_ms": 95400,
+      "words": 19,
+      "text": "Through the sniper’s scope, the floating vessel drifts closer. It is cluttered with spotlights, satellites, and various mechanical gear.",
+      "audio_uri": "audio/cue_84600-95400.standard.m4a",
+      "source_frames_ms": [
+        84913,
+        90000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_95400-106200",
+      "start_ms": 95400,
+      "end_ms": 106200,
+      "words": 23,
+      "text": "Thom pulls the newspaper from his face and looks up at the ceiling. The sniper remains in the background, staring into the scope.",
+      "audio_uri": "audio/cue_95400-106200.standard.m4a",
+      "source_frames_ms": [
+        100800
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_106200-117000",
+      "start_ms": 106200,
+      "end_ms": 117000,
+      "words": 25,
+      "text": "The floating vessel hovers directly over the city roofs, its bright spotlights shining. The sniper tracks the ship through his rifle scope, holding his position.",
+      "audio_uri": "audio/cue_106200-117000.standard.m4a",
+      "source_frames_ms": [
+        111600,
+        116788
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_119000-131000",
+      "start_ms": 119000,
+      "end_ms": 131000,
+      "words": 25,
+      "text": "Thom lies on his back with his eyes closed, his hand resting on his chest. Then, he sits up and rubs his face, looking weary.",
+      "audio_uri": "audio/cue_119000-131000.standard.m4a",
+      "source_frames_ms": [
+        119955,
+        125000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_133000-136000",
+      "start_ms": 133000,
+      "end_ms": 136000,
+      "words": 3,
+      "text": "Thom looks away.",
+      "audio_uri": "audio/cue_133000-136000.standard.m4a",
+      "source_frames_ms": [
+        134500
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_138000-148600",
+      "start_ms": 138000,
+      "end_ms": 148600,
+      "words": 24,
+      "text": "The sniper continues to peer through the rifle scope. Nearby, an older man with white hair steps through a doorway, holding onto a rope.",
+      "audio_uri": "audio/cue_138000-148600.standard.m4a",
+      "source_frames_ms": [
+        139997,
+        143300,
+        143372
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_148600-159200",
+      "start_ms": 148600,
+      "end_ms": 159200,
+      "words": 23,
+      "text": "The man steps off a balcony and swings across the cavernous room, dangling from the rope in front of a giant pipe organ.",
+      "audio_uri": "audio/cue_148600-159200.standard.m4a",
+      "source_frames_ms": [
+        153900
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_159200-169800",
+      "start_ms": 159200,
+      "end_ms": 169800,
+      "words": 24,
+      "text": "The white-haired man swings past a thick rope in the center of the frame, his back to the camera as he nears the machinery.",
+      "audio_uri": "audio/cue_159200-169800.standard.m4a",
+      "source_frames_ms": [
+        164500
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_169800-180400",
+      "start_ms": 169800,
+      "end_ms": 180400,
+      "words": 23,
+      "text": "The white-haired man stands in a doorway, observing the room. He looks to his left, his expression serious, before he turns away slightly.",
+      "audio_uri": "audio/cue_169800-180400.standard.m4a",
+      "source_frames_ms": [
+        172372,
+        175100
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_180400-191000",
+      "start_ms": 180400,
+      "end_ms": 191000,
+      "words": 21,
+      "text": "The white-haired man walks towards a desk in the overgrown room. He approaches Thom, who remains seated and looks toward him.",
+      "audio_uri": "audio/cue_180400-191000.standard.m4a",
+      "source_frames_ms": [
+        183330,
+        185700
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_195000-197000",
+      "start_ms": 195000,
+      "end_ms": 197000,
+      "words": 4,
+      "text": "The sniper holds Thom.",
+      "audio_uri": "audio/cue_195000-197000.standard.m4a",
+      "source_frames_ms": [
+        196000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_217000-223000",
+      "start_ms": 217000,
+      "end_ms": 223000,
+      "words": 13,
+      "text": "Thom stands on a bridge, arms outstretched as holographic squares envelop his body.",
+      "audio_uri": "audio/cue_217000-223000.standard.m4a",
+      "source_frames_ms": [
+        220000,
+        222497
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_227000-231000",
+      "start_ms": 227000,
+      "end_ms": 231000,
+      "words": 8,
+      "text": "The sniper points at Celia, standing beside them.",
+      "audio_uri": "audio/cue_227000-231000.standard.m4a",
+      "source_frames_ms": [
+        229000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_248000-259000",
+      "start_ms": 248000,
+      "end_ms": 259000,
+      "words": 25,
+      "text": "The white-haired man stands on the bridge with Celia and the sniper, who places a hand on his back as holographic squares float around them.",
+      "audio_uri": "audio/cue_248000-259000.standard.m4a",
+      "source_frames_ms": [
+        253497,
+        253500,
+        257997
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_259000-270000",
+      "start_ms": 259000,
+      "end_ms": 270000,
+      "words": 24,
+      "text": "The translucent boxes pulse around his torso, expanding and contracting as Thom remains standing, looking down toward his own waist in the center frame.",
+      "audio_uri": "audio/cue_259000-270000.standard.m4a",
+      "source_frames_ms": [
+        264500
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_270000-281000",
+      "start_ms": 270000,
+      "end_ms": 281000,
+      "words": 25,
+      "text": "Thom walks along a stone bridge in Amsterdam. He wears a patterned jacket with yellow accents, passing a yellow traffic sign marked with an F.",
+      "audio_uri": "audio/cue_270000-281000.standard.m4a",
+      "source_frames_ms": [
+        275500
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_281000-292000",
+      "start_ms": 281000,
+      "end_ms": 292000,
+      "words": 23,
+      "text": "Thom stops on the bridge and faces the towering, complex mechanical suit. The machine looms over him, its metallic components intricate and exposed.",
+      "audio_uri": "audio/cue_281000-292000.standard.m4a",
+      "source_frames_ms": [
+        286500
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_305000-316000",
+      "start_ms": 305000,
+      "end_ms": 316000,
+      "words": 24,
+      "text": "A close-up of a metallic, mechanical robot face with glowing circular eyes. Cut to Celia, then Thom, both looking toward the robot with concern.",
+      "audio_uri": "audio/cue_305000-316000.standard.m4a",
+      "source_frames_ms": [
+        307788,
+        310500,
+        310663
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_323000-325000",
+      "start_ms": 323000,
+      "end_ms": 325000,
+      "words": 3,
+      "text": "Thom looks away.",
+      "audio_uri": "audio/cue_323000-325000.standard.m4a",
+      "source_frames_ms": [
+        324000,
+        324163
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_328000-339000",
+      "start_ms": 328000,
+      "end_ms": 339000,
+      "words": 25,
+      "text": "The sun sets behind architectural domes and cranes in Amsterdam. Through a camera lens, a mechanical suit jumps between the rooftop gables of old houses.",
+      "audio_uri": "audio/cue_328000-339000.standard.m4a",
+      "source_frames_ms": [
+        328538,
+        330372,
+        333500
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_341000-343000",
+      "start_ms": 341000,
+      "end_ms": 343000,
+      "words": 4,
+      "text": "The sniper looks away.",
+      "audio_uri": "audio/cue_341000-343000.standard.m4a",
+      "source_frames_ms": [
+        341288,
+        342000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_350000-356000",
+      "start_ms": 350000,
+      "end_ms": 356000,
+      "words": 15,
+      "text": "A quick glitch flashes back to the control room, then Thom watches Celia's metallic hand.",
+      "audio_uri": "audio/cue_350000-356000.standard.m4a",
+      "source_frames_ms": [
+        350288,
+        352788,
+        353000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_363000-365000",
+      "start_ms": 363000,
+      "end_ms": 365000,
+      "words": 4,
+      "text": "Celia glares at Thom.",
+      "audio_uri": "audio/cue_363000-365000.standard.m4a",
+      "source_frames_ms": [
+        364000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_368500-371500",
+      "start_ms": 368500,
+      "end_ms": 371500,
+      "words": 4,
+      "text": "Celia grabs Thom's mouth.",
+      "audio_uri": "audio/cue_368500-371500.standard.m4a",
+      "source_frames_ms": [
+        369038,
+        370000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_375000-379000",
+      "start_ms": 375000,
+      "end_ms": 379000,
+      "words": 8,
+      "text": "Thom presses the playback button with his palm.",
+      "audio_uri": "audio/cue_375000-379000.standard.m4a",
+      "source_frames_ms": [
+        377000,
+        377288,
+        378080
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_393000-396000",
+      "start_ms": 393000,
+      "end_ms": 396000,
+      "words": 6,
+      "text": "Celia's robotic hand holds Thom's mouth.",
+      "audio_uri": "audio/cue_393000-396000.standard.m4a",
+      "source_frames_ms": [
+        394500
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_397000-407000",
+      "start_ms": 397000,
+      "end_ms": 407000,
+      "words": 18,
+      "text": "Thom looks away, looking unsure. The sniper turns his gaze, looking at the desk in front of him.",
+      "audio_uri": "audio/cue_397000-407000.standard.m4a",
+      "source_frames_ms": [
+        399080,
+        400497,
+        402000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_408000-410000",
+      "start_ms": 408000,
+      "end_ms": 410000,
+      "words": 3,
+      "text": "Celia holds Thom.",
+      "audio_uri": "audio/cue_408000-410000.standard.m4a",
+      "source_frames_ms": [
+        409000,
+        409163
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_411000-419000",
+      "start_ms": 411000,
+      "end_ms": 419000,
+      "words": 17,
+      "text": "Celia keeps her metallic hand pressed against Thom's mouth. Then, a quick cut shows Thom's worried face.",
+      "audio_uri": "audio/cue_411000-419000.standard.m4a",
+      "source_frames_ms": [
+        415000,
+        415080,
+        418872
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_423000-428000",
+      "start_ms": 423000,
+      "end_ms": 428000,
+      "words": 10,
+      "text": "A close-up of a man with a mechanical eye attachment.",
+      "audio_uri": "audio/cue_423000-428000.standard.m4a",
+      "source_frames_ms": [
+        425500,
+        425580,
+        427872
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_431000-441333",
+      "start_ms": 431000,
+      "end_ms": 441333,
+      "words": 23,
+      "text": "A soldier in dark gear aims a large rifle from a high balcony, as a massive mechanical walker moves into position beside him.",
+      "audio_uri": "audio/cue_431000-441333.standard.m4a",
+      "source_frames_ms": [
+        431538,
+        434247,
+        436166
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_441333-451667",
+      "start_ms": 441333,
+      "end_ms": 451667,
+      "words": 22,
+      "text": "Thom looks down at his hand, then tilts his head and gazes directly at Celia, which is positioned in front of him.",
+      "audio_uri": "audio/cue_441333-451667.standard.m4a",
+      "source_frames_ms": [
+        444955,
+        446500
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_451667-462000",
+      "start_ms": 451667,
+      "end_ms": 462000,
+      "words": 23,
+      "text": "Thom holds a mechanical device up to his face. He kneels with others in a cluttered room filled with discarded equipment and debris.",
+      "audio_uri": "audio/cue_451667-462000.standard.m4a",
+      "source_frames_ms": [
+        456833,
+        461872
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_462000-472333",
+      "start_ms": 462000,
+      "end_ms": 472333,
+      "words": 23,
+      "text": "A dark, blurry view of a massive mechanical foot stepping down. Then, Thom gazes intently while holding his mechanical device toward the camera.",
+      "audio_uri": "audio/cue_462000-472333.standard.m4a",
+      "source_frames_ms": [
+        464913,
+        467166,
+        468413
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_472333-482667",
+      "start_ms": 472333,
+      "end_ms": 482667,
+      "words": 22,
+      "text": "Several figures in white gear kneel in a wreckage-filled room, aiming weapons at a large, metallic mechanical walker invading the space nearby.",
+      "audio_uri": "audio/cue_472333-482667.standard.m4a",
+      "source_frames_ms": [
+        472455,
+        477500,
+        480288
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_482667-493000",
+      "start_ms": 482667,
+      "end_ms": 493000,
+      "words": 20,
+      "text": "Thom presses switches on a control panel, then looks down anxiously. A metallic structure is illuminated by bright yellow lights.",
+      "audio_uri": "audio/cue_482667-493000.standard.m4a",
+      "source_frames_ms": [
+        483497,
+        483997,
+        487833
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_494000-502000",
+      "start_ms": 494000,
+      "end_ms": 502000,
+      "words": 17,
+      "text": "Thom, wearing a tactical harness, grips a thick rope while looking up at a massive pipe organ.",
+      "audio_uri": "audio/cue_494000-502000.standard.m4a",
+      "source_frames_ms": [
+        498000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_508000-518000",
+      "start_ms": 508000,
+      "end_ms": 518000,
+      "words": 20,
+      "text": "Thom stands on a bridge, leaning back into Celia's massive robotic claws. He looks away with a somber, heavy expression.",
+      "audio_uri": "audio/cue_508000-518000.standard.m4a",
+      "source_frames_ms": [
+        510038,
+        513000,
+        517955
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_520000-527000",
+      "start_ms": 520000,
+      "end_ms": 527000,
+      "words": 16,
+      "text": "The massive mechanical walker stomps through a debris-filled room as dust and steam fill the air.",
+      "audio_uri": "audio/cue_520000-527000.standard.m4a",
+      "source_frames_ms": [
+        521080,
+        523500
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_527000-534000",
+      "start_ms": 527000,
+      "end_ms": 534000,
+      "words": 15,
+      "text": "Brilliant lights surround the massive, weathered structure before focusing on intricate, grinding mechanical piston joints.",
+      "audio_uri": "audio/cue_527000-534000.standard.m4a",
+      "source_frames_ms": [
+        527497,
+        530500,
+        531288
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_536000-538000",
+      "start_ms": 536000,
+      "end_ms": 538000,
+      "words": 3,
+      "text": "Progress bar loading.",
+      "audio_uri": "audio/cue_536000-538000.standard.m4a",
+      "source_frames_ms": [
+        537000,
+        537788
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_539000-549000",
+      "start_ms": 539000,
+      "end_ms": 549000,
+      "words": 22,
+      "text": "A man monitors glowing data screens. Nearby, Thom stands by the massive mechanical walker, gently placing his hand on its metallic head.",
+      "audio_uri": "audio/cue_539000-549000.standard.m4a",
+      "source_frames_ms": [
+        539288,
+        543247,
+        544000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_549000-559000",
+      "start_ms": 549000,
+      "end_ms": 559000,
+      "words": 21,
+      "text": "The man stares intently, his face illuminated by a warm glow. His brow is furrowed and his mouth is slightly parted.",
+      "audio_uri": "audio/cue_549000-559000.standard.m4a",
+      "source_frames_ms": [
+        554000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_560000-562000",
+      "start_ms": 560000,
+      "end_ms": 562000,
+      "words": 3,
+      "text": "Thom looks up.",
+      "audio_uri": "audio/cue_560000-562000.standard.m4a",
+      "source_frames_ms": [
+        561000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_564000-566000",
+      "start_ms": 564000,
+      "end_ms": 566000,
+      "words": 3,
+      "text": "The man sighs.",
+      "audio_uri": "audio/cue_564000-566000.standard.m4a",
+      "source_frames_ms": [
+        564372,
+        565000
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_567000-577500",
+      "start_ms": 567000,
+      "end_ms": 577500,
+      "words": 24,
+      "text": "The massive mechanical walker lumbers through the shadows of the cluttered room, its heavy, metallic joints shifting as it moves past piles of debris.",
+      "audio_uri": "audio/cue_567000-577500.standard.m4a",
+      "source_frames_ms": [
+        572250
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_577500-588000",
+      "start_ms": 577500,
+      "end_ms": 588000,
+      "words": 21,
+      "text": "Thom stands beneath the heavy mechanical walker in the cavernous, debris-strewn workshop, gazing toward a large, intricate opening in the distance.",
+      "audio_uri": "audio/cue_577500-588000.standard.m4a",
+      "source_frames_ms": [
+        582750
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_709500-719917",
+      "start_ms": 709500,
+      "end_ms": 719917,
+      "words": 23,
+      "text": "The massive mechanical walker's complex, grinding parts and weathered armor plating fill the frame, shifting and clanking together as it continues to walk.",
+      "audio_uri": "audio/cue_709500-719917.standard.m4a",
+      "source_frames_ms": [
+        714708
+      ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_719917-730333",
+      "start_ms": 719917,
+      "end_ms": 730333,
+      "words": 21,
+      "text": "Thom sits amidst piles of scrap metal, staring at a small photograph in his hand as sunlight filters through the workshop.",
+      "audio_uri": "audio/cue_719917-730333.standard.m4a",
+      "source_frames_ms": [
+        725125
+      ],
+      "status": "ok"
+    }
+  ]
+}

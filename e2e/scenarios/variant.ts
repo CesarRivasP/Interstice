@@ -198,4 +198,31 @@ export const VARIANT: Scenario[] = [
     blocked_by: 'D6 — the app has no seek control',
     steps: [], assertions: [],
   },
+  {
+    // R11: moved here from the Release suite, where it was S05. Since app R57
+    // every title the Release build lists has a packaged track, so the missing
+    // state is reached by withholding the FIXTURE's track instead.
+    id: 'S19', name: 'no-track-is-stated', suite: 'variant', fixture: true,
+    use_case: 'The title has no description track; the app says so and the film plays anyway.',
+    covers: ['AC8'],
+    faults: [{ path: /e2e-fixture\.standard\.track\.json$/, kind: 'missing' }],
+    steps: [
+      ...select,
+      { do: 'wait', for: { name: 'controls.announce' } },
+      { do: 'wait', for: progress, timeout_ms: 20_000 },
+      { do: 'shot', caption: 'The missing-track state, on screen' },
+      { do: 'wait', for: past(5_000), timeout_ms: 20_000 },
+    ],
+    assertions: [
+      { kind: 'seen', expect: { name: 'controls.announce', where: { kind: 'missing' } } },
+      // announced AFTER the loader looked, never before (R45-F2, R47-W1)
+      { kind: 'order', expect: [{ name: 'loader.miss' }, { name: 'controls.announce', where: { kind: 'missing' } }] },
+      // the film is still moving AFTER the loader gave up
+      { kind: 'order', expect: [{ name: 'loader.miss' }, progress, progress] },
+      { kind: 'absent', expect: { name: 'player.stalled' },
+        after: progress,
+        before: past(5_000),
+        emitter: 'src/screens/PlayerScreen.tsx onStalled -> player.stalled' },
+    ],
+  },
 ];

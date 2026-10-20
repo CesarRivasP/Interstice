@@ -93,6 +93,15 @@ describe('in_window', () => {
     expect(positionAt([ev('INTERSTICE.audio.duck id=c1', 1)], 0)).toBeNull();
     expect(evaluate(w, [ev('INTERSTICE.audio.duck id=c1', 1), ev('INTERSTICE.audio.restored id=c1', 2)]).ok).toBe(false);
   });
+
+  // Fails if: only player.progress states the playhead. A cue whose window
+  // opens the film fires on the first tick, ahead of the first progress line,
+  // and its duck had no position (R11, S07 on the device: fire at pos_ms=142).
+  it('reads the playhead from a scheduler line too, and only one that carries pos_ms', () => {
+    const early = [ev('INTERSTICE.scheduler.fire id=c1 pos_ms=142 window=[0,11500)', 1000), ev('INTERSTICE.audio.duck id=c1', 1006)];
+    expect(positionAt(early, 1)).toBe(148);
+    expect(positionAt([ev('INTERSTICE.scheduler.load cues=55', 1), ev('INTERSTICE.audio.duck id=c1', 2)], 1)).toBeNull();
+  });
 });
 
 describe('integrity', () => {

@@ -364,8 +364,9 @@ limits:
 
   suite:
     basis: decided
-    release: [S01, S02, S03, S04, S05]
-    variant: [S10, S11, S12, S13, S14, S15, S16, S17, S18]
+    release: [S01, S04, S06, S07]
+    variant: [S10, S11, S12, S13, S14, S15, S16, S17, S18, S19]
+    retired: [S02, S03, S05]
     note: 'ids are stable and never recycled. Each scenario names the app criteria it
            covers by id only (decisions.ac_text_read_not_copied); `covers` below refers to
            `docs/features/interstice/_facts.yml` acceptance[].'
@@ -373,18 +374,28 @@ limits:
       - { id: S01, name: launch-and-list, suite: release, covers: [AC1, AC2],
           use_case: 'the viewer opens the app and lands on the title list with a title focused',
           decisive: 'INTERSTICE.app.mode e2e=false, INTERSTICE.asset.segments with n > 0 and init=set; ENTER then yields INTERSTICE.app.play' }
-      - { id: S02, name: play-to-end, suite: release, covers: [AC1],
+      - { id: S02, name: play-to-end, suite: release, covers: [AC1], retired: true,
+          retired_by: 'R11 — the package carries the film, not the 20 s clip (app R57); replaced by S06',
           use_case: 'the viewer plays the demo clip from start to finish',
           decisive: 'player.opened, one buffer.appended per segment, buffer.complete, player.play resolved, player.progress advancing to the end, and buffer.evicted EXACTLY once' }
-      - { id: S03, name: probe-cue-ducks, suite: release, covers: [AC5],
+      - { id: S03, name: probe-cue-ducks, suite: release, covers: [AC5], retired: true,
+          retired_by: 'R11 — the probe cue is gone; the film''s own generated track speaks (app R57); replaced by S07',
           use_case: 'a description cue speaks over the film and the film comes back to full',
           decisive: 'cue.fire, audio.duck to_pct=25, cue.audio state=ended, audio.restored, in that order, with player.progress advancing between duck and restore' }
       - { id: S04, name: back-returns-to-list, suite: release, covers: [AC2],
           use_case: 'the viewer presses BACK during playback and is on the list again, able to start over',
           decisive: 'player.back from=playing, then a second ENTER yields a second app.play' }
-      - { id: S05, name: no-track-is-stated, suite: release, covers: [AC8],
+      - { id: S05, name: no-track-is-stated, suite: release, covers: [AC8], retired: true,
+          retired_by: 'R11 — every Release title now has a packaged track, so the state is unreachable there; carried on by S19 in the variant',
           use_case: 'the title has no description track; the app says so and the film plays anyway',
           decisive: 'loader.miss, controls.announce kind=missing, and player.progress still advancing afterwards' }
+      - { id: S06, name: film-plays-and-windows, suite: release, covers: [AC1],
+          use_case: 'the viewer plays the film; the buffer runs ahead of the picture and lets go behind it',
+          decisive: 'asset.segments n > 100, player.opened then player.play then player.progress, progress past 45000, buffer.evicted with held <= 9 and never above, no buffer.complete, no buffer.failed',
+          note: 'the evict half of limits.mse_buffer, on the device, for the first time. It supports AC23 and cannot close it: 45 s of a 12 min film, on the Virtual Device, not the worst device in the matrix' }
+      - { id: S07, name: generated-cue-ducks, suite: release, covers: [AC4, AC5],
+          use_case: 'the film''s first generated cue speaks inside its gap, over the film, and the film comes back to full',
+          decisive: 'loader.load ok=true cues=55 before controls.announce kind=ready; scheduler.fire, audio.duck to_pct=25, player.progress, cue.audio state=ended, audio.restored for cue_0-11500, in that order; duck and restore inside [0, 11500] within limits.timing.window_tolerance_ms' }
       - { id: S10, name: cues-stay-in-window, suite: variant, covers: [AC4], fixture: true,
           use_case: 'three cues each start and finish inside their window',
           decisive: 'per cue: audio.duck at a position inside the window and audio.restored before its end' }
@@ -418,6 +429,10 @@ limits:
           decisive: 'buffer.evicted repeatedly with held= bounded',
           note: 'Virtual Device only. It supports the criterion and cannot close it: the
                  criterion names the worst device in the matrix.' }
+      - { id: S19, name: no-track-is-stated, suite: variant, covers: [AC8], fixture: true,
+          use_case: 'the title has no description track; the app says so and the film plays anyway',
+          decisive: 'loader.miss, controls.announce kind=missing after it, and player.progress still advancing afterwards',
+          note: 'S05 until R11, when the Release build stopped having a title without a track. The fixture''s standard track is answered with a 404' }
 
   coverage:
     basis: decided

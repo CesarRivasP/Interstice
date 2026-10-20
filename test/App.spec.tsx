@@ -1,10 +1,10 @@
-import 'react-native';
+import {Image} from 'react-native';
 import {fireEvent, render, waitFor} from '@testing-library/react-native';
 import * as React from 'react';
 
 import {instances} from '@amazon-devices/react-native-w3cmedia';
 
-import {App, readJson} from '../src/App';
+import {App, packagedTrack, readJson} from '../src/App';
 import {pressBack} from './setup';
 
 /**
@@ -103,6 +103,38 @@ describe('App — readJson, the loader\'s view of a track file', () => {
     const got = await readJson('assets/x.standard.track.json');
     expect(typeof got).toBe('string');
     expect(got === null || typeof got === 'object').toBe(false);
+  });
+});
+
+/**
+ * R57: the film's track travels inside the package. metro inlines a required
+ * .json, so there is no file to fetch at the product path; readJson hands over
+ * the packaged object, its relative audio paths resolved to packaged assets.
+ */
+describe('App — the packaged track', () => {
+  const PATH = '/pkg/bundle/assets/src/assets/tears-of-steel.standard.track.json';
+  const realFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = realFetch;
+    jest.restoreAllMocks();
+  });
+
+  // Fails if: the device fetches a file metro never copied, and the viewer of
+  // a title that HAS a track is told there is none.
+  it('is read from the package, not fetched, with every audio_uri resolved', async () => {
+    jest.spyOn(Image, 'resolveAssetSource').mockReturnValue({uri: 'file:///pkg/cue.m4a', width: 0, height: 0, scale: 1});
+    const fetchSpy = jest.fn();
+    global.fetch = fetchSpy as unknown as typeof fetch;
+    const track = (await readJson(PATH)) as {asset_id: string; cues: {status: string; audio_uri: string}[]};
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(track.asset_id).toBe('tears-of-steel');
+    expect(track.cues.length).toBeGreaterThan(0);
+    for (const cue of track.cues.filter(c => c.status === 'ok')) expect(cue.audio_uri).toBe('file:///pkg/cue.m4a');
+  });
+
+  it('leaves every other path to fetch — the VARIANT fixture and the missing levels', () => {
+    expect(packagedTrack('http://localhost:8099/fx/e2e-fixture.standard.track.json')).toBeUndefined();
+    expect(packagedTrack('/pkg/bundle/assets/src/assets/tears-of-steel.detailed.track.json')).toBeUndefined();
   });
 });
 

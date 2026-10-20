@@ -1,20 +1,20 @@
 {
-  "run_id": "2026-10-19T19-32-40-097Z-release",
-  "started_at": "2026-10-19T19:32:40.097Z",
+  "run_id": "2026-10-20T17-24-25-693Z-release",
+  "started_at": "2026-10-20T17:24:25.693Z",
   "suite": "release",
   "conditions": {
     "target_platform": "Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480)",
     "build": "Release aarch64, SDK 0.24.12112",
     "content_asset": "clip: 20 s of Tears of Steel, 4 segments, packaged"
   },
-  "app_commit": "f552e08",
+  "app_commit": "e0567b5",
   "package_version": "0.2.0",
   "capture_rung": "grpc",
   "input_route": "inputd-cli",
   "selftest": {
     "ran": true,
-    "scenarios_that_can_fail": 5,
-    "of": 5
+    "scenarios_that_can_fail": 4,
+    "of": 4
   },
   "restored_release": null,
   "results": [
@@ -33,22 +33,22 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 3164,
+          "at_ms": 3265,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 3907,
+          "at_ms": 3992,
           "action": "shot",
           "detail": "The title list on launch"
         },
         {
-          "at_ms": 5630,
+          "at_ms": 5796,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 5630,
+          "at_ms": 5796,
           "action": "wait",
           "detail": "app.play"
         }
@@ -58,7 +58,7 @@
           "kind": "seen",
           "expect": "app.mode e2e=false",
           "ok": true,
-          "matched_seq": 3
+          "matched_seq": 2
         },
         {
           "kind": "seen",
@@ -70,12 +70,12 @@
           "kind": "seen",
           "expect": "app.play id=tears-of-steel",
           "ok": true,
-          "matched_seq": 4
+          "matched_seq": 3
         }
       ],
       "spoken": [
         "Loading title",
-        "No description track was found for this title. Playback continues without description.",
+        "Audio description on, standard, 55 descriptions",
         "The video paused while it loads more. Press back to return to the list."
       ],
       "artifacts": [
@@ -87,164 +87,7 @@
         }
       ],
       "trace_path": "traces/S01.jsonl",
-      "duration_ms": 7294
-    },
-    {
-      "id": "S02",
-      "name": "play-to-end",
-      "suite": "release",
-      "use_case": "The viewer plays the demo clip from start to finish.",
-      "covers": [
-        "AC1"
-      ],
-      "fixture": false,
-      "verdict": "pass",
-      "reason": null,
-      "blocked_by": null,
-      "steps": [
-        {
-          "at_ms": 2917,
-          "action": "wait",
-          "detail": "asset.segments"
-        },
-        {
-          "at_ms": 4605,
-          "action": "keys",
-          "detail": "ENTER"
-        },
-        {
-          "at_ms": 4605,
-          "action": "wait",
-          "detail": "player.play"
-        },
-        {
-          "at_ms": 5258,
-          "action": "shot",
-          "detail": "The film playing"
-        },
-        {
-          "at_ms": 24797,
-          "action": "wait",
-          "detail": "player.progress"
-        },
-        {
-          "at_ms": 25052,
-          "action": "wait",
-          "detail": "buffer.evicted"
-        }
-      ],
-      "assertions": [
-        {
-          "kind": "order",
-          "expect": "buffer.complete → player.opened → player.play → player.progress",
-          "ok": true,
-          "matched_seq": 24
-        },
-        {
-          "kind": "count",
-          "expect": "buffer.appended _=/^seg/ ×4 (saw 4)",
-          "ok": true,
-          "matched_seq": 16
-        },
-        {
-          "kind": "seen",
-          "expect": "player.progress pos_ms=(checked)",
-          "ok": true,
-          "matched_seq": 49
-        },
-        {
-          "kind": "count",
-          "expect": "buffer.evicted ×1 (saw 1)",
-          "ok": true,
-          "matched_seq": 50
-        }
-      ],
-      "spoken": [
-        "Loading title",
-        "No description track was found for this title. Playback continues without description.",
-        "The video paused while it loads more. Press back to return to the list."
-      ],
-      "artifacts": [
-        {
-          "kind": "screenshot",
-          "path": "shots/S02-0.jpg",
-          "at_seq": 21,
-          "caption": "The film playing"
-        }
-      ],
-      "trace_path": "traces/S02.jsonl",
-      "duration_ms": 26790,
-      "cannot_show": "The full film: this is the 20 s clip."
-    },
-    {
-      "id": "S03",
-      "name": "probe-cue-ducks",
-      "suite": "release",
-      "use_case": "A description cue speaks over the film and the film comes back to full.",
-      "covers": [
-        "AC5"
-      ],
-      "fixture": false,
-      "verdict": "pass",
-      "reason": null,
-      "blocked_by": null,
-      "steps": [
-        {
-          "at_ms": 2857,
-          "action": "wait",
-          "detail": "asset.segments"
-        },
-        {
-          "at_ms": 4659,
-          "action": "keys",
-          "detail": "ENTER"
-        },
-        {
-          "at_ms": 6433,
-          "action": "wait",
-          "detail": "audio.duck"
-        },
-        {
-          "at_ms": 7416,
-          "action": "shot",
-          "detail": "During the cue"
-        },
-        {
-          "at_ms": 9066,
-          "action": "wait",
-          "detail": "audio.restored"
-        }
-      ],
-      "assertions": [
-        {
-          "kind": "order",
-          "expect": "cue.fire → audio.duck id=probe to_pct=25 → player.progress → cue.audio state=ended → audio.restored id=probe",
-          "ok": true,
-          "matched_seq": 32
-        }
-      ],
-      "spoken": [
-        "Loading title",
-        "No description track was found for this title. Playback continues without description.",
-        "The video paused while it loads more. Press back to return to the list."
-      ],
-      "artifacts": [
-        {
-          "kind": "screenshot",
-          "path": "shots/S03-0.jpg",
-          "at_seq": 25,
-          "caption": "During the cue"
-        },
-        {
-          "kind": "clip",
-          "path": "clips/S03.mp4",
-          "at_seq": null,
-          "caption": "The cue, with the film ducked under it"
-        }
-      ],
-      "trace_path": "traces/S03.jsonl",
-      "duration_ms": 19224,
-      "cannot_show": "That a listener heard the film get quieter. The volume property was set to 25% and restored; audible ducking closes on hardware."
+      "duration_ms": 7896
     },
     {
       "id": "S04",
@@ -260,42 +103,42 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 2656,
+          "at_ms": 3359,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 4474,
+          "at_ms": 5162,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 5791,
+          "at_ms": 6220,
           "action": "wait",
           "detail": "player.progress"
         },
         {
-          "at_ms": 7519,
+          "at_ms": 8396,
           "action": "keys",
           "detail": "BACK"
         },
         {
-          "at_ms": 7519,
+          "at_ms": 8396,
           "action": "wait",
           "detail": "player.back"
         },
         {
-          "at_ms": 8004,
+          "at_ms": 9108,
           "action": "shot",
           "detail": "Back on the list"
         },
         {
-          "at_ms": 9698,
+          "at_ms": 10825,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 9698,
+          "at_ms": 10825,
           "action": "wait",
           "detail": "player.opened"
         }
@@ -317,15 +160,16 @@
           "kind": "count",
           "expect": "player.opened ×2 (saw 2)",
           "ok": true,
-          "matched_seq": 50
+          "matched_seq": 51
         }
       ],
       "spoken": [
         "Loading title",
-        "No description track was found for this title. Playback continues without description.",
+        "Audio description on, standard, 55 descriptions",
         "The video paused while it loads more. Press back to return to the list.",
         "Loading title",
-        "No description track was found for this title. Playback continues without description."
+        "Audio description on, standard, 55 descriptions",
+        "The video paused while it loads more. Press back to return to the list."
       ],
       "artifacts": [
         {
@@ -336,15 +180,15 @@
         }
       ],
       "trace_path": "traces/S04.jsonl",
-      "duration_ms": 11161
+      "duration_ms": 12528
     },
     {
-      "id": "S05",
-      "name": "no-track-is-stated",
+      "id": "S06",
+      "name": "film-plays-and-windows",
       "suite": "release",
-      "use_case": "The title has no description track; the app says so and the film plays anyway.",
+      "use_case": "The viewer plays the film; the buffer runs ahead of the picture and lets go behind it.",
       "covers": [
-        "AC8"
+        "AC1"
       ],
       "fixture": false,
       "verdict": "pass",
@@ -352,77 +196,191 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 2698,
+          "at_ms": 3293,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 4379,
+          "at_ms": 5176,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 4379,
+          "at_ms": 5176,
           "action": "wait",
-          "detail": "controls.announce"
+          "detail": "player.play"
         },
         {
-          "at_ms": 5221,
-          "action": "wait",
-          "detail": "player.progress"
-        },
-        {
-          "at_ms": 6203,
+          "at_ms": 5825,
           "action": "shot",
-          "detail": "The missing-track state, on screen"
+          "detail": "The film playing"
         },
         {
-          "at_ms": 10235,
+          "at_ms": 51429,
           "action": "wait",
           "detail": "player.progress"
+        },
+        {
+          "at_ms": 52181,
+          "action": "wait",
+          "detail": "buffer.evicted"
         }
       ],
       "assertions": [
         {
           "kind": "seen",
-          "expect": "controls.announce kind=missing",
+          "expect": "asset.segments n=(checked)",
           "ok": true,
-          "matched_seq": 8
+          "matched_seq": 0
         },
         {
           "kind": "order",
-          "expect": "loader.miss → controls.announce kind=missing",
+          "expect": "player.opened → player.play → player.progress",
           "ok": true,
-          "matched_seq": 8
+          "matched_seq": 26
         },
         {
-          "kind": "order",
-          "expect": "loader.miss → player.progress → player.progress",
+          "kind": "seen",
+          "expect": "player.progress pos_ms=(checked)",
           "ok": true,
-          "matched_seq": 28
+          "matched_seq": 94
         },
         {
-          "kind": "absent",
-          "expect": "no player.stalled between player.progress and player.progress pos_ms=(checked) [emitter: src/screens/PlayerScreen.tsx onStalled -> player.stalled]",
+          "kind": "seen",
+          "expect": "buffer.evicted held=(checked)",
           "ok": true,
-          "matched_seq": 36
+          "matched_seq": 51
+        },
+        {
+          "kind": "count",
+          "expect": "buffer.evicted held=(checked) ×0 (saw 0)",
+          "ok": true,
+          "matched_seq": null
+        },
+        {
+          "kind": "count",
+          "expect": "buffer.complete ×0 (saw 0)",
+          "ok": true,
+          "matched_seq": null
+        },
+        {
+          "kind": "count",
+          "expect": "buffer.failed ×0 (saw 0)",
+          "ok": true,
+          "matched_seq": null
         }
       ],
       "spoken": [
         "Loading title",
-        "No description track was found for this title. Playback continues without description.",
+        "Audio description on, standard, 55 descriptions",
         "The video paused while it loads more. Press back to return to the list."
       ],
       "artifacts": [
         {
           "kind": "screenshot",
-          "path": "shots/S05-0.jpg",
-          "at_seq": 25,
-          "caption": "The missing-track state, on screen"
+          "path": "shots/S06-0.jpg",
+          "at_seq": 21,
+          "caption": "The film playing"
         }
       ],
-      "trace_path": "traces/S05.jsonl",
-      "duration_ms": 11506
+      "trace_path": "traces/S06.jsonl",
+      "duration_ms": 54689,
+      "cannot_show": "The whole film, and memory: this run watches 45 s of 12 min on the Virtual Device. AC23 names the worst device in the matrix and an end-to-end watch."
+    },
+    {
+      "id": "S07",
+      "name": "generated-cue-ducks",
+      "suite": "release",
+      "use_case": "The film's first generated cue speaks inside its gap, over the film, and the film comes back to full.",
+      "covers": [
+        "AC4",
+        "AC5"
+      ],
+      "fixture": false,
+      "verdict": "pass",
+      "reason": null,
+      "blocked_by": null,
+      "steps": [
+        {
+          "at_ms": 3498,
+          "action": "wait",
+          "detail": "asset.segments"
+        },
+        {
+          "at_ms": 5418,
+          "action": "keys",
+          "detail": "ENTER"
+        },
+        {
+          "at_ms": 6593,
+          "action": "wait",
+          "detail": "audio.duck"
+        },
+        {
+          "at_ms": 7353,
+          "action": "shot",
+          "detail": "During the first generated cue"
+        },
+        {
+          "at_ms": 17327,
+          "action": "wait",
+          "detail": "audio.restored"
+        }
+      ],
+      "assertions": [
+        {
+          "kind": "seen",
+          "expect": "loader.load ok=true cues=55",
+          "ok": true,
+          "matched_seq": 5
+        },
+        {
+          "kind": "order",
+          "expect": "loader.load ok=true → controls.announce kind=ready",
+          "ok": true,
+          "matched_seq": 7
+        },
+        {
+          "kind": "order",
+          "expect": "scheduler.fire id=cue_0-11500 → audio.duck id=cue_0-11500 to_pct=25 → player.progress → cue.audio state=ended → audio.restored id=cue_0-11500",
+          "ok": true,
+          "matched_seq": 40
+        },
+        {
+          "kind": "in_window",
+          "expect": "audio.duck id=cue_0-11500 … audio.restored id=cue_0-11500 inside [0, 11500] ms (was 179 … 10288)",
+          "ok": true,
+          "matched_seq": 40
+        }
+      ],
+      "spoken": [
+        "Loading title",
+        "Audio description on, standard, 55 descriptions",
+        "The video paused while it loads more. Press back to return to the list."
+      ],
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "shots/S07-0.jpg",
+          "at_seq": 25,
+          "caption": "During the first generated cue"
+        },
+        {
+          "kind": "clip",
+          "path": "clips/S07.mp4",
+          "at_seq": null,
+          "caption": "The first generated cue, with the film ducked under it"
+        }
+      ],
+      "trace_path": "traces/S07.jsonl",
+      "duration_ms": 22780,
+      "windows_ms": [
+        [
+          0,
+          11500
+        ]
+      ],
+      "cannot_show": "That a listener heard the film get quieter (closes on hardware), and that the cue avoids dialogue beyond this first gap."
     }
   ]
 }

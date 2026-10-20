@@ -849,6 +849,10 @@ limits:
            a 20-second clip with a 30-second window never evicts anything, so the
            branch has unit tests and no device run. That is AC23, and AC23 needs a
            feature-length asset on the worst device in the matrix.'
+    device_evict: 'MEASURED 2026-10-20 (R57) on the Virtual Device with the whole film
+           packaged (123 segments): e2e-harness S06 watched 45 s and saw buffer.evicted
+           with held <= 9 every time and no buffer.complete. The evict half now has a
+           device run. AC23 stays written: 45 s of 12 min, and not the worst device.'
     corrected_on: 2026-09-27
     corrected_by: limits.vega_media.sourceopen_refires
     correction: 'the 20 s clip DOES evict — once, at 19.94 s, when the playhead passes behind_s beyond the end of segment 0 — and that eviction ran on the Virtual Device on 2026-09-27; what stays unverified is the memory bound over a feature-length asset, which is still AC23.'
@@ -1082,6 +1086,21 @@ changes:
                DESCRIPTION_PROVIDER=gemini. Chosen because the owner holds a Gemini key and
                defects[D4] still closes Bedrock; run.ts also fills missing variables from a
                gitignored .env (loadDotEnv), never overriding the shell.' }
+  - { id: C31, file: pipeline/package.ts, kind: planned, where: repo, built: '2026-10-20 (R57)',
+      change: 'puts the film and its description tracks INSIDE the app package. The
+               film is cut by changes[C27] into src/assets/seg/ (123 segments of 6 s,
+               117 MB) and every generated track under generated/<asset>/ is copied
+               into src/assets/ad/ with the audio its ok cues name. A .json file is
+               SOURCE to metro: require inlines it and copies nothing the app could
+               fetch. So the emitted module src/assets/ad/tracks.ts hands the app the
+               track object plus a static require per cue clip, and App.packagedTrack
+               resolves each relative audio_uri to the packaged asset when the loader
+               asks for a path under the product directory. Every other path still
+               goes to fetch, so the VARIANT fixture and AC8 are reached as before.',
+      why: 'until R57 the package carried a 20 s excerpt and a probe cue, and no
+            generated cue had ever played on the device. The media process cannot reach
+            the host (limits.vega_media.media_process_is_separate), so the film has to
+            travel in the package; the package is 128 MB.' }
   - { id: C26, file: pipeline/segment.ts, kind: planned, where: repo,
       built: '2026-09-26 (R35)',
       change: 'cuts the asset into fragmented-MP4 segments plus an init segment, for
@@ -1981,8 +2000,12 @@ acceptance:
         { date: 2026-10-18, outcome: passed, env: 'Vega Virtual Device, OS 1.2, Release aarch64, SDK 0.24.12112 — e2e-harness S04 and S01, run 2026-10-18T20-10-13-786Z-release, app commit 866ccec',
           note: 'the BACK half: player.back from=playing, then a second app.play and a second player.opened, 2.0 s apart. The "focusable element in every state" half is not what a trace can show — a focus indicator visible on screen is R45-F3 and still open — so status stays written; the flip is the owner''s.' } ] }
   - { id: AC3, item: 'description can be toggled on and off from the remote without interrupting playback', status: written }
-  - { id: AC4, item: 'description cues play inside real dialogue gaps and never overlap dialogue', status: written }
-  - { id: AC5, item: 'the main track ducks to limits.ad.duck_target_pct during a cue and returns to full afterwards', status: written }
+  - { id: AC4, item: 'description cues play inside real dialogue gaps and never overlap dialogue', status: written,
+      attempts: [ { date: 2026-10-20, round: R57, outcome: passed, env: 'Vega Virtual Device, OS 1.2, Release aarch64, SDK 0.24.12112 — e2e-harness S07, run 2026-10-20T17-24-25-693Z-release, app commit e0567b5',
+                    note: 'ONE cue, the first: cue_0-11500 of the generated standard track fired at pos_ms=142, ducked and restored inside [0, 11500]. The other 54, and the never-overlaps half, wait on an end-to-end watch (AC14)' } ] }
+  - { id: AC5, item: 'the main track ducks to limits.ad.duck_target_pct during a cue and returns to full afterwards', status: written,
+      attempts: [ { date: 2026-10-20, round: R57, outcome: passed, env: 'Vega Virtual Device, OS 1.2, Release aarch64, SDK 0.24.12112 — e2e-harness S07, run 2026-10-20T17-24-25-693Z-release, app commit e0567b5',
+                    note: 'on a GENERATED cue for the first time (S03 used a probe): scheduler.fire, audio.duck to_pct=25, player.progress, cue.audio state=ended, audio.restored. The property was set; that it was heard closes on hardware' } ] }
   - { id: AC6, item: 'seeking and held-direction key repeat resync the scheduler without firing a cue per key event', status: written }
   - { id: AC7, item: 'the description track is produced end to end by the pipeline from asset plus subtitles — no cue text is hand-written', status: written,
       attempts: [{ date: 2026-10-18, round: R47-W2, outcome: aborted_no_conditions,

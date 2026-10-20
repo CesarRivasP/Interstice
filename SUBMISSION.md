@@ -146,13 +146,15 @@ react-native-tv-audio-description ·
 TypeScript · ffmpeg · Jest · Vitest · Amazon Devices Builder Tools (MCP server + Agent Skills)
 ```
 
-**Status of the on-device demonstration on 2026-10-19**, so the coordinator can update it: the
+**Status of the on-device demonstration on 2026-10-20**, so the coordinator can update it: the
 harness report at <https://cesarrivasp.github.io/Interstice/e2e/> (`docs/e2e/index.html`) runs
 the app through its scenarios on the Vega Virtual Device: 12 pass and 1 blocked (S17, seeking,
 which the harness cannot drive on the device — e2e-harness `defects[D6]`). The two defects it
 found earlier — reopening a title after BACK, and a corrupt track announced as missing
-(`_log.md` R46-F1, R46-F2) — were fixed and re-verified on 2026-10-18. Those runs use the
-labelled fixture track; §5 has the re-run on the generated one.
+(`_log.md` R46-F1, R46-F2) — were fixed and re-verified on 2026-10-18. Since 2026-10-20 the
+Release suite runs on the packaged film and its **generated** standard track: the first
+generated cue ducks the film inside its gap (S07), and the buffer evicts behind the playhead
+on the whole film (S06). The fault-injection suite still uses the labelled fixture.
 
 ### 2.4 URLs
 
@@ -469,7 +471,7 @@ first time: *Vega OS*, *Fire TV*, *Amazon Bedrock*, *Amazon Polly*.
 | 1:10–1:35 | The pipeline terminal running to the Bedrock call and the refusal, verbatim: `Error 002: Access to Bedrock models is not allowed for this account`. Then the same command with `DESCRIPTION_PROVIDER=gemini`: frames extracted, a cue going to the model, the answer bounded, Amazon Polly speaking it. `[Amazon Bedrock refused this account for four weeks · same interface, Google Gemini answered · Amazon Polly speaks every cue]` | "Offline, the pipeline sends up to three frames per window, the surrounding dialogue and a cast list to a vision model. It was built for Amazon Bedrock, which refused this account for the whole hackathon — the error is on screen — so the same interface ran on Google Gemini. The answer is bounded to its window, and Amazon Polly speaks it. Nothing in the track is hand-written; every cue records the frames it was written from." |
 | 1:35–2:25 | **The app on Vega OS**, captured from the Vega Virtual Device, playing the **generated** standard track: the title list with focus; ENTER; the film playing; the description toggle focused; a cue arrives — the film ducks, the description plays, the film restores; the next line of dialogue lands clean. Then a second cue, a different scene. `[React Native for Vega OS · Fire TV · Vega Virtual Device · every word you hear was generated from the frames]` | "On the television — a React Native app on Vega OS, running on the Vega Virtual Device. Description on. The cue plays in the gap, the film comes back, and the next line is untouched. The toggle never pauses the film. Every word you hear was written by the model from the frames on screen; none of it by hand." |
 | 2:25–2:30 | **The verbosity control**: focus moving across concise, standard, detailed; no level switched audibly. `[concise 47 · standard 55 · detailed 60 windows — timing computed from the gaps; text generated for standard]` | "Three verbosity levels with different budgets, so different cue counts — the timing comes from the gaps, not from the model." |
-| 2:30–2:45 | The track file renamed; relaunch; the app says, out loud and on screen, that no description track was found while the film plays. Then a still of the open-source package README. `[every failure state is spoken · react-native-tv-audio-description on npm]` | "When the track is missing, the app says so — out loud — and the film still plays. The whole TV-side layer is open source on npm; this app installs it like anyone else would." |
+| 2:30–2:45 | The test build's labelled fixture with its track withheld (harness S19 — the Release package carries its track inside, so there is no file to rename); the app says, out loud and on screen, that no description track was found while the film plays. Then a still of the open-source package README. `[every failure state is spoken · react-native-tv-audio-description on npm]` | "When the track is missing, the app says so — out loud — and the film still plays. The whole TV-side layer is open source on npm; this app installs it like anyone else would." |
 | 2:45–2:55 | Two honest captions over the paused app, no music. `[VoiceView cannot be enabled on the Vega Virtual Device and no physical Fire TV was available — the screen reader is not shown.]` `[A validation session with a blind viewer was planned; nobody was confirmed by the cut-off, so it was dropped, not faked.]` | "Two things this video does not show, on purpose: VoiceView — it cannot be switched on inside the Virtual Device and I had no physical Fire TV — and a session with a blind viewer, which was planned and dropped when nobody was confirmed in time. Everything you did see is in the repository, with the measurements behind it." |
 | 2:55–3:00 | Attribution card (§4), repository URL. | — |
 
@@ -497,7 +499,7 @@ Short form for the on-screen card: **Tears of Steel (CC BY 3.0) — Blender Foun
 | item | owner | by |
 |---|---|---|
 | ~~Finish the standard track after the Gemini free-tier reset~~ — **done 2026-10-20: 55 of 55** (R56) | coordinator | done |
-| Load the generated standard track on the Virtual Device, re-run both harness suites on it, republish the report | coordinator | 10-20 |
+| ~~Load the generated standard track on the Virtual Device, re-run both harness suites on it, republish the report~~ — **done 2026-10-20** (R57): the film and its track ship in the package; 12 pass, 1 blocked | coordinator | done |
 | Only the standard level is generated: the free tier yields about 21 cues a day (`_log.md` R49), and concise + detailed are 107 more. Decided 2026-10-19 (R54): the quota goes to standard and its AC14 regenerations; §3 shows the verbosity control for 5 s with the computed window counts and spends the time saved on the generated track playing. Generate concise/detailed only if standard is complete with quota to spare | owner | — |
 | Record, edit and upload the video; fill `[VIDEO URL]` in §2.4 and the registry `acceptance[AC12]` | owner | 10-22 |
 | ~~Ask at office hours #2 (10-19, 9:00 PT) whether an in-app CC BY asset needs anything beyond attribution~~ — **not asked; closed 2026-10-19.** CC BY 3.0 grants any use on attribution, and the rule asks for rights plus attribution: the attribution is in the video (§4 card), its description and the thumbnail | owner | closed |
