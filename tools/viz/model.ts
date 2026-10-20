@@ -51,9 +51,9 @@ export interface TimelineModel {
   content_windows: ContentWindow[];
   subtitles: Subtitle[];
   speech: Subtitle[];
-  /** every silence >= min_gap_ms, before the content-window clip (README: 38) */
+  /** every silence >= min_gap_ms, before the content-window clip (38 on the demo asset) */
   gaps_raw: Gap[];
-  /** the raw gaps intersected with content windows — what C7 hands to C8/C9 */
+  /** the raw gaps intersected with content windows — what C7 hands to C8/C9 (39) */
   gaps: Gap[];
   cues: CueWindow[];
   dropped: DroppedWindow[];
@@ -61,7 +61,9 @@ export interface TimelineModel {
   figures: {
     subtitle_cues: number;
     speech_spans: number;
+    /** raw gaps, before clipToContent — a secondary figure, not the canonical one */
     gaps: number;
+    /** gaps after clipToContent — the canonical count (worst_case.gaps_detected) */
     gaps_in_content: number;
     cue_windows: number;
     cue_windows_dropped: number;
@@ -71,8 +73,13 @@ export interface TimelineModel {
     dialogue_pct: number;
     silence_ms: number;
     silence_pct: number;
+    /** describable silence after clipping, as % of the whole asset (worst_case.describable_pct) */
     silence_in_content_ms: number;
     silence_in_content_pct: number;
+    /** total length of the content windows (the whole asset when none are declared) */
+    content_ms: number;
+    /** describable silence after clipping, as % of the content itself — the headline figure */
+    describable_of_content_pct: number;
     longest_gap_ms: number;
   };
   limits: {
@@ -113,7 +120,9 @@ export function buildTimelineModel(
   const dialogue_ms = speech.reduce((a, s) => a + s.end_ms - s.start_ms, 0);
   const silence_ms = sum(gaps_raw);
   const silence_in_content_ms = sum(gaps);
-  const pct = (ms: number) => Math.round((ms / manifest.duration_ms) * 1000) / 10;
+  const content_ms = content_windows.length ? sum(content_windows.map((w) => ({ duration_ms: w.end_ms - w.start_ms }))) : manifest.duration_ms;
+  const pctOf = (ms: number, of: number) => Math.round((ms / of) * 1000) / 10;
+  const pct = (ms: number) => pctOf(ms, manifest.duration_ms);
 
   return {
     asset_id: manifest.asset_id,
@@ -142,6 +151,8 @@ export function buildTimelineModel(
       silence_pct: pct(silence_ms),
       silence_in_content_ms,
       silence_in_content_pct: pct(silence_in_content_ms),
+      content_ms,
+      describable_of_content_pct: pctOf(silence_in_content_ms, content_ms),
       longest_gap_ms: gaps_raw.reduce((a, g) => Math.max(a, g.duration_ms), 0),
     },
     limits: {

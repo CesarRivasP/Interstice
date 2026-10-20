@@ -61,7 +61,7 @@ async function main(): Promise<void> {
   console.log(
     `INTERSTICE.viz.model asset=${model.asset_id} subs=${f.subtitle_cues} speech=${f.speech_spans} gaps=${f.gaps}` +
       ` in_content=${f.gaps_in_content} cues=${f.cue_windows} dropped=${f.cue_windows_dropped} rejected=${f.rejected_silences}` +
-      ` dialogue_pct=${f.dialogue_pct} silence_pct=${f.silence_pct} silence_in_content_pct=${f.silence_in_content_pct} verbosity=${model.verbosity}`,
+      ` dialogue_pct=${f.dialogue_pct} silence_pct=${f.silence_pct} silence_in_content_pct=${f.silence_in_content_pct} describable_s=${(f.silence_in_content_ms / 1000).toFixed(1)} describable_of_content_pct=${f.describable_of_content_pct} verbosity=${model.verbosity}`,
   );
 
   if (cmd === 'timeline' || cmd === 'all') {
