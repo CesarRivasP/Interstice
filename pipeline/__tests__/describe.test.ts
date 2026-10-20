@@ -190,6 +190,7 @@ describe('describeCue — one call, one retry with the budget restated, then fai
     const d = await describeCue(p, cue(), frames(3), 'standard', 'Thom — jacket', [], noRead);
     expect(d).toEqual({
       window_key: '10000-16000', text: 'Thom steps onto the bridge.', words: 5, status: 'ok', attempts: 1,
+      model: 'fake-provider', // the model that wrote it, cached with it (R56)
     });
     expect(p.requests[0]!.images).toHaveLength(3);
     expect(p.requests[0]!.images[1]!.toString()).toBe('jpeg:/frames/f1.jpg');

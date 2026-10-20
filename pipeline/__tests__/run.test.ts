@@ -5,7 +5,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { validateTrack } from '../../node_modules/react-native-tv-audio-description/lib/TrackLoader.js';
 import { wordCeiling } from '../budget.js';
 import { FakeProvider } from '../providers/index.js';
-import { DEFAULT_MANIFEST, optionsFromArgv, runPipeline } from '../run.js';
+import { DEFAULT_MANIFEST, optionsFromArgv, runPipeline, trackModelId } from '../run.js';
 import type { DescriptionTrack } from '../types.js';
 
 /**
@@ -103,6 +103,25 @@ describe('runPipeline --dry-run on media/tears-of-steel.en.srt', () => {
     expect(readdirSync(join(dir, 'cache')).sort()).toEqual([
       'cast.txt', 'descriptions.concise.json', 'descriptions.detailed.json', 'descriptions.standard.json',
     ]);
+  });
+
+  // Fails if: a run that only reuses the cache labels the track with its own
+  // provider instead of the models that wrote the cues (R56: a six-model track
+  // was labelled with the default model of a run that made no call).
+  it('names the models that wrote the cues, not the provider of a cache-only run', async () => {
+    const dir = out();
+    await runPipeline({ manifestPath: DEFAULT_MANIFEST, outDir: dir, dryRun: true, frames: 'stub', provider: new FakeProvider([], 'writer-model'), synthesize: stubSynth, levels: ['standard'] });
+    await runPipeline({ manifestPath: DEFAULT_MANIFEST, outDir: dir, dryRun: true, frames: 'stub', provider: new FakeProvider([], 'idle-model'), synthesize: stubSynth, levels: ['standard'] });
+    const track = JSON.parse(readFileSync(join(dir, 'tears-of-steel.standard.track.json'), 'utf8')) as DescriptionTrack;
+    expect(track.model_id).toBe('writer-model');
+  });
+
+  it('trackModelId: first-appearance order, + lists split, failed cues ignored, legacy cues unrecorded', () => {
+    const ok = (model?: string) => ({ window_key: 'k', text: 't', words: 1, status: 'ok' as const, attempts: 1, ...(model ? { model } : {}) });
+    const failed = { window_key: 'k', text: '', words: 0, status: 'failed' as const, attempts: 2, model: 'never' };
+    expect(trackModelId([ok('b'), ok('a+b'), failed, ok('c')], 'fb')).toBe('b+a+c');
+    expect(trackModelId([ok('a'), ok()], 'fb')).toBe('a+unrecorded');
+    expect(trackModelId([failed], 'fb')).toBe('fb');
   });
 
   // Fails if: a failed cue is cached as final. AC14 regenerates bad cues by

@@ -64,6 +64,23 @@ export interface RunResult {
 
 type DescriptionCache = Record<string, DescribedCueResult>;
 
+/**
+ * `contracts.description_track.model_id`: every model that wrote an `ok` cue
+ * of this track, joined with `+` in order of first appearance — read from the
+ * cues, not from the provider, because a run that only reuses the cache made no
+ * call. On 2026-10-20 such a run labelled a six-model track with the provider's
+ * default, a model that wrote one cue of 55. A cached cue from before cues
+ * carried their model is named `unrecorded`, never guessed.
+ */
+export function trackModelId(described: DescribedCueResult[], fallback: string): string {
+  const seen: string[] = [];
+  for (const d of described) {
+    if (d.status !== 'ok') continue;
+    for (const m of (d.model ?? 'unrecorded').split('+')) if (!seen.includes(m)) seen.push(m);
+  }
+  return seen.length ? seen.join('+') : fallback;
+}
+
 function readJson<T>(path: string, fallback: T): T {
   if (!existsSync(path)) return fallback;
   return JSON.parse(readFileSync(path, 'utf8')) as T;
@@ -243,7 +260,7 @@ export async function runPipeline(o: RunOptions): Promise<RunResult> {
       assetId: manifest.asset_id,
       sourceSubtitles: manifest.subtitles_uri,
       verbosity,
-      modelId: provider.modelId,
+      modelId: trackModelId(described, provider.modelId),
       cues,
       frames: fr.frames,
       described,

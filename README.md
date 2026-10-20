@@ -101,10 +101,10 @@ tracked here rather than implied. The registry behind every line is
   written by hand
 - ✅ Frame extraction built and tested; **Amazon Polly works** on the entrant account, and
   real Polly audio has been played over the film on the device
-- ✅ **Description of the frames has run, on Google Gemini.** On 2026-10-19 the pipeline
-  generated its first real standard-level track: **21 of 55 cues** came back within budget
-  before the Gemini free tier's daily quota ran out; the rest run after the reset. No cue
-  text is hand-written, and the track's `model_id` names the models that answered. It has
+- ✅ **Description of the frames has run, on Google Gemini.** The pipeline generated the
+  standard-level track on Gemini's free tier over two days (2026-10-19 and 10-20): **55 of
+  55 cues**, none failed, each within its word budget and voiced by Amazon Polly. No cue
+  text is hand-written, and the track's `model_id` names the models that wrote it. It has
   not yet been played on the device — the harness runs above use the fixture track.
 - ⛔ **Amazon Bedrock refuses every inference call on this AWS account** — `Error 002:
   Access to Bedrock models is not allowed for this account` — in every region, for every

@@ -22,6 +22,11 @@ import type { Verbosity } from './types.js';
 
 export interface DescribedCueResult extends DescribedCue {
   attempts: number;
+  /**
+   * the model that wrote an `ok` cue. Cached with it, so a later run that only
+   * reuses the cache still names the models that wrote the track (R56).
+   */
+  model?: string;
   /** why a `failed` cue failed; absent on `ok` */
   reason?: RejectReason | 'provider';
 }
@@ -262,7 +267,14 @@ export async function describeCue(
         `INTERSTICE.describe.cue window=${key} words=${v.words} budget=${budget}` +
           ` attempt=${attempt} status=ok`,
       );
-      return { window_key: key, text: v.text, words: v.words, status: 'ok', attempts: attempt };
+      return {
+        window_key: key,
+        text: v.text,
+        words: v.words,
+        status: 'ok',
+        attempts: attempt,
+        model: provider.lastModelId ?? provider.modelId,
+      };
     }
 
     console.log(

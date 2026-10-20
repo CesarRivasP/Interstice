@@ -30,6 +30,7 @@ export class GeminiProvider implements DescriptionProvider {
   readonly answeredBy = new Map<string, number>();
   private readonly exhausted = new Set<string>();
   private current = 0;
+  lastModelId?: string;
   private readonly minIntervalMs: number;
   private lastCallAt = 0;
   private readonly apiKey: string;
@@ -105,6 +106,7 @@ export class GeminiProvider implements DescriptionProvider {
       try {
         const out = await this.describeWith(model, req);
         this.answeredBy.set(model, (this.answeredBy.get(model) ?? 0) + 1);
+        this.lastModelId = model;
         return out;
       } catch (err) {
         lastError = err;
