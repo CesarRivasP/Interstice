@@ -34,7 +34,8 @@
     "viz": "npm-run-all viz:timeline viz:split",
     "viz:timeline": "tsx tools/viz/cli.ts timeline",
     "viz:split": "tsx tools/viz/cli.ts split",
-    "viz:check": "tsc --noEmit -p tools/viz/tsconfig.json"
+    "viz:check": "tsc --noEmit -p tools/viz/tsconfig.json",
+    "package:film": "tsx pipeline/package.ts"
   },
   "dependencies": {
     "@amazon-devices/react-native-kepler": "~4.0.0",

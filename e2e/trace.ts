@@ -88,13 +88,18 @@ const first = (events: TraceEvent[], m: Match, from = 0): number => {
 };
 
 /**
- * Where the playhead was when `e` was emitted: the last player.progress at or
- * before it, plus the device time elapsed since. null before the first progress.
+ * Where the playhead was when `e` was emitted: the last line at or before it
+ * that STATES the playhead — player.progress, or a scheduler line carrying
+ * pos_ms — plus the device time elapsed since. null before any such line.
+ *
+ * Not player.progress alone: the app ticks the scheduler before it logs
+ * progress, so a cue whose window opens the film fires and ducks ahead of the
+ * first progress line (R11, S07 at pos_ms=142), and its position was null.
  */
 export function positionAt(events: TraceEvent[], index: number): number | null {
   for (let i = index; i >= 0; i--) {
     const p = events[i]!;
-    if (p.name === 'player.progress') {
+    if (p.name === 'player.progress' || (p.name.startsWith('scheduler.') && p.fields.pos_ms !== undefined)) {
       return Number(p.fields.pos_ms) + (events[index]!.t_dev_ms - p.t_dev_ms);
     }
   }

@@ -14,8 +14,9 @@ const APP = readFileSync('docs/features/interstice/_facts.yml', 'utf8');
 const declared = [...OWN.matchAll(/- \{ id: (S\d+), name: ([\w-]+), suite: (\w+), covers: \[([^\]]*)\]/g)].map((m) => ({
   id: m[1]!, name: m[2]!, suite: m[3]!, covers: m[4]!.split(',').map((s) => s.trim()),
 }));
+// deferred scenarios are not coded yet; retired ones never will be again
 const deferred = new Set(
-  [...OWN.matchAll(/- \{ id: (S\d+),[^}]*?deferred: true/gs)].map((m) => m[1]!),
+  [...OWN.matchAll(/- \{ id: (S\d+),[^}]*?(?:deferred|retired): true/gs)].map((m) => m[1]!),
 );
 const coded = [...SUITES.release, ...SUITES.variant];
 
