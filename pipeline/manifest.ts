@@ -129,7 +129,18 @@ function validateWindow(
         ` end_ms=${w.end_ms} duration_ms=${durationMs}`,
     );
   }
-  return { start_ms: w.start_ms, end_ms: w.end_ms, label: w.label };
+  if (
+    w.announce_end !== undefined &&
+    (typeof w.announce_end !== 'string' || w.announce_end.trim() === '')
+  ) {
+    throw new ManifestError(`INTERSTICE.manifest.badAnnounce origin=${origin} index=${i}`);
+  }
+  return {
+    start_ms: w.start_ms,
+    end_ms: w.end_ms,
+    label: w.label,
+    ...(w.announce_end ? { announce_end: w.announce_end.trim() } : {}),
+  };
 }
 
 export function loadManifest(path: string): AssetManifest {

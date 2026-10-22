@@ -90,7 +90,7 @@ export const RELEASE: Scenario[] = [
     ],
     assertions: [
       // the packaged track, not a fixture: every standard cue loaded
-      { kind: 'seen', expect: { name: 'loader.load', where: { ok: 'true', cues: '55' } } },
+      { kind: 'seen', expect: { name: 'loader.load', where: { ok: 'true', cues: '56' } } },
       { kind: 'order', expect: [
         { name: 'loader.load', where: { ok: 'true' } },
         { name: 'controls.announce', where: { kind: 'ready' } },

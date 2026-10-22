@@ -25,6 +25,15 @@ describe('parseManifest — contracts.asset_manifest', () => {
     expect(m.segments).toBeNull();
   });
 
+  // Fails if: an empty sentence is accepted. Polly would be asked to speak
+  // nothing and the track would carry a cue with no audio.
+  it('keeps announce_end and rejects an empty one', () => {
+    const w = { start_ms: 0, end_ms: 588_000, announce_end: ' The end credits roll. ' };
+    expect(parse({ content_windows: [w] }).content_windows[0]?.announce_end).toBe('The end credits roll.');
+    expect(() => parse({ content_windows: [{ ...w, announce_end: ' ' }] })).toThrow(/badAnnounce/);
+    expect(() => parse({ content_windows: [{ ...w, announce_end: 3 }] })).toThrow(ManifestError);
+  });
+
   it('sorts windows by start time so downstream order is not the author s', () => {
     const m = parse({
       content_windows: [

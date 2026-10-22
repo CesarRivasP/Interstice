@@ -1,0 +1,56 @@
+n,start,end,id,words,text,score_1_5,note
+1,00:00.0,00:11.5,cue_0-11500,24,"A title card reads, ""the Mango Open Movie project."" Next, huge rocket thruster cones loom above a massive industrial launch complex shrouded in mist.",4,"La descripción de “The Mango Open Movie Project” sale desde el inicio, cuando aun no se visualiza. Inicia visualizando “Blender Foundation Presents”"
+2,00:11.5,00:23.0,cue_11500-23000,21,"One by one, the thrusters ignite, blasting blazing white fire downwards, lighting up the cityscape as the rocket prepares for launch.",5,
+3,00:45.0,00:50.0,cue_45000-50000,9,A blue wireframe figure dances beside an orange one.,4,Seria bueno agregar que estan interactuando con una interfaz sobre una serie de mandos electrónicos futuristas o algo asi. Ahi lo chequeas.
+4,00:53.5,01:01.0,cue_53500-61000,15,"A man with dreadlocks works at a laboratory console. Later, a pink holographic brain floats.",5,
+5,01:03.0,01:13.8,cue_63000-73800,23,"On a black screen, silver text reads, ""TEARS OF STEEL."" Next, a futuristic city unfolds with traditional buildings beneath a floating mechanical craft.",5,
+6,01:13.8,01:24.6,cue_73800-84600,22,"A sniper in a bell tower aims at a ship. Below him, a newspaper covering Thom's face reads, 'ROBOTICIST CREATES KILLER ROBOTS'.",5,
+7,01:24.6,01:35.4,cue_84600-95400,19,"Through the sniper’s scope, the floating vessel drifts closer. It is cluttered with spotlights, satellites, and various mechanical gear.",5,
+8,01:35.4,01:46.2,cue_95400-106200,23,"Thom pulls the newspaper from his face and looks up at the ceiling. The sniper remains in the background, staring into the scope.",5,
+9,01:46.2,01:57.0,cue_106200-117000,25,"The floating vessel hovers directly over the city roofs, its bright spotlights shining. The sniper tracks the ship through his rifle scope, holding his position.",3,"Creo que deberia describir que en esa escena, esa nave flotante fue atacada por unos robots o drones antes de caer a los techos de las casas/edificios. Y por ello la aeronave fue derribada"
+10,01:59.0,02:11.0,cue_119000-131000,25,"Thom lies on his back with his eyes closed, his hand resting on his chest. Then, he sits up and rubs his face, looking weary.",5,
+11,02:13.0,02:16.0,cue_133000-136000,3,Thom looks away.,5,
+12,02:18.0,02:28.6,cue_138000-148600,24,"The sniper continues to peer through the rifle scope. Nearby, an older man with white hair steps through a doorway, holding onto a rope.",5,
+13,02:28.6,02:39.2,cue_148600-159200,23,"The man steps off a balcony and swings across the cavernous room, dangling from the rope in front of a giant pipe organ.",5,
+14,02:39.2,02:49.8,cue_159200-169800,24,"The white-haired man swings past a thick rope in the center of the frame, his back to the camera as he nears the machinery.",5,
+15,02:49.8,03:00.4,cue_169800-180400,23,"The white-haired man stands in a doorway, observing the room. He looks to his left, his expression serious, before he turns away slightly.",4,"Falto agregar que cuando ingreso en el cuarto, habia una mujer. No se si una soldado a su derecha viendo como este ingresaba al cuarto."
+16,03:00.4,03:11.0,cue_180400-191000,21,"The white-haired man walks towards a desk in the overgrown room. He approaches Thom, who remains seated and looks toward him.",4,"Un poco mas de descripción, como que al salir del cuarto, se encuentra una calle con vegetación, y la nave que esta por despegar"
+17,03:15.0,03:17.0,cue_195000-197000,4,The sniper holds Thom.,5,
+18,03:37.0,03:43.0,cue_217000-223000,13,"Thom stands on a bridge, arms outstretched as holographic squares envelop his body.",5,
+19,03:47.0,03:51.0,cue_227000-231000,8,"The sniper points at Celia, standing beside them.",2,"En esta escena, no sale el francotirador. Sale el señor de cabello blanco, creo que thom y la mujer viendo la nave"
+20,04:08.0,04:19.0,cue_248000-259000,25,"The white-haired man stands on the bridge with Celia and the sniper, who places a hand on his back as holographic squares float around them.",5,
+21,04:19.0,04:30.0,cue_259000-270000,24,"The translucent boxes pulse around his torso, expanding and contracting as Thom remains standing, looking down toward his own waist in the center frame.",4,"Tambien indicar que esos cuadros holográficos, se posaron sobre el señor de cabello blanco, y paso a ser un hombre joven, o al menos eso se ve."
+22,04:30.0,04:41.0,cue_270000-281000,25,"Thom walks along a stone bridge in Amsterdam. He wears a patterned jacket with yellow accents, passing a yellow traffic sign marked with an F.",5,
+23,04:41.0,04:52.0,cue_281000-292000,23,"Thom stops on the bridge and faces the towering, complex mechanical suit. The machine looms over him, its metallic components intricate and exposed.",5,
+24,05:05.0,05:16.0,cue_305000-316000,24,"A close-up of a metallic, mechanical robot face with glowing circular eyes. Cut to Celia, then Thom, both looking toward the robot with concern.",5,
+25,05:23.0,05:25.0,cue_323000-325000,3,Thom looks away.,5,
+26,05:28.0,05:39.0,cue_328000-339000,25,"The sun sets behind architectural domes and cranes in Amsterdam. Through a camera lens, a mechanical suit jumps between the rooftop gables of old houses.",4,"Mas que un traje mecánico, es un robot sobre el techo"
+27,05:41.0,05:43.0,cue_341000-343000,4,The sniper looks away.,5,
+28,05:50.0,05:56.0,cue_350000-356000,15,"A quick glitch flashes back to the control room, then Thom watches Celia's metallic hand.",5,
+29,06:03.0,06:05.0,cue_363000-365000,4,Celia glares at Thom.,5,
+30,06:08.5,06:11.5,cue_368500-371500,4,Celia grabs Thom's mouth.,5,
+31,06:15.0,06:19.0,cue_375000-379000,8,Thom presses the playback button with his palm.,4,Era una persona con lentes. No se si es thom
+32,06:33.0,06:36.0,cue_393000-396000,6,Celia's robotic hand holds Thom's mouth.,5,
+33,06:37.0,06:47.0,cue_397000-407000,18,"Thom looks away, looking unsure. The sniper turns his gaze, looking at the desk in front of him.",4,"Sale el señor con el ojo biónico, y el amigo de los lentes"
+34,06:48.0,06:50.0,cue_408000-410000,3,Celia holds Thom.,5,
+35,06:51.0,06:59.0,cue_411000-419000,17,"Celia keeps her metallic hand pressed against Thom's mouth. Then, a quick cut shows Thom's worried face.",4,"Seria bueno indicar, que celia desapareció al transformarse en un robot."
+36,07:03.0,07:08.0,cue_423000-428000,10,A close-up of a man with a mechanical eye attachment.,4,"Antes del hombre del ojo mecánico, se visualizo el hombre de lentes"
+37,07:11.0,07:21.3,cue_431000-441333,23,"A soldier in dark gear aims a large rifle from a high balcony, as a massive mechanical walker moves into position beside him.",5,
+38,07:21.3,07:31.7,cue_441333-451667,22,"Thom looks down at his hand, then tilts his head and gazes directly at Celia, which is positioned in front of him.",4,"Es otro hombre que aun no habia salido en escena, no thom"
+39,07:31.7,07:42.0,cue_451667-462000,23,Thom holds a mechanical device up to his face. He kneels with others in a cluttered room filled with discarded equipment and debris.,4,Es el otro hombre de la escena anterior
+40,07:42.0,07:52.3,cue_462000-472333,23,"A dark, blurry view of a massive mechanical foot stepping down. Then, Thom gazes intently while holding his mechanical device toward the camera.",4,"Tambien describir que esa figura entro o irrumpió en ese edificio donde ellos estaban esperándolo. Y es otra persona, no thom"
+41,07:52.3,08:02.7,cue_472333-482667,22,"Several figures in white gear kneel in a wreckage-filled room, aiming weapons at a large, metallic mechanical walker invading the space nearby.",5,
+42,08:02.7,08:13.0,cue_482667-493000,20,"Thom presses switches on a control panel, then looks down anxiously. A metallic structure is illuminated by bright yellow lights.",1,"Desde el 8:00 al 8:13 mas o menos, la escena deberia describir al francotirador bajando de la azotea para combatir a los robots."
+43,08:14.0,08:22.0,cue_494000-502000,17,"Thom, wearing a tactical harness, grips a thick rope while looking up at a massive pipe organ.",4,"No es thom, es el francotirador"
+44,08:28.0,08:38.0,cue_508000-518000,20,"Thom stands on a bridge, leaning back into Celia's massive robotic claws. He looks away with a somber, heavy expression.",5,
+45,08:40.0,08:47.0,cue_520000-527000,16,The massive mechanical walker stomps through a debris-filled room as dust and steam fill the air.,5,
+46,08:47.0,08:54.0,cue_527000-534000,15,"Brilliant lights surround the massive, weathered structure before focusing on intricate, grinding mechanical piston joints.",5,
+47,08:56.0,08:58.0,cue_536000-538000,3,Progress bar loading.,5,
+48,08:59.0,09:09.0,cue_539000-549000,22,"A man monitors glowing data screens. Nearby, Thom stands by the massive mechanical walker, gently placing his hand on its metallic head.",5,
+49,09:09.0,09:19.0,cue_549000-559000,21,"The man stares intently, his face illuminated by a warm glow. His brow is furrowed and his mouth is slightly parted.",5,
+50,09:20.0,09:22.0,cue_560000-562000,3,Thom looks up.,4,"Es el señor del ojo mecánico, no thom"
+51,09:24.0,09:26.0,cue_564000-566000,3,The man sighs.,4,"Es la mujer soldado, no un hombre"
+52,09:27.0,09:37.5,cue_567000-577500,24,"The massive mechanical walker lumbers through the shadows of the cluttered room, its heavy, metallic joints shifting as it moves past piles of debris.",5,
+53,09:37.5,09:48.0,cue_577500-588000,21,"Thom stands beneath the heavy mechanical walker in the cavernous, debris-strewn workshop, gazing toward a large, intricate opening in the distance.",4,"No es thom, es el senor de cabello blanco"
+54,11:49.5,11:59.9,cue_709500-719917,23,"The massive mechanical walker's complex, grinding parts and weathered armor plating fill the frame, shifting and clanking together as it continues to walk.",5,
+55,11:59.9,12:10.3,cue_719917-730333,21,"Thom sits amidst piles of scrap metal, staring at a small photograph in his hand as sunlight filters through the workshop.",4,"No es thom, es el francotirador"

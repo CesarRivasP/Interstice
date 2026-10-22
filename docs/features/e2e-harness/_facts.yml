@@ -395,7 +395,7 @@ limits:
           note: 'the evict half of limits.mse_buffer, on the device, for the first time. It supports AC23 and cannot close it: 45 s of a 12 min film, on the Virtual Device, not the worst device in the matrix' }
       - { id: S07, name: generated-cue-ducks, suite: release, covers: [AC4, AC5],
           use_case: 'the film''s first generated cue speaks inside its gap, over the film, and the film comes back to full',
-          decisive: 'loader.load ok=true cues=55 before controls.announce kind=ready; scheduler.fire, audio.duck to_pct=25, player.progress, cue.audio state=ended, audio.restored for cue_0-11500, in that order; duck and restore inside [0, 11500] within limits.timing.window_tolerance_ms' }
+          decisive: 'loader.load ok=true cues=56 (55 described + the credits announcement, R58) before controls.announce kind=ready; scheduler.fire, audio.duck to_pct=25, player.progress, cue.audio state=ended, audio.restored for cue_0-11500, in that order; duck and restore inside [0, 11500] within limits.timing.window_tolerance_ms' }
       - { id: S10, name: cues-stay-in-window, suite: variant, covers: [AC4], fixture: true,
           use_case: 'three cues each start and finish inside their window',
           decisive: 'per cue: audio.duck at a position inside the window and audio.restored before its end' }

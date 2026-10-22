@@ -1,13 +1,13 @@
 {
-  "run_id": "2026-10-20T17-24-25-693Z-release",
-  "started_at": "2026-10-20T17:24:25.693Z",
+  "run_id": "2026-10-22T18-30-03-493Z-release",
+  "started_at": "2026-10-22T18:30:03.493Z",
   "suite": "release",
   "conditions": {
     "target_platform": "Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480)",
     "build": "Release aarch64, SDK 0.24.12112",
     "content_asset": "clip: 20 s of Tears of Steel, 4 segments, packaged"
   },
-  "app_commit": "e0567b5",
+  "app_commit": "64a5b72",
   "package_version": "0.2.0",
   "capture_rung": "grpc",
   "input_route": "inputd-cli",
@@ -33,22 +33,22 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 3265,
+          "at_ms": 2631,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 3992,
+          "at_ms": 3150,
           "action": "shot",
           "detail": "The title list on launch"
         },
         {
-          "at_ms": 5796,
+          "at_ms": 4692,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 5796,
+          "at_ms": 4693,
           "action": "wait",
           "detail": "app.play"
         }
@@ -75,7 +75,7 @@
       ],
       "spoken": [
         "Loading title",
-        "Audio description on, standard, 55 descriptions",
+        "Audio description on, standard, 56 descriptions",
         "The video paused while it loads more. Press back to return to the list."
       ],
       "artifacts": [
@@ -87,7 +87,7 @@
         }
       ],
       "trace_path": "traces/S01.jsonl",
-      "duration_ms": 7896
+      "duration_ms": 6388
     },
     {
       "id": "S04",
@@ -103,42 +103,42 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 3359,
+          "at_ms": 2645,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 5162,
+          "at_ms": 4151,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 6220,
+          "at_ms": 6463,
           "action": "wait",
           "detail": "player.progress"
         },
         {
-          "at_ms": 8396,
+          "at_ms": 8110,
           "action": "keys",
           "detail": "BACK"
         },
         {
-          "at_ms": 8396,
+          "at_ms": 8110,
           "action": "wait",
           "detail": "player.back"
         },
         {
-          "at_ms": 9108,
+          "at_ms": 8635,
           "action": "shot",
           "detail": "Back on the list"
         },
         {
-          "at_ms": 10825,
+          "at_ms": 10221,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 10825,
+          "at_ms": 10221,
           "action": "wait",
           "detail": "player.opened"
         }
@@ -165,10 +165,10 @@
       ],
       "spoken": [
         "Loading title",
-        "Audio description on, standard, 55 descriptions",
+        "Audio description on, standard, 56 descriptions",
         "The video paused while it loads more. Press back to return to the list.",
         "Loading title",
-        "Audio description on, standard, 55 descriptions",
+        "Audio description on, standard, 56 descriptions",
         "The video paused while it loads more. Press back to return to the list."
       ],
       "artifacts": [
@@ -180,7 +180,7 @@
         }
       ],
       "trace_path": "traces/S04.jsonl",
-      "duration_ms": 12528
+      "duration_ms": 11800
     },
     {
       "id": "S06",
@@ -196,32 +196,32 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 3293,
+          "at_ms": 2789,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 5176,
+          "at_ms": 4303,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 5176,
+          "at_ms": 4304,
           "action": "wait",
           "detail": "player.play"
         },
         {
-          "at_ms": 5825,
+          "at_ms": 4858,
           "action": "shot",
           "detail": "The film playing"
         },
         {
-          "at_ms": 51429,
+          "at_ms": 51637,
           "action": "wait",
           "detail": "player.progress"
         },
         {
-          "at_ms": 52181,
+          "at_ms": 52386,
           "action": "wait",
           "detail": "buffer.evicted"
         }
@@ -272,7 +272,7 @@
       ],
       "spoken": [
         "Loading title",
-        "Audio description on, standard, 55 descriptions",
+        "Audio description on, standard, 56 descriptions",
         "The video paused while it loads more. Press back to return to the list."
       ],
       "artifacts": [
@@ -284,7 +284,7 @@
         }
       ],
       "trace_path": "traces/S06.jsonl",
-      "duration_ms": 54689,
+      "duration_ms": 55015,
       "cannot_show": "The whole film, and memory: this run watches 45 s of 12 min on the Virtual Device. AC23 names the worst device in the matrix and an end-to-end watch."
     },
     {
@@ -302,27 +302,27 @@
       "blocked_by": null,
       "steps": [
         {
-          "at_ms": 3498,
+          "at_ms": 2993,
           "action": "wait",
           "detail": "asset.segments"
         },
         {
-          "at_ms": 5418,
+          "at_ms": 4518,
           "action": "keys",
           "detail": "ENTER"
         },
         {
-          "at_ms": 6593,
+          "at_ms": 5811,
           "action": "wait",
           "detail": "audio.duck"
         },
         {
-          "at_ms": 7353,
+          "at_ms": 6409,
           "action": "shot",
           "detail": "During the first generated cue"
         },
         {
-          "at_ms": 17327,
+          "at_ms": 15939,
           "action": "wait",
           "detail": "audio.restored"
         }
@@ -330,7 +330,7 @@
       "assertions": [
         {
           "kind": "seen",
-          "expect": "loader.load ok=true cues=55",
+          "expect": "loader.load ok=true cues=56",
           "ok": true,
           "matched_seq": 5
         },
@@ -338,7 +338,7 @@
           "kind": "order",
           "expect": "loader.load ok=true → controls.announce kind=ready",
           "ok": true,
-          "matched_seq": 7
+          "matched_seq": 9
         },
         {
           "kind": "order",
@@ -348,14 +348,14 @@
         },
         {
           "kind": "in_window",
-          "expect": "audio.duck id=cue_0-11500 … audio.restored id=cue_0-11500 inside [0, 11500] ms (was 179 … 10288)",
+          "expect": "audio.duck id=cue_0-11500 … audio.restored id=cue_0-11500 inside [0, 11500] ms (was 174 … 10289)",
           "ok": true,
           "matched_seq": 40
         }
       ],
       "spoken": [
         "Loading title",
-        "Audio description on, standard, 55 descriptions",
+        "Audio description on, standard, 56 descriptions",
         "The video paused while it loads more. Press back to return to the list."
       ],
       "artifacts": [
@@ -373,7 +373,7 @@
         }
       ],
       "trace_path": "traces/S07.jsonl",
-      "duration_ms": 22780,
+      "duration_ms": 21037,
       "windows_ms": [
         [
           0,

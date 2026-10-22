@@ -2,7 +2,16 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildDramatisPersonae, describeCue, type DescribedCueResult } from './describe.js';
 import { framesForCue, windowKey, type CueFrames } from './frames.js';
-import { clipToContent, findGaps, logCues, logGaps, parseWebVtt, splitIntoCues } from './gaps.js';
+import {
+  announcements,
+  clipToContent,
+  findGaps,
+  logCues,
+  logGaps,
+  parseWebVtt,
+  splitIntoCues,
+  type CueWindow,
+} from './gaps.js';
 import { loadManifest } from './manifest.js';
 import { fakeSynthesize, selectProvider } from './providers/index.js';
 import type { DescriptionProvider, ProviderUsage } from './providers/types.js';
@@ -49,6 +58,8 @@ export interface LevelResult {
   failed: number;
   cached: number;
   calls: number;
+  /** fixed manifest sentences added to the track (ContentWindow.announce_end) */
+  announced: number;
 }
 
 export interface RunResult {
@@ -255,15 +266,51 @@ export async function runPipeline(o: RunOptions): Promise<RunResult> {
       );
     }
 
+    // Named before the announcements join: no model wrote them.
+    const modelId = trackModelId(described, provider.modelId);
+
+    // The manifest's fixed boundary sentences (ContentWindow.announce_end).
+    // Same text at every level, no provider call, no frames.
+    // They join the track, not the level's counts: `cues/ok/failed` stay the
+    // model's work, and `announced` says how many fixed sentences were added.
+    const announced = announcements(manifest.content_windows, manifest.duration_ms);
+    const trackCues: CueWindow[] = [...cues];
+    const trackDescribed: DescribedCueResult[] = [...described];
+    for (const a of announced) {
+      const key = windowKey(a);
+      console.log(`INTERSTICE.describe.announce window=${key} text=${a.text}`);
+      trackDescribed.push({
+        window_key: key,
+        text: a.text,
+        words: a.text.split(/\s+/).length,
+        status: 'ok',
+        attempts: 0,
+      });
+      trackCues.push({
+        index: -1,
+        gap_index: -1,
+        start_ms: a.start_ms,
+        end_ms: a.end_ms,
+        duration_ms: a.end_ms - a.start_ms,
+        word_target: 0,
+        word_ceiling: 0,
+        part_index: 1,
+        part_count: 1,
+        before: null,
+        after: null,
+      });
+    }
+    trackCues.sort((x, y) => x.start_ms - y.start_ms);
+
     // C10 — Polly (or its fake), then the track file for this level.
     const track_path = await buildTrack({
       assetId: manifest.asset_id,
       sourceSubtitles: manifest.subtitles_uri,
       verbosity,
-      modelId: trackModelId(described, provider.modelId),
-      cues,
+      modelId,
+      cues: trackCues,
       frames: fr.frames,
-      described,
+      described: trackDescribed,
       audioDir: join(out, 'audio'),
       outDir: out,
       synthesize: speak,
@@ -277,6 +324,7 @@ export async function runPipeline(o: RunOptions): Promise<RunResult> {
       failed: described.filter((d) => d.status === 'failed').length,
       cached,
       calls,
+      announced: announced.length,
     });
   }
 
