@@ -173,6 +173,7 @@ on the whole film (S06). The fault-injection suite still uses the labelled fixtu
 | Open-source contribution (new repository, MIT) | <https://github.com/CesarRivasP/react-native-tv-audio-description> |
 | Package on npm | <https://www.npmjs.com/package/react-native-tv-audio-description> |
 | Verification report (GitHub Pages, from `docs/e2e/index.html`) | <https://cesarrivasp.github.io/Interstice/e2e/> |
+| Installable build ("Try it out") — aarch64 `.vpkg` for the Vega Virtual Device | <https://github.com/CesarRivasP/Interstice/releases/tag/v0.1.0-hackathon> |
 | Demo video | `[VIDEO URL]` — YouTube, public, filled on 10-22 |
 
 ### 2.5 Track and mini-challenge declarations

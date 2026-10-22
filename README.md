@@ -207,6 +207,10 @@ npm run lint
 
 **Run on the Vega Virtual Device**
 
+No build needed to try it: **[download the Release package](https://github.com/CesarRivasP/Interstice/releases/tag/v0.1.0-hackathon)**
+(`interstice_aarch64.vpkg`, 128 MB — the app, the film and its generated track; SHA-256 in
+the release notes) and run the last line below on it. To build it yourself:
+
 ```bash
 vega virtual-device start
 npm run build
