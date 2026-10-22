@@ -108,6 +108,13 @@ tracked here rather than implied. The registry behind every line is
   2026-10-20 the track ships **inside the app package with the whole film** (128 MB) and
   plays on the Virtual Device: the harness hears the first generated cue duck the film
   inside its gap and restore it, and watches the buffer let go behind the playhead.
+- ✅ **Watched end to end and rated (AC14, 2026-10-22):** every cue scored 1–5 against the
+  picture — **mean 4.51, 2 of 55 failed (3.6%)**; the sheet is `docs/ac14/`. The worst
+  three were regenerated and the better text kept. The most common fault is a character
+  named wrongly: the cast pass sees only the opening scene and knows two names (AC18,
+  recorded, not fixed). The silent credits now get one fixed sentence from the asset
+  manifest, "The end credits roll." — the only cue text a person wrote, and the test
+  suite pins it to the manifest.
 - ⛔ **Amazon Bedrock refuses every inference call on this AWS account** — `Error 002:
   Access to Bedrock models is not allowed for this account` — in every region, for every
   identity, before and after the AWS credit, and five minutes after the use-case form was

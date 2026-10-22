@@ -16,7 +16,10 @@ one-method provider interface (`pipeline/providers/`), so a Google Gemini implem
 added beside the Bedrock one, and on 2026-10-19 the pipeline generated its first real track
 on Gemini's free tier: 21 of the 55 standard-level cues before the daily quota ran out
 (`_log.md` R49), and the other 34 after the reset on 2026-10-20 — **55 of 55, none failed**
-(R56).
+(R56). The owner watched it end to end on 2026-10-22 and rated every cue (`acceptance[AC14]`,
+R58): **mean 4.51 of 5, 2 of 55 failed (3.6%)**, most marks lost to characters named wrongly
+(AC18). The track now has 56 cues: the credits are announced by one fixed sentence from the
+asset manifest.
 
 **Still to fill, and by whom:** the video URL (`[VIDEO URL]`, after upload on 10-22) · see §5 for what
 has to happen on the device before the text in §2.2 is true of the demo.
@@ -501,6 +504,7 @@ Short form for the on-screen card: **Tears of Steel (CC BY 3.0) — Blender Foun
 | ~~Finish the standard track after the Gemini free-tier reset~~ — **done 2026-10-20: 55 of 55** (R56) | coordinator | done |
 | ~~Load the generated standard track on the Virtual Device, re-run both harness suites on it, republish the report~~ — **done 2026-10-20** (R57): the film and its track ship in the package; 12 pass, 1 blocked | coordinator | done |
 | Only the standard level is generated: the free tier yields about 21 cues a day (`_log.md` R49), and concise + detailed are 107 more. Decided 2026-10-19 (R54): the quota goes to standard and its AC14 regenerations; §3 shows the verbosity control for 5 s with the computed window counts and spends the time saved on the generated track playing. Generate concise/detailed only if standard is complete with quota to spare | owner | — |
+| ~~AC14: watch the generated track end to end, rate every cue, regenerate the worst~~ — **done 2026-10-22** (R58): mean 4.51, 3.6% failed; #42 regenerated and kept; credits announced; both suites green on the 56-cue package | owner + coordinator | done |
 | Record, edit and upload the video; fill `[VIDEO URL]` in §2.4 and the registry `acceptance[AC12]` | owner | 10-22 |
 | ~~Ask at office hours #2 (10-19, 9:00 PT) whether an in-app CC BY asset needs anything beyond attribution~~ — **not asked; closed 2026-10-19.** CC BY 3.0 grants any use on attribution, and the rule asks for rights plus attribution: the attribution is in the video (§4 card), its description and the thumbnail | owner | closed |
 | Submit every field; declare Fire TV, AWS Builder, Open Source; mark `acceptance[AC13]` executed with the confirmation | owner | 10-22, deadline 10-23 12:00 PT |

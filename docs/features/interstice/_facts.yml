@@ -1902,6 +1902,7 @@ contracts:
     start_ms: int
     end_ms: int
     label: string
+    announce_end: 'string | absent — a fixed sentence spoken where this window ends (AC14, R58)'
 
   media_segment:
     index: int
@@ -2011,7 +2012,9 @@ acceptance:
       attempts: [{ date: 2026-10-18, round: R47-W2, outcome: aborted_no_conditions,
                    aborted_because: 'the pipeline runs end to end only with the fake provider (npm run pipeline -- --dry-run: 163 fake calls, three tracks validating against the package TrackLoader, exit 0). Bedrock still returns Error 002 after the use-case form (defects[D4]) and ANTHROPIC_API_KEY was not set in the build session, so no real model has produced a cue; the dry-run tracks are fake text and prove the flow, not the criterion.' },
                  { date: 2026-10-20, round: R56, outcome: passed, env: 'npm run pipeline -- --levels standard on the build machine; DESCRIPTION_PROVIDER=gemini (free tier, six Flash models rotating); Amazon Polly neural Joanna',
-                   note: 'STANDARD level only: 55 of 55 cues ok, 0 failed, every cue within its word ceiling, every cue synthesized; 21 written 2026-10-19 (R49), 34 on 2026-10-20. No cue text hand-written; each cue names its source_frames_ms. model_id lists the six models that wrote it (R56 fixed a cache-only run labelling it with one). Concise and detailed are not generated (R54). Status stays written: the flip is the owner''s, after AC14.' }] }
+                   note: 'STANDARD level only: 55 of 55 cues ok, 0 failed, every cue within its word ceiling, every cue synthesized; 21 written 2026-10-19 (R49), 34 on 2026-10-20. No cue text hand-written; each cue names its source_frames_ms. model_id lists the six models that wrote it (R56 fixed a cache-only run labelling it with one). Concise and detailed are not generated (R54). Status stays written: the flip is the owner''s, after AC14.' },
+                 { date: 2026-10-22, round: R58, outcome: passed, env: 'as R56, plus the AC14 regenerations',
+                   note: 'ONE stated exception: cue_588000-591000 "The end credits roll." is the manifest''s announce_end, written by a person beside the content window it closes, with no model call and empty source_frames_ms. contract.track.test matches it to the manifest verbatim, so the exception cannot widen. The other 55 cues are model-written.' }] }
   - { id: AC8, item: 'a failed or missing track produces a stated visible and spoken state, not silence', status: written,
       attempts: [
         { date: 2026-10-04, outcome: failed, env: 'Vega Virtual Device, OS 1.2, Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112 — e2e-harness S05 and S13, runs 2026-10-04T16-41-25-178Z-release and 2026-10-04T16-35-32-657Z-variant',
@@ -2040,7 +2043,12 @@ acceptance:
       attempts: [ { date: 2026-10-18, outcome: aborted_no_conditions,
                     aborted_because: 'the form is filled once, by hand, on 10-22. Every field is drafted in SUBMISSION.md §2 against limits.hackathon.rules_reread — name, tagline, description naming Vega OS / Fire TV / Amazon Bedrock / Amazon Polly, Built With, URLs, track and both mini challenges, the Open Source and AWS Builder blocks, product feedback, feature requests, friction log — with the video URL missing and one fork open',
                     env: 'R47-W3, documents only' } ] }
-  - { id: AC14, item: 'the author watches the demo asset end to end with the description track and rates every cue 1–5 against the picture; track mean and % failed are recorded and the worst cues are regenerated before the demo video is recorded', status: written }
+  - { id: AC14, item: 'the author watches the demo asset end to end with the description track and rates every cue 1–5 against the picture; track mean and % failed are recorded and the worst cues are regenerated before the demo video is recorded', status: written,
+      attempts: [ { date: 2026-10-22, round: R58, outcome: passed,
+                    env: 'host-side mix of the generated standard track over the whole film (generated/tears-of-steel/ac14/, ffmpeg: film ducked to 0.25 under each cue, cue clips at their start_ms, cue text as subtitles); the device path of the same track and clips is e2e-harness S07',
+                    result: { rated: 55, mean: 4.51, failed_pct: 3.6, failed: [cue_227000-231000, cue_482667-493000], distribution: { '5': 34, '4': 18, '3': 1, '2': 1, '1': 1 } },
+                    sheet: docs/ac14/ratings-2026-10-22.csv,
+                    note: 'FAILED is a score of 2 or less. #19 (2) names the man with the mechanical eye "the sniper"; #42 (1) misses the sniper descending to fight. 18 cues scored 4, and 10 of all notes are the same defect: a character named wrongly (AC18 attempt, R58). REGENERATED: the three lowest (#9, #19, #42) were re-described on gemini-3.6-flash with the same cast; #42 came back better (the grappling hook shot to the ceiling) and is kept; #9 came back worse and #19 still wrong, so their original text is kept. The author also noted the credits (9:48-11:48) played in silence: the film window now announces them, a fixed manifest sentence (contracts.content_window.announce_end), cue_588000-591000. Status stays written: the flip is the owner''s.' } ] }
   - { id: AC15, item: 'the control surface is exercised under VoiceView: every control is reachable and announces its state, and the demo video shows it', status: written, closes_on: 'physical hardware only — limits.vega_media.voiceview_not_enablable, measured 2026-09-25' }
   - { id: AC16, item: 'the submission package cites at least one sourced figure on audio-description coverage; the figure and its source enter the registry before the prose', status: executed,
       verified_on: 2026-10-18,
@@ -2052,7 +2060,10 @@ acceptance:
                   note: 'entered here before SUBMISSION.md §2.11, README and the video script cited it, as the criterion requires. The page carries no publication date beyond the report year. SECONDARY, older and narrower, kept for a percentage if the form asks for one: Lenstore, UK, Netflix, data as of 2021-01-12 — "Only 25.4% of the titles available to stream have Audio Descriptions, whereas 74.5% do not." https://www.lenstore.co.uk/research/the-accessibility-of-streaming/ . A blog figure of "7% of streaming content" attributed to ACB could not be found on any ACB page and is NOT used.' },
       attempts: [ { date: 2026-10-18, outcome: passed, env: 'R47-W3, web read through the text proxy' } ] }
   - { id: AC17, item: 'three verbosity levels (concise/standard/detailed) are selectable from the remote, rescale max_words_per_cue per limits.ad.verbosity_scales, and are demonstrated in the demo', status: written }
-  - { id: AC18, item: 'a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch', status: written }
+  - { id: AC18, item: 'a dramatis personae pass precedes per-gap description and is fed into every C9 prompt alongside rolling context; cue coherence is checked during the AC14 watch', status: written,
+      attempts: [ { date: 2026-10-22, round: R58, outcome: failed,
+                    env: 'the AC14 watch of the generated standard track',
+                    note: 'the pass runs, and its output is too thin: generated/tears-of-steel/cache/cast.txt names two people (Celia, Thom) because buildDramatisPersonae sees only the first window''s frames and the first 20 subtitles. The film has at least six recurring characters, and the model gives the names it has to whoever is on screen — 10 author notes are a wrong name (#19, #31, #38, #39, #40, #43, #50, #51, #53, #55; #51 also the wrong gender). Rolling context did not prevent it. FIX, not applied: build the cast from frames sampled across every content window, then re-describe all 55 cues — one more full run, which the free Gemini tier cannot pay for before the deadline.' } ] }
   - id: AC19
     item: 'the submission video visualizes the gap structure (timeline strip with dialogue vs gaps + split-screen before/after with ducking) using data from C7'
     status: written
