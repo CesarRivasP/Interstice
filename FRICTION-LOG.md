@@ -195,6 +195,17 @@ Amazon feedback is not diluted by things Amazon cannot act on.
 - **severity:** **High**
 - **what would have helped:** `vega device info` printing the Virtual Device's console and gRPC ports, or the `vega device screenshot` asked for in the 2026-10-04 entry, which would address the device by name and make the question disappear.
 
+### 2026-10-22 — an `aws login` session expires under a running batch job, and the SDK error does not say which login
+
+- **tool:** AWS CLI v2 `aws login` sessions, consumed by the AWS SDK for JavaScript v3 (`@aws-sdk/client-polly`)
+- **steps:** ran the description pipeline (Gemini for the text, Polly for the voice) after the free-tier reset; Polly failed on the first cue that needed synthesis; re-ran `aws login`; the browser leg expired twice because the terminal that started it had moved on; finished it from a plain terminal; re-ran the pipeline.
+- **expected:** a credential source the SDK resolves either lasts the length of a batch job or tells the job how to refresh it.
+- **happened:** `SynthesizeSpeech` threw `Your session has expired. Please reauthenticate.` — no profile name, no credential source, no command. It happened on 2026-10-20 and again on 2026-10-22, both times mid-run (the descriptions were cached first, so nothing paid was lost). Restarting `aws login` from a non-interactive shell left the authorization pending until it expired: `The pending authorization to retrieve an SSO token has expired`, exit 255, twice.
+- **workaround:** `aws login` from a regular terminal, then a re-run: the pipeline caches descriptions and re-synthesizes only what is missing, so the second run made zero model calls.
+- **time_lost:** about 30 min across the two days
+- **severity:** **Low**
+- **what would have helped:** the expiry error naming its source and fix ("the `default` profile's `aws login` session expired — run `aws login`"), and the session lifetime printed when `aws login` succeeds, so a batch job can be started knowing whether it will outlive its credentials.
+
 ---
 
 ## Toolchain

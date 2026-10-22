@@ -11,6 +11,15 @@ Interstice generates it. A vision model reads the frames of a film, writes a des
 what is on screen, and speaks it in the natural gaps between lines of dialogue — on the
 television itself, with no second device.
 
+![Where the description fits in Tears of Steel: dialogue spans, the silences between them, and the cue windows the pipeline fills](docs/video/gap-timeline-readme.png)
+
+<p>
+  <img src="docs/e2e/run/release/shots/S07-0.jpg" width="49%" alt="The app on the Vega Virtual Device: description on, verbosity standard, focus on the toggle">
+  <img src="docs/e2e/run/variant/shots/S19-0.jpg" width="49%" alt="A title with no description track: the app says so on screen and out loud, and playback continues">
+</p>
+
+*Captured from the Vega Virtual Device by the end-to-end harness ([full report](https://cesarrivasp.github.io/Interstice/e2e/)). The emulator's capture does not include the video plane, so the film area is dark.*
+
 > Built for the **Build, Ship, Shape: Amazon Developer Hackathon** — **Fire TV** track, on
 > **Vega OS**, with both mini challenges: **AWS Builder** and **Open Source**.
 >
@@ -85,7 +94,7 @@ To re-run it: a booted Vega Virtual Device (SDK 0.24), Node 20+, `ffmpeg`, then
 
 ## Status
 
-This is a hackathon build. What is true today — **2026-10-20** — and what is not, is
+This is a hackathon build. What is true today — **2026-10-22** — and what is not, is
 tracked here rather than implied. The registry behind every line is
 `docs/features/interstice/_facts.yml`.
 
@@ -109,7 +118,8 @@ tracked here rather than implied. The registry behind every line is
   plays on the Virtual Device: the harness hears the first generated cue duck the film
   inside its gap and restore it, and watches the buffer let go behind the playhead.
 - ✅ **Watched end to end and rated (AC14, 2026-10-22):** every cue scored 1–5 against the
-  picture — **mean 4.51, 2 of 55 failed (3.6%)**; the sheet is `docs/ac14/`. The worst
+  picture — **mean 4.51, 2 of 55 failed (3.6%)**; the sheet is `docs/ac14/` (the owner's
+  notes are in Spanish). The worst
   three were regenerated and the better text kept. The most common fault is a character
   named wrongly: the cast pass sees only the opening scene and knows two names (AC18,
   recorded, not fixed). The silent credits now get one fixed sentence from the asset
@@ -178,7 +188,14 @@ their audio). `npm run package:film` writes both, from `media/tears-of-steel.mp4
 pipeline's output in `generated/tears-of-steel/`. The track and `tracks.ts` are committed;
 the segments, `segments.ts` and the cue audio are gitignored, so a fresh clone fails
 `npm test` and the Vega build with `Cannot find module './assets/seg/segments'` until the
-film is downloaded and that command has run.
+film is downloaded and that command has run:
+
+```bash
+# the 720p .mov (372 MB, CC BY 3.0) from https://mango.blender.org/download/ , then an
+# H.264/AAC MP4 the device can play (the source's audio is MP3)
+ffmpeg -i tears_of_steel_720p.mov -c:v libx264 -crf 23 -c:a aac -b:a 128k media/tears-of-steel.mp4
+npm run package:film   # needs the pipeline's output in generated/tears-of-steel/
+```
 
 **Install and verify**
 
@@ -193,7 +210,7 @@ npm run lint
 ```bash
 vega virtual-device start
 npm run build
-vega run-app build/x86_64-release/interstice_x86_64.vpkg com.cesarrivasp.interstice.main -d VirtualDevice
+vega run-app build/aarch64-release/interstice_aarch64.vpkg com.cesarrivasp.interstice.main -d VirtualDevice
 ```
 
 **Run the pipeline**
@@ -272,7 +289,7 @@ against real data repeatedly falsified the plan, and the log records each time:
 - Three build commands written from `--help` output were wrong, and were only caught by
   running them.
 
-A [friction log](FRICTION-LOG.md) records what fought back — 15 dated entries, each with a
+A [friction log](FRICTION-LOG.md) records what fought back — 17 dated entries, each with a
 severity and a *what would have helped* line. [`SUBMISSION.md`](SUBMISSION.md) holds the
 Devpost submission as drafted, including the product feedback for every Amazon tool used.
 

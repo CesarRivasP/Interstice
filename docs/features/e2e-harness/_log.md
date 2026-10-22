@@ -215,3 +215,9 @@ Hashes: `python3 scripts/audit.py <dir> --read-line [FILE ...]` prints the
 **Disposition:** the app set's R58 adds a credits announcement to the generated track, so S07's `loader.load` expects **cues=56** (55 described + `cue_588000-591000`). Nothing else in either suite reads the cue count. Release 4/4 `2026-10-22T18-30-03-493Z-release` (app `64a5b72`), variant 8 pass + S17 blocked `2026-10-22T18-32-50-127Z-variant`; S01/S04/S06/S07 traces re-recorded. R12-F1 `POLISH`: the S07 clip measured 3.1 MB, over `limits.report`'s 3 MB per clip, so `e2e:publish` refused it; re-encoded by hand (x264 CRF 30, 1.1 MB). The recorder has no size target — the next long clip will hit the bound again.
 **Edits:** `_facts.yml` (896 lines, blob 55af0fe — S07 decisive line) · `e2e/scenarios/release.ts` · `e2e/__tests__/traces/{S01,S04,S06,S07}.jsonl` · `docs/e2e/` (13 scenarios, 21 criteria). Carried from the app set's R58: `docs/features/interstice/_facts.yml` (2137 lines, blob 9dfa211).
 **Validation:** vitest 197 · `tsc -p e2e` 0.
+
+## R13 · 2026-10-22 · claude-opus-5-5 (Claude Code) · docs
+**Read:** the app set's R59 · `_log.md` through R12
+**Log read through:** R12
+**Disposition:** nothing in this set changed; the app set's R59 touched its own registry (`acceptance[AC19]`). Recorded so the cross-set blob is accounted for.
+**Edits:** none here. Carried from the app set's R59: `docs/features/interstice/_facts.yml` (2140 lines, blob dc79fd6).

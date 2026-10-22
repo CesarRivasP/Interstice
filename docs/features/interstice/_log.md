@@ -530,3 +530,18 @@ No `contracts.description_track` exists for the asset (nothing under `media/` or
 **Edits:** `_facts.yml` (2137 lines, blob 9dfa211 — `contracts.content_window.announce_end`, `acceptance[AC7]`, `[AC14]`, `[AC18]` attempts) · `media/tears-of-steel.manifest.json` (21 lines, blob e6245d3) · `pipeline/{gaps,manifest,run}.ts` · tests in `gaps`, `manifest`, `run`, `contract.track` · `src/assets/ad/` (regenerated) · `docs/ac14/ratings-2026-10-22.csv` (new) · `README.md` (288 lines, blob 1bc47ab) · `SUBMISSION.md` (510 lines, blob 49bb7e5) · `docs/e2e/` (republished). Carried from the e2e-harness set's R12: `docs/features/e2e-harness/_facts.yml` (896 lines, blob 55af0fe — S07 decisive line).
 **Validation:** vitest 197 · jest 34 · `npm run lint` 0 errors · both suites on the device as above.
 **Next:** the video (AC12), then the submission (AC13).
+
+## R59 · 2026-10-22 · claude-opus-5-5 (Claude Code) + claude-fable-5-1 (review) · review + docs
+**Read:** a judge's-eye review of the entry by a read-only subagent (Fable) over `SUBMISSION.md`, `README.md`, `FRICTION-LOG.md`, `docs/e2e/`, `docs/video/`, the registry and the OSS repository · `tools/viz/split.ts` · `_log.md` R58
+**Log read through:** R58
+**Dispositions** (each finding checked before acting; one of the review's figures was wrong and is corrected below):
+- R59-F1 `FUNCTIONAL` (DQ-class) → **fixed.** The §3 video script ran to 3:00 against a limit of *under* 3 minutes while its header claimed 2:45. Re-timed to 2:45: an 8 s hook with a cue firing on the device first, the Bedrock refusal cut from 25 s to 18 s with the Polly cost on screen, the cast-and-blind-viewer captions shortened.
+- R59-F2 `FUNCTIONAL` → **fixed.** `SUBMISSION.md` §2.2 still said "all 55 … no hand-written cue text" after R58 made the track 56 cues with one manifest sentence, and never said only the standard level was generated. Both stated, with the AC14 result.
+- R59-F3 `FUNCTIONAL` → **fixed.** `README.md` ran the x86_64 package; the Virtual Device and harness are aarch64. A fresh clone had no route to the film: the README now names the download page and the transcode, then `npm run package:film`.
+- R59-F4 `POLISH` → **fixed.** README and SUBMISSION had no images: the gap timeline and two device shots (S07 controls, S19 missing track) added, with a note that the emulator capture omits the video plane.
+- R59-F5 `FUNCTIONAL` → **fixed.** `docs/video/gap-split-screen.mp4` was still the 10-18 placeholder. Re-rendered from the generated track (`acceptance[AC19]` attempt).
+- R59-F6 `POLISH` → **fixed.** AWS Builder §2.7 now carries the measured cost: 56 `SynthesizeSpeech` calls, **5,601** characters (the review said 5,572; counted from the packaged track), ≈ $0.09 of Polly neural per film, 5.2 MB of clips, zero AWS calls on the TV. Built With lists Polly before Bedrock. README Status dated 2026-10-22.
+- R59-F7 → **added.** `FRICTION-LOG.md` gains the 2026-10-22 `aws login` session entry (R56 and R58 both hit it): 17 entries, 15 on Amazon tools, 7 Low.
+- **Left to the owner** (public or external): the GitHub repository descriptions and topics (Interstice's still says "with Amazon Bedrock and Polly"), a GitHub Release with the aarch64 `.vpkg`. **Not done:** the AC18 cast fix (R58). The registry's dated close-out counts at `changes[]` friction-log and `acceptance[AC11]` (15 entries, 2026-10-18) are measurements of that day and stay as recorded.
+**Edits:** `SUBMISSION.md` (522 lines, blob 87afdf0) · `README.md` (305 lines, blob 217b1ae) · `FRICTION-LOG.md` (231 lines, blob e20e5d5) · `_facts.yml` (2140 lines, blob dc79fd6 — `acceptance[AC19]` attempt) · `docs/video/gap-split-screen.mp4` (re-rendered).
+**Validation:** documents and one render; no code changed.
