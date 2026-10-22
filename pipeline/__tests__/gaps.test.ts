@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ANNOUNCE_MS,
+  announcements,
   clipToContent,
   findGaps,
   splitIntoCues,
@@ -204,5 +206,34 @@ describe('splitIntoCues — part position, so C9 can tell silence from a film bo
     expect(cues).toHaveLength(1);
     expect(cues[0]?.part_index).toBe(1);
     expect(cues[0]?.part_count).toBe(1);
+  });
+});
+
+describe('announcements — the AC14 credits finding (2026-10-22)', () => {
+  // Fails if: the credits stay silent. The viewer cannot tell the film ended
+  // from a quiet scene — the author's note on the AC14 watch.
+  it('opens one window where an announcing content window ends', () => {
+    const w: ContentWindow[] = [{ ...WINDOWS[0]!, announce_end: 'The end credits roll.' }, WINDOWS[1]!];
+    expect(announcements(w, 734_167)).toEqual([
+      { start_ms: 588_000, end_ms: 588_000 + ANNOUNCE_MS, text: 'The end credits roll.' },
+    ]);
+  });
+
+  // Fails if: the window runs into the next content window, where a described
+  // cue would overlap it.
+  it('is bounded by the next window and by the asset end', () => {
+    const tight: ContentWindow[] = [
+      { start_ms: 0, end_ms: 10_000, announce_end: 'x' },
+      { start_ms: 11_000, end_ms: 20_000, announce_end: 'y' },
+    ];
+    expect(announcements(tight, 21_000)).toEqual([
+      { start_ms: 10_000, end_ms: 11_000, text: 'x' },
+      { start_ms: 20_000, end_ms: 21_000, text: 'y' },
+    ]);
+    expect(announcements([{ start_ms: 0, end_ms: 5_000, announce_end: 'z' }], 5_000)).toEqual([]);
+  });
+
+  it('is empty without announce_end', () => {
+    expect(announcements(WINDOWS, 734_167)).toEqual([]);
   });
 });

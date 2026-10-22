@@ -59,6 +59,7 @@ export const PACKAGED_TRACKS: Record<string, {track: unknown; audio: Record<stri
       'audio/cue_564000-566000.standard.m4a': require('./audio/cue_564000-566000.standard.m4a'),
       'audio/cue_567000-577500.standard.m4a': require('./audio/cue_567000-577500.standard.m4a'),
       'audio/cue_577500-588000.standard.m4a': require('./audio/cue_577500-588000.standard.m4a'),
+      'audio/cue_588000-591000.standard.m4a': require('./audio/cue_588000-591000.standard.m4a'),
       'audio/cue_709500-719917.standard.m4a': require('./audio/cue_709500-719917.standard.m4a'),
       'audio/cue_719917-730333.standard.m4a': require('./audio/cue_719917-730333.standard.m4a'),
     },

@@ -69,12 +69,17 @@ describe('runPipeline --dry-run on media/tears-of-steel.en.srt', () => {
       expect(track.verbosity).toBe(level.verbosity);
       expect(track.asset_id).toBe('tears-of-steel');
       expect(track.model_id).toBe('fake-provider');
+      // the manifest's credits sentence joins every level, after the film
+      const fixed = track.cues.filter((c) => c.source_frames_ms.length === 0);
+      expect(fixed.map((c) => [c.id, c.text])).toEqual([['cue_588000-591000', 'The end credits roll.']]);
+      expect(track.cues).toHaveLength(level.cues + level.announced);
       for (const c of track.cues) {
         expect(c.status).toBe('ok');
+        expect(existsSync(join(dir, c.audio_uri))).toBe(true);
+        if (fixed.includes(c)) continue;
         expect(c.words).toBeLessThanOrEqual(wordCeiling(c.end_ms - c.start_ms));
         expect(c.words).toBeGreaterThan(0);
         expect(c.audio_uri).toBe(`audio/${c.id}.${level.verbosity}.m4a`);
-        expect(existsSync(join(dir, c.audio_uri))).toBe(true);
         expect(c.source_frames_ms).toHaveLength(1); // stubbed: the midpoint
         expect(c.source_frames_ms[0]).toBeGreaterThanOrEqual(c.start_ms);
         expect(c.source_frames_ms[0]).toBeLessThan(c.end_ms);

@@ -1,7 +1,7 @@
 {
   "version": "1",
   "asset_id": "tears-of-steel",
-  "generated_at": "2026-10-20T12:37:50.546Z",
+  "generated_at": "2026-10-22T18:28:55.199Z",
   "source_subtitles": "media/tears-of-steel.en.srt",
   "verbosity": "standard",
   "model_id": "gemini-3-flash-preview+gemini-3.1-flash-lite+gemini-3.6-flash+gemini-3.8-flash+gemini-3.7-flash+gemini-3.5-flash",
@@ -548,8 +548,8 @@
       "id": "cue_482667-493000",
       "start_ms": 482667,
       "end_ms": 493000,
-      "words": 20,
-      "text": "Thom presses switches on a control panel, then looks down anxiously. A metallic structure is illuminated by bright yellow lights.",
+      "words": 21,
+      "text": "Thom presses switches on a control panel, looks with determination, and the mechanical device shoots a grappling hook toward the ceiling.",
       "audio_uri": "audio/cue_482667-493000.standard.m4a",
       "source_frames_ms": [
         483497,
@@ -697,6 +697,16 @@
       "source_frames_ms": [
         582750
       ],
+      "status": "ok"
+    },
+    {
+      "id": "cue_588000-591000",
+      "start_ms": 588000,
+      "end_ms": 591000,
+      "words": 4,
+      "text": "The end credits roll.",
+      "audio_uri": "audio/cue_588000-591000.standard.m4a",
+      "source_frames_ms": [],
       "status": "ok"
     },
     {

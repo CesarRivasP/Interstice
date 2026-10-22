@@ -117,6 +117,39 @@ export interface ContentWindow {
   end_ms: number;
   /** for the log line and the AC19 timeline; not load-bearing */
   label?: string;
+  /**
+   * A fixed sentence spoken where this window ends, e.g. "The end credits
+   * roll." (AC14, 2026-10-22: the credits played in silence and the viewer
+   * could not tell the film had ended). Written in the manifest beside the
+   * window it closes, never by the model: it marks a boundary the manifest
+   * already measured, and describes nothing on screen.
+   */
+  announce_end?: string;
+}
+
+/** how long an announcement window may run before the next content starts */
+export const ANNOUNCE_MS = 3000;
+
+export interface Announcement {
+  start_ms: number;
+  end_ms: number;
+  text: string;
+}
+
+/**
+ * One window per `announce_end`, starting where its content window ends and
+ * bounded by the next window and the asset's end.
+ */
+export function announcements(windows: ContentWindow[], assetDurationMs: number): Announcement[] {
+  const sorted = [...windows].sort((a, b) => a.start_ms - b.start_ms);
+  const out: Announcement[] = [];
+  sorted.forEach((w, i) => {
+    if (!w.announce_end) return;
+    const limit = Math.min(sorted[i + 1]?.start_ms ?? assetDurationMs, assetDurationMs);
+    const end_ms = Math.min(w.end_ms + ANNOUNCE_MS, limit);
+    if (end_ms > w.end_ms) out.push({ start_ms: w.end_ms, end_ms, text: w.announce_end });
+  });
+  return out;
 }
 
 /**
