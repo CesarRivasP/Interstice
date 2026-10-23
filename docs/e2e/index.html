@@ -13,6 +13,7 @@ h1{font-size:28px;margin:0 0 4px}h2{margin:40px 0 12px;font-size:20px}h3{font-si
 a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20px;margin:4px 0}.asserts{list-style:none;padding:0}.cannot{border-top:1px dashed var(--line);padding-top:8px}</style></head><body><main>
 <h1>Interstice — verification report</h1>
 <p class="meta">Every result below was decided by the app's own trace on a device run. Pictures illustrate; they decide nothing.</p>
+<p class="meta">The app in motion, with sound: <a href="https://youtu.be/9BRS-iJYW0s">the 2:32 demo video</a>.</p>
 <p class="meta"><strong>RELEASE</strong> · 2026-10-22T18:30:03.493Z · Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480) · Release aarch64, SDK 0.24.12112 · clip: 20 s of Tears of Steel, 4 segments, packaged · app 64a5b72 · package 0.2.0 · capture grpc · keys inputd-cli · selftest 4/4 passing scenarios shown able to fail</p>
 <p class="meta"><strong>VARIANT</strong> · 2026-10-22T18:32:50.127Z · Vega Virtual Device, aarch64, OS 1.2 (TV Ship/102282480) · Release aarch64 + INTERSTICE_E2E, SDK 0.24.12112 · e2e-fixture: first 60 s of Tears of Steel, host-served · app 64a5b72+dirty · package 0.2.0 · capture grpc · keys inputd-cli · selftest 8/8 passing scenarios shown able to fail · Release package restored: yes</p>
 
@@ -90,7 +91,7 @@ a{color:inherit}code{font-size:13px;overflow-wrap:anywhere}ul,ol{padding-left:20
 <li><strong>Audible ducking.</strong> The trace shows the volume property set and restored. Whether a listener hears the film get quieter is checked on hardware.</li>
 <li><strong>VoiceView.</strong> It cannot be switched on in the Virtual Device. "What the viewer is told" below is what the app hands to the screen reader, not what the screen reader did with it.</li>
 <li><strong>The memory bound on a real Fire TV.</strong> Every run here is on the Virtual Device.</li>
-<li><strong>That a cue avoids dialogue.</strong> Fixture windows are declared, not derived from subtitles; that half waits on the generated track.</li>
+<li><strong>That every cue avoids dialogue.</strong> On the generated track, S07 checks the first cue against its window; all 55 described cues were rated by watching the whole film (the app set's AC14, mean 4.51 of 5). Fixture windows are declared, not derived from subtitles.</li>
 </ul>
 
 <h2>The submitted build</h2>

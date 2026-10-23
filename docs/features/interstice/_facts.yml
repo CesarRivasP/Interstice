@@ -2038,7 +2038,10 @@ acceptance:
   - { id: AC12, item: 'the demo video is under 3 minutes, in English, and shows the app running on the target platform', status: written,
       attempts: [ { date: 2026-10-18, outcome: aborted_no_conditions,
                     aborted_because: 'the video is not recorded. The script is SUBMISSION.md §3 (2:45 target, the order of 02d §16.6, the VoiceView and AC20 beats stated on screen), the URL placeholder is §2.4; recording waits on the 10-22 fork between a generated and a fixture track',
-                    env: 'R47-W3, documents only' } ] }
+                    env: 'R47-W3, documents only' },
+                  { date: 2026-10-22, round: R60, outcome: passed,
+                    env: 'https://youtu.be/9BRS-iJYW0s — public on YouTube, 2:32, English, 1920x1080; assembled in Remotion 4.0.537 outside the repository',
+                    note: 'under 3 minutes (2:32 by ffprobe, 152.0 s); English narration (Amazon Polly, Matthew, generative); the app running on the target platform: the Vega Virtual Device window recorded from the host screen while a script drove the app, its own sound from a parallel gRPC recording aligned to the film by cross-correlation (A +2.34 s, B +3.45 s, C +2.3 s). Shows generated cues #2, #3, #4 and the credits announcement playing over the ducked film, and the remote toggling description. The harness gRPC video alone measured 1-6 fps and slowed playback, so it was not used for picture. Status stays written: the flip is the owner''s.' } ] }
   - { id: AC13, item: 'every Devpost field is submitted before 2026-10-23 12:00 PT, with the primary track and both mini challenges declared', status: written,
       attempts: [ { date: 2026-10-18, outcome: aborted_no_conditions,
                     aborted_because: 'the form is filled once, by hand, on 10-22. Every field is drafted in SUBMISSION.md §2 against limits.hackathon.rules_reread — name, tagline, description naming Vega OS / Fire TV / Amazon Bedrock / Amazon Polly, Built With, URLs, track and both mini challenges, the Open Source and AWS Builder blocks, product feedback, feature requests, friction log — with the video URL missing and one fork open',
@@ -2079,6 +2082,9 @@ acceptance:
       - date: 2026-10-22
         outcome: passed
         env: 'R59, the split-screen re-rendered from the GENERATED track (`npm run viz:split -- --film media/tears-of-steel.mp4 --from 70 --to 100 --track generated/tears-of-steel/tears-of-steel.standard.track.json`): 30 s, 2 cue windows, placeholder=false, 1.9 MB. The 10-18 render was the placeholder (no track existed, R47-W4-F2). Span 1:10-1:40 chosen for cues #6 and #7, both rated 5 in AC14; the default 215-245 s holds #19, rated 2.'
+      - date: 2026-10-22
+        outcome: passed
+        env: 'R60, the published video https://youtu.be/9BRS-iJYW0s: 0:30-0:43 an animated timeline strip of dialogue, silences and cue windows built from C7 output (67 speech spans, 39 gaps, 55 standard windows), and 1:02-1:11 the split screen before/after with ducking (docs/video/gap-split-screen.mp4, R59 render). Both halves of the criterion are in the video; status flip is the owner''s.'
   - { id: AC20, item: 'at least one blind/low-vision viewer validates the track before Phase 5 (20–30 min, with/without comparison, consent on file); anonymized quote retained for SUBMISSION.md/video', status: retired,
       retired_on: 2026-10-18,
       retired_because: 'decisions.user_validation set a hard cut-off — nobody confirmed by 10-16 and AC20 is dropped and the submission says so. Nobody was confirmed. Dropped on that rule, two days after the cut-off, rather than the deadline moved or a quote invented; stated in SUBMISSION.md §2.11, README Status, 03 §A.6 and the video script. owners.external and tracking.blocked_by (1) describe a dependency that no longer exists; they are left for the coordinator, who owns the header.',

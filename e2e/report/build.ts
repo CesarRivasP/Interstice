@@ -105,6 +105,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta n
 <title>Interstice — verification report</title><style>${css}</style></head><body><main>
 <h1>Interstice — verification report</h1>
 <p class="meta">Every result below was decided by the app's own trace on a device run. Pictures illustrate; they decide nothing.</p>
+<p class="meta">The app in motion, with sound: <a href="https://youtu.be/9BRS-iJYW0s">the 2:32 demo video</a>.</p>
 ${runs.map((r) => `<p class="meta"><strong>${esc(r.suite.toUpperCase())}</strong> · ${esc(r.started_at)} · ${esc(r.conditions.target_platform)} · ${esc(r.conditions.build)} · ${esc(r.conditions.content_asset)} · app ${esc(r.app_commit)} · package ${esc(r.package_version)} · capture ${esc(r.capture_rung)} · keys ${esc(r.input_route)} · selftest ${esc(r.selftest.scenarios_that_can_fail)}/${esc(r.selftest.of)} passing scenarios shown able to fail${r.restored_release === null ? '' : ` · Release package restored: ${r.restored_release ? 'yes' : 'NO'}`}</p>`).join('\n')}
 
 <h2>The app's acceptance criteria</h2>
@@ -119,7 +120,7 @@ ${matrix}
 <li><strong>Audible ducking.</strong> The trace shows the volume property set and restored. Whether a listener hears the film get quieter is checked on hardware.</li>
 <li><strong>VoiceView.</strong> It cannot be switched on in the Virtual Device. "What the viewer is told" below is what the app hands to the screen reader, not what the screen reader did with it.</li>
 <li><strong>The memory bound on a real Fire TV.</strong> Every run here is on the Virtual Device.</li>
-<li><strong>That a cue avoids dialogue.</strong> Fixture windows are declared, not derived from subtitles; that half waits on the generated track.</li>
+<li><strong>That every cue avoids dialogue.</strong> On the generated track, S07 checks the first cue against its window; all 55 described cues were rated by watching the whole film (the app set's AC14, mean 4.51 of 5). Fixture windows are declared, not derived from subtitles.</li>
 </ul>
 
 ${runs.map((r) => `<h2>${esc(r.suite === 'release' ? 'The submitted build' : 'The test build, with faults injected')}</h2>\n${r.results.map(card).join('\n')}`).join('\n')}

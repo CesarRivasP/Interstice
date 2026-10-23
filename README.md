@@ -11,6 +11,8 @@ Interstice generates it. A vision model reads the frames of a film, writes a des
 what is on screen, and speaks it in the natural gaps between lines of dialogue — on the
 television itself, with no second device.
 
+**▶ [Watch the 2:32 demo](https://youtu.be/9BRS-iJYW0s)** — the app on the Vega Virtual Device, generated description and all.
+
 ![Where the description fits in Tears of Steel: dialogue spans, the silences between them, and the cue windows the pipeline fills](docs/video/gap-timeline-readme.png)
 
 <p>
@@ -18,7 +20,7 @@ television itself, with no second device.
   <img src="docs/e2e/run/variant/shots/S19-0.jpg" width="49%" alt="A title with no description track: the app says so on screen and out loud, and playback continues">
 </p>
 
-*Captured from the Vega Virtual Device by the end-to-end harness ([full report](https://cesarrivasp.github.io/Interstice/e2e/)). The emulator's capture does not include the video plane, so the film area is dark.*
+*Captured from the Vega Virtual Device by the end-to-end harness ([full report](https://cesarrivasp.github.io/Interstice/e2e/)). These shots are taken before the film's first frame, so the film area is dark; the [demo video](https://youtu.be/9BRS-iJYW0s) shows the app over the film.*
 
 > Built for the **Build, Ship, Shape: Amazon Developer Hackathon** — **Fire TV** track, on
 > **Vega OS**, with both mini challenges: **AWS Builder** and **Open Source**.
