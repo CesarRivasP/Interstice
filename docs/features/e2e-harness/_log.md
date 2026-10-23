@@ -227,3 +227,9 @@ Hashes: `python3 scripts/audit.py <dir> --read-line [FILE ...]` prints the
 **Log read through:** R13
 **Measured, not changed:** `record` through the gRPC wrapper gives 1 fps of distinct frames during film playback and slows the device's playback below half speed; at `--fps 2` it still carries the device's sound. The VVD's GUI window, recorded from the host screen, gives 1080p at ~17–21 fps with real-time playback. For this set: clips stay evidence, not footage; a future `startClip` could take picture from the host screen and sound from gRPC, as the app set's R60 did by hand.
 **Edits:** none here. Carried from the app set's R60: `docs/features/interstice/_facts.yml` (2146 lines, blob 8035556).
+
+## R15 · 2026-10-23 · claude-opus-5-5 (Claude Code) · docs
+**Read:** the app set's R61 · `_log.md` through R14
+**Log read through:** R14
+**Disposition:** nothing in this set changed; the app set's R61 commits the cue audio and adds a note to its `changes[C31]`. Recorded so the cross-set blob is accounted for.
+**Edits:** none here. Carried from the app set's R61: `docs/features/interstice/_facts.yml` (2150 lines, blob 8ff3edb).

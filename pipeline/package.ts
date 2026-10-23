@@ -20,6 +20,8 @@ import type { DescriptionTrack } from './types.js';
  *
  * Run it after `npm run pipeline` and before a build:
  *   npm run package:film
+ * On a fresh clone (no `generated/`) it cuts the segments and keeps the
+ * committed track, clips and module as they are.
  */
 
 const MANIFEST = 'media/tears-of-steel.manifest.json';
@@ -27,32 +29,40 @@ const TRACK_DIR = 'generated/tears-of-steel';
 const SEG_DIR = 'src/assets/seg';
 const AD_DIR = 'src/assets/ad';
 
-function main(): void {
-  // 1. the film, segmented. Old segments go first: a shorter cut would leave
-  //    stale seg*.m4s files behind, and a stale file is bundled all the same.
-  if (existsSync(SEG_DIR)) {
-    for (const f of readdirSync(SEG_DIR)) if (f !== 'segments.ts') rmSync(join(SEG_DIR, f), { force: true });
+/**
+ * Copy every generated track under `trackDir` into `adDir` and write the module
+ * that hands them to the app. Returns the number of tracks packaged.
+ *
+ * A fresh clone has no `generated/` (it is gitignored, and regenerating it needs
+ * paid model and Polly keys), but it does have the committed track, its clips
+ * and `tracks.ts`. Rewriting `adDir` from nothing would leave the app with no
+ * track, so when `trackDir` holds no `*.track.json` the committed package is
+ * left exactly as it is.
+ */
+export function packageTracks(trackDir: string, adDir: string): number {
+  const tracks = existsSync(trackDir)
+    ? readdirSync(trackDir).filter((f) => f.endsWith('.track.json')).sort()
+    : [];
+  if (tracks.length === 0) {
+    console.log(`INTERSTICE.package.tracks_kept reason=no_generated_track dir=${trackDir} module=${join(adDir, 'tracks.ts')}`);
+    return 0;
   }
-  prepareAsset({ manifestPath: MANIFEST, manifestJson: readFileSync(MANIFEST, 'utf8'), segmentDir: SEG_DIR });
 
-  // 2. the tracks that exist, and the audio their ok cues name
-  rmSync(AD_DIR, { recursive: true, force: true });
-  mkdirSync(join(AD_DIR, 'audio'), { recursive: true });
-  const tracks = readdirSync(TRACK_DIR).filter((f) => f.endsWith('.track.json')).sort();
-  if (tracks.length === 0) throw new Error(`no track in ${TRACK_DIR}: run the pipeline first`);
+  rmSync(adDir, { recursive: true, force: true });
+  mkdirSync(join(adDir, 'audio'), { recursive: true });
 
   const entries: string[] = [];
   for (const file of tracks) {
-    const track = JSON.parse(readFileSync(join(TRACK_DIR, file), 'utf8')) as DescriptionTrack;
+    const track = JSON.parse(readFileSync(join(trackDir, file), 'utf8')) as DescriptionTrack;
     const audio: string[] = [];
     for (const cue of track.cues) {
       if (cue.status !== 'ok' || cue.audio_uri === '') continue;
-      const src = join(TRACK_DIR, cue.audio_uri);
+      const src = join(trackDir, cue.audio_uri);
       if (!existsSync(src)) throw new Error(`cue ${cue.id} names ${cue.audio_uri}, which is not on disk`);
-      copyFileSync(src, join(AD_DIR, 'audio', basename(cue.audio_uri)));
+      copyFileSync(src, join(adDir, 'audio', basename(cue.audio_uri)));
       audio.push(`      '${cue.audio_uri}': require('./audio/${basename(cue.audio_uri)}'),`);
     }
-    copyFileSync(join(TRACK_DIR, file), join(AD_DIR, file));
+    copyFileSync(join(trackDir, file), join(adDir, file));
     entries.push(
       `  '${file}': {\n    track: require('./${file}'),\n    audio: {\n${audio.join('\n')}\n    },\n  },`,
     );
@@ -67,8 +77,23 @@ export const PACKAGED_TRACKS: Record<string, {track: unknown; audio: Record<stri
 ${entries.join('\n')}
 };
 `;
-  writeFileSync(join(AD_DIR, 'tracks.ts'), source);
-  console.log(`INTERSTICE.package.done tracks=${tracks.length} module=${join(AD_DIR, 'tracks.ts')}`);
+  writeFileSync(join(adDir, 'tracks.ts'), source);
+  console.log(`INTERSTICE.package.done tracks=${tracks.length} module=${join(adDir, 'tracks.ts')}`);
+  return tracks.length;
 }
 
-main();
+function main(): void {
+  // 1. the film, segmented. Old segments go first: a shorter cut would leave
+  //    stale seg*.m4s files behind, and a stale file is bundled all the same.
+  if (existsSync(SEG_DIR)) {
+    for (const f of readdirSync(SEG_DIR)) if (f !== 'segments.ts') rmSync(join(SEG_DIR, f), { force: true });
+  }
+  prepareAsset({ manifestPath: MANIFEST, manifestJson: readFileSync(MANIFEST, 'utf8'), segmentDir: SEG_DIR });
+
+  // 2. the tracks that exist, and the audio their ok cues name
+  packageTracks(TRACK_DIR, AD_DIR);
+}
+
+if (process.argv[1] && /package\.ts$/.test(process.argv[1])) {
+  main();
+}
