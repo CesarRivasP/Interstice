@@ -185,19 +185,30 @@ the attribution — is drafted in [`SUBMISSION.md`](SUBMISSION.md).
   the app calls no AWS service at runtime; on the entrant account Bedrock is refused, see Status)
 
 **Generated inputs the app imports.** `src/App.tsx` imports `src/assets/seg/segments.ts`
-(the film's fragmented segments) and `src/assets/ad/tracks.ts` (the generated tracks and
-their audio). `npm run package:film` writes both, from `media/tears-of-steel.mp4` and the
-pipeline's output in `generated/tears-of-steel/`. The track and `tracks.ts` are committed;
-the segments, `segments.ts` and the cue audio are gitignored, so a fresh clone fails
-`npm test` and the Vega build with `Cannot find module './assets/seg/segments'` until the
-film is downloaded and that command has run:
+(the film's fragmented segments) and `src/assets/ad/tracks.ts` (the generated track and
+its audio). The description track, its 56 Polly clips (`src/assets/ad/audio/`, 4.0 MB) and
+`tracks.ts` are **committed**, so running the app needs no API keys — keys are only for
+regenerating the descriptions (below). The film (117 MB of segments) is not committed: until
+it is downloaded and cut, `npm test` and the Vega build fail with
+`Cannot find module './assets/seg/segments'`.
+
+**From a fresh clone**
 
 ```bash
+git clone https://github.com/CesarRivasP/Interstice.git && cd Interstice
+npm install
 # the 720p .mov (372 MB, CC BY 3.0) from https://mango.blender.org/download/ , then an
 # H.264/AAC MP4 the device can play (the source's audio is MP3)
 ffmpeg -i tears_of_steel_720p.mov -c:v libx264 -crf 23 -c:a aac -b:a 128k media/tears-of-steel.mp4
-npm run package:film   # needs the pipeline's output in generated/tears-of-steel/
+npm run package:film   # cuts src/assets/seg/; with no generated/ it keeps the committed track
+npm run build
+# then run it on the Vega Virtual Device (below)
 ```
+
+`npm run package:film` re-copies tracks into `src/assets/ad/` only when the pipeline has
+written some to `generated/tears-of-steel/`; on a fresh clone it logs
+`INTERSTICE.package.tracks_kept` and leaves the committed track untouched. To skip the download and the build, install the
+prebuilt [Release](https://github.com/CesarRivasP/Interstice/releases/tag/v0.1.0-hackathon) instead.
 
 **Install and verify**
 
