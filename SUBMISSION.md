@@ -21,8 +21,7 @@ R58): **mean 4.51 of 5, 2 of 55 failed (3.6%)**, most marks lost to characters n
 (AC18). The track now has 56 cues: the credits are announced by one fixed sentence from the
 asset manifest.
 
-**Still to fill, and by whom:** the video URL (`[VIDEO URL]`, after upload on 10-22) · see §5 for what
-has to happen on the device before the text in §2.2 is true of the demo.
+**Still to fill, and by whom:** nothing in this file. Submitting the form is `AC13`, by the owner.
 
 ---
 
@@ -39,7 +38,7 @@ by hand, on the form.
 | 3 | Description — *must name Vega OS, Fire TV, Amazon Bedrock, Amazon Polly explicitly* | ready | §2.2 |
 | 4 | Built With | ready | §2.3 |
 | 5 | Repository URL(s) | ready | §2.4 |
-| 6 | Demo video URL (YouTube or Vimeo, public, under 3 minutes, English) | **placeholder** — fill 10-22 | §2.4, script in §3 |
+| 6 | Demo video URL (YouTube or Vimeo, public, under 3 minutes, English) | ready — <https://youtu.be/9BRS-iJYW0s>, 2:32 | §2.4, cut in §3 |
 | 7 | Primary track | ready — Fire TV, on Vega OS | §2.5 |
 | 8 | Mini challenge(s) | ready — AWS Builder and Open Source | §2.5 |
 | 9 | Open Source block — contribution URL, repository URL, GitHub username, what / how / why | ready | §2.6 |
@@ -174,7 +173,7 @@ on the whole film (S06). The fault-injection suite still uses the labelled fixtu
 | Package on npm | <https://www.npmjs.com/package/react-native-tv-audio-description> |
 | Verification report (GitHub Pages, from `docs/e2e/index.html`) | <https://cesarrivasp.github.io/Interstice/e2e/> |
 | Installable build ("Try it out") — aarch64 `.vpkg` for the Vega Virtual Device | <https://github.com/CesarRivasP/Interstice/releases/tag/v0.1.0-hackathon> |
-| Demo video | `[VIDEO URL]` — YouTube, public, filled on 10-22 |
+| Demo video | <https://youtu.be/9BRS-iJYW0s> — YouTube, public, 2:32 |
 
 ### 2.5 Track and mini-challenge declarations
 
@@ -465,38 +464,38 @@ date.
 
 ---
 
-## 3. The demo video — script, under 3 minutes, English
+## 3. The demo video — as published, 2:32, English
 
-Order per `02d` Phase 16.6, adjusted for what can be shown: the problem; the gap mechanism
-visualized; the app with description on; the verbosity switch; the honest notes. Recorded
-from the Vega Virtual Device through its gRPC capture (1920×1080 frames and the audio
-stream), which is the same path the end-to-end harness uses. Total **2:45** by the rows
-below (re-timed 2026-10-22: the previous cut ran to 3:00), leaving 15 s of slack under the
-3-minute limit judges are not required to watch beyond. The product is on screen in the first
-8 seconds.
+**<https://youtu.be/9BRS-iJYW0s>** — public on YouTube since 2026-10-22, 1920×1080, 2:32.
 
-Overlays in `[brackets]`. Every on-screen caption that names a tool names it in full the
-first time: *Vega OS*, *Fire TV*, *Amazon Bedrock*, *Amazon Polly*.
+**How it was made.** Assembled in [Remotion](https://www.remotion.dev/) (React, rendered to
+MP4) from a project kept outside this repository. The device footage is real: the Vega
+Virtual Device's window recorded from the Mac screen (1080p) while a script drove the app over
+`inputd-cli`, with the device's own sound taken from a parallel gRPC recording and aligned to
+the film by cross-correlation. The harness's gRPC video alone runs at 1–6 fps and slowed the
+device's playback, so it was not used for picture. The timeline animation reads the
+pipeline's own gap and cue data; the split screen is `docs/video/gap-split-screen.mp4`.
+Narration is Amazon Polly, voice Matthew on the generative engine, 1,579 characters. Audio
+normalized to −15 LUFS.
 
 | time | on screen | voice-over |
 |---|---|---|
-| 0:00–0:08 | **Hook.** The app on the Vega Virtual Device mid-film: a generated cue arrives, the film ducks, the description plays, the film comes back. `[Interstice · audio description generated from a film's own silences]` | "This film is describing itself — in the silences between its lines." |
-| 0:08–0:22 | Black. Then the opening of *Tears of Steel* playing with sound, no picture — the frame slowly revealed. `[Most films ship with no audio description.]` | "For a blind viewer, a film is the dialogue and the sound — nothing the camera shows. At the end of 2025 the American Council of the Blind counted thirteen thousand described titles across every streaming service combined." |
-| 0:22–0:47 | **The gap visualization.** A timeline strip of the whole film: dialogue blocks in one colour, silences in another, a marker on every cue window, the sub-threshold gaps greyed out. Zoom into one 30-second span. `[39 gaps · 451.8 s of describable silence · 74 % of the content]` | "Interstice finds the silences. The subtitle file already says when every line is spoken, so every gap between lines is a place a description can go — if it fits. On this film that is thirty-nine gaps and seven and a half minutes of usable silence." |
-| 0:47–1:02 | Split screen, the same span: left, the film as shipped (silence in the gap); right, the film ducked to 25 % with a description spoken in the gap, the waveform visible. `[same scene · silence vs. ducking + description]` | "Each window gets a description bounded to the words that fit at a hundred and sixty words a minute. The film ducks, the cue plays, the film comes back — before the next line." |
-| 1:02–1:20 | The pipeline terminal: the Bedrock refusal on screen for two seconds, verbatim (`Error 002: Access to Bedrock models is not allowed for this account`); then the same command with `DESCRIPTION_PROVIDER=gemini` — a cue going to the model, the answer bounded, Amazon Polly speaking it. `[Amazon Bedrock refused this account · same interface, Google Gemini answered · Amazon Polly voices every cue — about $0.09 a film]` | "Offline, the pipeline sends frames, the surrounding dialogue and a cast list to a vision model. Amazon Bedrock refused this account all hackathon — the error is on screen — so the same interface ran on Google Gemini, and Amazon Polly voices every cue, for about nine cents a film." |
-| 1:20–2:05 | **The app on Vega OS**, captured from the Vega Virtual Device, playing the **generated** standard track: the title list with focus; ENTER; the film playing; the description toggle focused; a cue arrives — the film ducks, the description plays, the film restores; the next line of dialogue lands clean. Then a second cue, a different scene. `[React Native for Vega OS · Fire TV · Vega Virtual Device · every word you hear was generated from the frames]` | "On the television — a React Native app on Vega OS, running on the Vega Virtual Device. Description on. The cue plays in the gap, the film comes back, and the next line is untouched. The toggle never pauses the film. Every word you hear was written by the model from the frames on screen." |
-| 2:05–2:10 | **The verbosity control**: focus moving across concise, standard, detailed; no level switched audibly. `[concise 47 · standard 55 · detailed 60 windows — timing computed from the gaps; text generated for standard]` | "Three verbosity levels with different budgets — the timing comes from the gaps, not from the model." |
-| 2:10–2:25 | The test build's labelled fixture with its track withheld (harness S19 — the Release package carries its track inside, so there is no file to rename); the app says, out loud and on screen, that no description track was found while the film plays. Then a still of the open-source package README. `[every failure state is spoken · react-native-tv-audio-description on npm]` | "When the track is missing, the app says so — out loud — and the film still plays. The whole TV-side layer is open source on npm." |
-| 2:25–2:40 | Two honest captions over the paused app, no music. `[VoiceView cannot be enabled on the Vega Virtual Device and no physical Fire TV was available — the screen reader is not shown.]` `[A validation session with a blind viewer was planned; nobody was confirmed by the cut-off, so it was dropped, not faked.]` | "Not shown, on purpose: VoiceView, which cannot be switched on inside the Virtual Device, and a session with a blind viewer, planned and dropped when nobody was confirmed. Everything you saw is in the repository, with the measurements behind it." |
-| 2:40–2:45 | Attribution card (§4), repository URL. | — |
+| 0:00–0:08 | **Hook.** The app on the Vega Virtual Device: the thrusters ignite and generated cue #2 plays over the ducked film (rated 5 in AC14). `[Audio description, written by AI from the frames, spoken in the gaps between dialogue.]` | — (the description itself is heard) |
+| 0:08–0:11 | Title card: *Interstice — AI audio description for Fire TV, spoken in the silences between dialogue.* | "This is Interstice." |
+| 0:11–0:30 | The film's opening behind a blur, then the ACB figure: **13,109** described titles, year-end 2025 (`acceptance[AC16]`). | "For a blind viewer, a film is the dialogue and the sound — and nothing the camera shows. Audio description fixes that, but it is written by hand, one title at a time. At the end of 2025, the American Council of the Blind counted about thirteen thousand described titles, across every streaming service combined." |
+| 0:30–0:43 | Animated timeline built from the pipeline's own output (C7): dialogue, silences, cue windows; counters to **39** gaps and **74 %**. | "Interstice starts from the subtitles. Every silence between two lines is a place a description can go — if it fits. In Tears of Steel, that is thirty-nine gaps: seventy-four percent of the film." |
+| 0:43–1:02 | Pipeline diagram: gap → frames → dialogue + cast → vision model → Amazon Polly → Fire TV. Amazon Bedrock shown with its verbatim `Error 002`; Google Gemini as the interface that wrote the demo track. | "For each gap, the pipeline takes a few frames, the dialogue around it, and a cast list, and asks a vision model for a description that fits the gap — never a word more. Amazon Polly gives it a voice. It was built for Amazon Bedrock, which refused this account for the whole hackathon, so the same interface ran on Google Gemini." |
+| 1:02–1:11 | `docs/video/gap-split-screen.mp4`: as shipped vs. with Interstice, film 1:10–1:40. | "The film ducks, the description plays, and the film comes back — before the next line." |
+| 1:11–1:33 | The Vega Virtual Device: "40 YEARS LATER", then cues #3 and #4 in their gaps. | "On the television: a React Native app on Vega OS, running on the Vega Virtual Device." |
+| 1:33–1:48 | The remote: description off and on while the film plays; focus over concise, standard, detailed. | "The remote turns description off and on without pausing the film." |
+| 1:48–1:56 | The Vega Virtual Device at 9:48: "Written and Directed by Ian Hubert" and the manifest's credits announcement. | "Even the credits are announced." |
+| 1:56–2:07 | Measured results: **4.51/5** (AC14) · **$0.09** of Polly per film · **0** cloud calls from the TV · 12 of 13 scenarios on the device. | "Every cue was rated by hand against the picture: four point five out of five. The whole film costs about nine cents of Polly, and the TV makes no cloud calls at all." |
+| 2:07–2:16 | The missing-track state (S19) and `npm i react-native-tv-audio-description`. | "When a track is missing, the app says so, out loud. And the TV side is open source, on npm, for any React Native TV app." |
+| 2:16–2:27 | What the video does not show: VoiceView (AC15) and the blind-viewer session (AC20). | "Not shown: VoiceView, which the Virtual Device cannot enable, and a session with a blind viewer, which could not be scheduled in time. Everything you saw is in the repository." |
+| 2:27–2:32 | End card: repository URL, the three challenges, *Tears of Steel (CC BY 3.0) Blender Foundation · mango.blender.org*, narration by Amazon Polly. | — |
 
-**Recording checklist (10-22):** the app build is the Release package without the e2e flag
-(read the `INTERSTICE.app.mode` line) · no terminal in frame shows an environment variable's
-value, `GEMINI_API_KEY` least of all · the Bedrock error is shown verbatim, not paraphrased ·
-the track on the device is the generated one, and any fixture track still heard (§5) is
-labelled on screen in the same shot · upload public on YouTube, English title, the
-attribution line in the description too.
+The 2:45 script this replaced is in git history (R59); the order changed only where real
+footage was better than a described shot — the pipeline beat is a diagram, not a terminal.
 
 ---
 
@@ -518,6 +517,6 @@ Short form for the on-screen card: **Tears of Steel (CC BY 3.0) — Blender Foun
 | ~~Load the generated standard track on the Virtual Device, re-run both harness suites on it, republish the report~~ — **done 2026-10-20** (R57): the film and its track ship in the package; 12 pass, 1 blocked | coordinator | done |
 | Only the standard level is generated: the free tier yields about 21 cues a day (`_log.md` R49), and concise + detailed are 107 more. Decided 2026-10-19 (R54): the quota goes to standard and its AC14 regenerations; §3 shows the verbosity control for 5 s with the computed window counts and spends the time saved on the generated track playing. Generate concise/detailed only if standard is complete with quota to spare | owner | — |
 | ~~AC14: watch the generated track end to end, rate every cue, regenerate the worst~~ — **done 2026-10-22** (R58): mean 4.51, 3.6% failed; #42 regenerated and kept; credits announced; both suites green on the 56-cue package | owner + coordinator | done |
-| Record, edit and upload the video; fill `[VIDEO URL]` in §2.4 and the registry `acceptance[AC12]` | owner | 10-22 |
+| ~~Record, edit and upload the video; fill `[VIDEO URL]` in §2.4 and the registry `acceptance[AC12]`~~ — **done 2026-10-22**: <https://youtu.be/9BRS-iJYW0s>, 2:32 (R60) | owner + coordinator | done |
 | ~~Ask at office hours #2 (10-19, 9:00 PT) whether an in-app CC BY asset needs anything beyond attribution~~ — **not asked; closed 2026-10-19.** CC BY 3.0 grants any use on attribution, and the rule asks for rights plus attribution: the attribution is in the video (§4 card), its description and the thumbnail | owner | closed |
 | Submit every field; declare Fire TV, AWS Builder, Open Source; mark `acceptance[AC13]` executed with the confirmation | owner | 10-22, deadline 10-23 12:00 PT |

@@ -221,3 +221,9 @@ Hashes: `python3 scripts/audit.py <dir> --read-line [FILE ...]` prints the
 **Log read through:** R12
 **Disposition:** nothing in this set changed; the app set's R59 touched its own registry (`acceptance[AC19]`). Recorded so the cross-set blob is accounted for.
 **Edits:** none here. Carried from the app set's R59: `docs/features/interstice/_facts.yml` (2140 lines, blob dc79fd6).
+
+## R14 · 2026-10-22 · claude-opus-5-5 (Claude Code) · measure
+**Read:** `e2e/capture.ts` · the app set's R60 · `_log.md` through R13
+**Log read through:** R13
+**Measured, not changed:** `record` through the gRPC wrapper gives 1 fps of distinct frames during film playback and slows the device's playback below half speed; at `--fps 2` it still carries the device's sound. The VVD's GUI window, recorded from the host screen, gives 1080p at ~17–21 fps with real-time playback. For this set: clips stay evidence, not footage; a future `startClip` could take picture from the host screen and sound from gRPC, as the app set's R60 did by hand.
+**Edits:** none here. Carried from the app set's R60: `docs/features/interstice/_facts.yml` (2146 lines, blob 8035556).
