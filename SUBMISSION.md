@@ -21,7 +21,7 @@ R58): **mean 4.51 of 5, 2 of 55 failed (3.6%)**, most marks lost to characters n
 (AC18). The track now has 56 cues: the credits are announced by one fixed sentence from the
 asset manifest.
 
-**Still to fill, and by whom:** nothing in this file. Submitting the form is `AC13`, by the owner.
+**Submitted:** <https://devpost.com/software/interstice-d90hqj> — the form was filled from §2 and submitted by the owner (`acceptance[AC13]`, R62).
 
 ---
 
@@ -228,7 +228,7 @@ on the whole film (S06). The fault-injection suite still uses the labelled fixtu
 >   the Vega player will append, and real Polly bytes were played over a running film on the
 >   Vega Virtual Device with the main track ducked. **The whole 12-minute film costs 56
 >   `SynthesizeSpeech` calls and 5,601 characters — about $0.09 of Polly neural** — and ships
->   as 5.2 MB of clips inside the app package, so the TV plays description with zero AWS
+>   as 4.0 MB of clips inside the app package, so the TV plays description with zero AWS
 >   calls at runtime.
 > - **Amazon Bedrock** (`Converse` API, Amazon Nova Pro / Nova Lite, multimodal) is the vision
 >   model that writes each description from up to three frames, the surrounding dialogue, a
@@ -519,4 +519,4 @@ Short form for the on-screen card: **Tears of Steel (CC BY 3.0) — Blender Foun
 | ~~AC14: watch the generated track end to end, rate every cue, regenerate the worst~~ — **done 2026-10-22** (R58): mean 4.51, 3.6% failed; #42 regenerated and kept; credits announced; both suites green on the 56-cue package | owner + coordinator | done |
 | ~~Record, edit and upload the video; fill `[VIDEO URL]` in §2.4 and the registry `acceptance[AC12]`~~ — **done 2026-10-22**: <https://youtu.be/9BRS-iJYW0s>, 2:32 (R60) | owner + coordinator | done |
 | ~~Ask at office hours #2 (10-19, 9:00 PT) whether an in-app CC BY asset needs anything beyond attribution~~ — **not asked; closed 2026-10-19.** CC BY 3.0 grants any use on attribution, and the rule asks for rights plus attribution: the attribution is in the video (§4 card), its description and the thumbnail | owner | closed |
-| Submit every field; declare Fire TV, AWS Builder, Open Source; mark `acceptance[AC13]` executed with the confirmation | owner | 10-22, deadline 10-23 12:00 PT |
+| ~~Submit every field; declare Fire TV, AWS Builder, Open Source; mark `acceptance[AC13]` executed with the confirmation~~ — **submitted**: <https://devpost.com/software/interstice-d90hqj> (R62) | owner | done |

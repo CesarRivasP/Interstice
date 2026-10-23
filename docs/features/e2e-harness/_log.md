@@ -233,3 +233,9 @@ Hashes: `python3 scripts/audit.py <dir> --read-line [FILE ...]` prints the
 **Log read through:** R14
 **Disposition:** nothing in this set changed; the app set's R61 commits the cue audio and adds a note to its `changes[C31]`. Recorded so the cross-set blob is accounted for.
 **Edits:** none here. Carried from the app set's R61: `docs/features/interstice/_facts.yml` (2150 lines, blob 8ff3edb).
+
+## R16 · 2026-10-23 · claude-opus-5-5 (Claude Code) · docs
+**Read:** the app set's R62 · `_log.md` through R15
+**Log read through:** R15
+**Disposition:** nothing in this set changed; the app set's R62 recorded the submission (`acceptance[AC13]`).
+**Edits:** none here. Carried from the app set's R62: `docs/features/interstice/_facts.yml` (2153 lines, blob b7c34b0).
